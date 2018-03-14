@@ -11,6 +11,20 @@ public enum GameboardDirection
     West,
 }
 
+public class ValidMovementTileResult
+{
+    public GameboardTile Tile { get; private set; }
+    public int Distance { get; private set; }
+    public float ActualDistance { get; private set; }
+
+    public ValidMovementTileResult(GameboardTile tile, int distance, float actualDistance)
+    {
+        Tile = tile;
+        Distance = distance;
+        ActualDistance = actualDistance;
+    }
+}
+
 public class Gameboard : MonoBehaviour
 {
     public GameObject Prefab;
@@ -82,6 +96,56 @@ public class Gameboard : MonoBehaviour
         }
 
         return hitTiles;
+    }
+
+    public List<ValidMovementTileResult> GetValidMovementTiles(GameboardTile origin, int radius)
+    {
+        var results = new List<ValidMovementTileResult>();
+
+        //foreach (var tile in myGridTileMap.Values)
+        //{
+        //    var actualDistance = Vector3.Distance(tile.transform.position, origin.transform.position);
+        //    var distance = Mathf.CeilToInt(actualDistance);
+
+        //    //if (distance != 0 && (distance <= movement || Mathf.RoundToInt(actualDistance) == movement - 1))
+        //        results.Add(new ValidMovementTileResult(tile, distance, actualDistance));
+        //}
+
+        for (int x = 0; x < radius; x++)
+        {
+            for (int y = 0; y < radius - x; y++)
+            {
+                var tileA = GetTile(new Vector2(x, y));
+                var tileB = GetTile(new Vector2(x, -y));
+                var tileC = GetTile(new Vector2(-x, y));
+                var tileD = GetTile(new Vector2(-x, y));
+
+                if (tileA != null)
+                    results.Add(new ValidMovementTileResult(tileA, x + y, x));
+
+                if (tileB != null)
+                    results.Add(new ValidMovementTileResult(tileB, x + y, x));
+
+                if (tileC != null)
+                    results.Add(new ValidMovementTileResult(tileC, x + y, x));
+
+                if (tileD != null)
+                    results.Add(new ValidMovementTileResult(tileD, x + y, x));
+            }
+        }
+
+        return results;
+    }
+
+    public GameboardTile GetTile(Vector2 position)
+    {
+        var gridPosition = ToGridPosition(position);
+        return myGridTileMap.ContainsKey(gridPosition) ? myGridTileMap[gridPosition] : null;
+    }
+
+    Vector3 ToGridPosition(Vector2 position)
+    {
+        return new Vector3(position.x, 0f, position.y);
     }
 
     Vector3 GetVectorFromDirection(GameboardDirection direction)

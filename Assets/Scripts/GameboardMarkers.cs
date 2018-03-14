@@ -9,7 +9,8 @@ public class GameboardMarkers : MonoBehaviour
     public GameboardDirection Direction;
     public int Length;
     public bool FilterOccupiedTiles;
-    public GameboardTile OriginTile; // Temp
+    public Vector2 OriginTile; // Temp
+    public bool ActualDistances;
 
     private Gameboard myGameboard;
 
@@ -19,14 +20,24 @@ public class GameboardMarkers : MonoBehaviour
         Assert.IsNotNull(myGameboard);
     }
 
-    private void Update()
+    private void OnGUI()
     {
-        if (OriginTile != null)
+        var originTile = myGameboard.GetTile(OriginTile);
+
+        if (originTile != null)
         {
-            var tiles = AllDirections ? myGameboard.GetTilesFromAllDirections(OriginTile, Length, FilterOccupiedTiles) : myGameboard.GetTiles(OriginTile, Direction, Length, FilterOccupiedTiles);
-            foreach (var tile in tiles)
+            //var tiles = AllDirections ? myGameboard.GetTilesFromAllDirections(OriginTile, Length, FilterOccupiedTiles) : myGameboard.GetTiles(OriginTile, Direction, Length, FilterOccupiedTiles);
+            var results = myGameboard.GetValidMovementTiles(originTile, Length);
+            foreach (var result in results)
             {
-                Debug.DrawLine(tile.transform.position, tile.transform.position + Vector3.up * 2f, Color.green);
+                Debug.DrawLine(result.Tile.transform.position, result.Tile.transform.position + Vector3.up * 2f, Color.green);
+
+                var worldToScreen = Camera.main.WorldToScreenPoint(result.Tile.transform.position);
+                worldToScreen.y = Screen.height - worldToScreen.y - 15f;
+
+                GUI.contentColor = Color.green;
+                GUILayout.BeginArea(new Rect(worldToScreen, new Vector2(50f, 50f)), ActualDistances ? result.ActualDistance.ToString() : result.Distance.ToString());
+                GUILayout.EndArea();
             }
         }
     }

@@ -357,4 +357,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b7625b3bfe1a3c40a22f1e03cd21748, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OriginTile: {fileID: 0}
+  AllDirections: 0
+  Direction: 0
+  Length: 3
+  FilterOccupiedTiles: 0
+  OriginTile: {x: 0, y: 0}
+  ActualDistances: 0
