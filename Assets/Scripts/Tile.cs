@@ -1,13 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Framework;
 
-public class GameboardTile : MonoBehaviour
+public class Tile : MonoBehaviour
 {
+    public TileMarker Marker { get; private set; }
+
     public bool Occupied { get { return myOccupant != null; } }
     public Unit Occupant { get { return myOccupant; } }
 
     private Unit myOccupant;
+
+
+    private void Awake()
+    {
+        Marker = gameObject.GetOrAddComponent<TileMarker>();
+    }
 
     /// <summary>
     /// Sets the occupant.
@@ -26,7 +35,7 @@ public class GameboardTile : MonoBehaviour
             myOccupant.Moved += MyOccupant_Moved;
     }
 
-    string GetOccupantName()
+    private string GetOccupantName()
     {
         return myOccupant != null ? myOccupant.name : "Nobody";
     }

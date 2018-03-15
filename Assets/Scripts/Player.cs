@@ -7,7 +7,7 @@ public class Player : MonoBehaviour
 
     private PlayerUnitPlacer myUnitPlacer;
     private Unit mySelectedUnit;
-    private GameboardTile myTileUnderMouse;
+    private Tile myTileUnderMouse;
     private bool myInputEnabled;
 
     private void Awake()
@@ -22,16 +22,14 @@ public class Player : MonoBehaviour
 
         // Highlight tile under mouse
         if (myTileUnderMouse)
-        {
-            var color = myTileUnderMouse.Occupied ? Color.red : Color.green;
-            Debug.DrawLine(myTileUnderMouse.transform.position, myTileUnderMouse.transform.position + (Vector3.up * 4f), color);
-        }
+            myTileUnderMouse.Marker.SetPositive();
     }
 
     void OnGUI()
     {
         GUILayout.BeginVertical();
         GUILayout.Label("Selected Unit: " + (mySelectedUnit != null ? mySelectedUnit.name : "Null"));
+        GUILayout.Label("Tile Under Mouse: " + (myTileUnderMouse != null ? myTileUnderMouse.transform.position.TransformToGridspace().ToString() : "Null"));
         GUILayout.EndVertical();
     }
 
@@ -87,9 +85,9 @@ public class Player : MonoBehaviour
         return rayResult.collider != null ? rayResult.collider.GetComponent<T>() : null;
     }
 
-    public static GameboardTile GetTileUnderMouse()
+    public static Tile GetTileUnderMouse()
     {
-        return GetComponentUnderMouse<GameboardTile>();
+        return GetComponentUnderMouse<Tile>();
     }
 
     public static Unit GetUnitUnderMouse()

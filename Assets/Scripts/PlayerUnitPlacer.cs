@@ -4,9 +4,9 @@ using UnityEngine.Assertions;
 public class UnitPlacementResult
 {
     public Unit Unit { get; private set; }
-    public GameboardTile Tile { get; private set; }
+    public Tile Tile { get; private set; }
 
-    public UnitPlacementResult(Unit unit, GameboardTile tile)
+    public UnitPlacementResult(Unit unit, Tile tile)
     {
         Unit = unit;
         Tile = tile;
@@ -30,7 +30,7 @@ public class PlayerUnitPlacer : MonoBehaviour
         }
     }
 
-    public UnitPlacementResult PlaceUnit(GameboardTile tile)
+    public UnitPlacementResult PlaceUnit(Tile tile)
     {
         if (tile != null && !tile.Occupied)
         {

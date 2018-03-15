@@ -6,7 +6,7 @@ public class Unit : MonoBehaviour
 {
     public event Action<Unit> Moved;
 
-    public void Move(GameboardTile tile)
+    public void Move(Tile tile)
     {
         if (tile.Occupied)
         {
