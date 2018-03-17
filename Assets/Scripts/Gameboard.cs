@@ -124,7 +124,27 @@ public class Gameboard : MonoBehaviour
 
         myTraversalIterationCost = 0;
 
-        Traverse(originTile, myTraversalMap, 0, distance);
+        var queue = new Queue<TileResult>();
+        queue.Enqueue(new TileResult(originTile, 0));
+
+        while (queue.Count > 0)
+        {
+            myTraversalIterationCost++;
+
+            var current = queue.Dequeue();
+            if (current.Tile == null || current.Tile.Occupied || current.Distance > distance || current.Distance > GridSize || myTraversalMap.ContainsKey(current.Tile))
+                continue;
+
+            var direction = (current.Tile.Position - originTile.Position).normalized;
+
+            if (direction.y != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.North), current.Distance + 1));
+            if (direction.x != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.East), current.Distance + 1));
+            if (direction.y != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.South), current.Distance + 1));
+            if (direction.x != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.West), current.Distance + 1));
+
+            if (current.Tile.Position != originTile.Position)
+                myTraversalMap.Add(current.Tile, current.Distance);
+        }
 
         var results = new List<TileResult>();
         foreach (var kvp in myTraversalMap)
@@ -136,39 +156,9 @@ public class Gameboard : MonoBehaviour
         return results;
     }
 
-    void Traverse(Tile origin, Dictionary<Tile, int> traversalMap, int accumulatedMoves, int movementRange)
-    {
-        accumulatedMoves += 1;
-        myTraversalIterationCost++;
-
-        for (int i = 0; i < GridHelper.AllDirections.Count(); i++)
-        {
-            var nextTile = GetTileInDirection(origin, GridHelper.AllDirections.ElementAt(i));
-
-            if(nextTile != null && !nextTile.Occupied)
-            {
-                if (!traversalMap.ContainsKey(nextTile))
-                    traversalMap.Add(nextTile, accumulatedMoves);
-
-                if (traversalMap[nextTile] > accumulatedMoves)
-                    traversalMap[nextTile] = accumulatedMoves;
-
-                if (accumulatedMoves != movementRange)
-                    Traverse(nextTile, traversalMap, accumulatedMoves, movementRange);
-            }
-        }
-    }
-
     Tile GetTileInDirection(Tile origin, GameboardDirection direction)
     {
-        if (origin == null)
-        {
-            return null;
-        }
-        else
-        {
-            return GetTile(origin.Position + GridHelper.GetVectorFromDirection(direction));
-        }
+        return GetTile(origin.Position + GridHelper.GetVectorFromDirection(direction));
     }
 
     public Tile GetTile(Vector2 position) { return myGridTileMap.ContainsKey(position) ? myGridTileMap[position] : null; }
