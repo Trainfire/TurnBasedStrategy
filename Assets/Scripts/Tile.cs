@@ -7,11 +7,11 @@ public class Tile : MonoBehaviour
 {
     public TileMarker Marker { get; private set; }
 
+    public Vector2 Position { get { return transform.position.TransformToGridspace(); } }
     public bool Occupied { get { return myOccupant != null; } }
     public Unit Occupant { get { return myOccupant; } }
 
     private Unit myOccupant;
-
 
     private void Awake()
     {

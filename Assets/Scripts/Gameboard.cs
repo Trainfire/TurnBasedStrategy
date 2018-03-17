@@ -2,6 +2,7 @@
 using UnityEngine.Assertions;
 using System.Linq;
 using System.Collections.Generic;
+using System;
 
 public enum GameboardDirection
 {
@@ -29,10 +30,13 @@ public class Gameboard : MonoBehaviour
     public int GridSize;
 
     private Dictionary<Vector2, Tile> myGridTileMap;
+    private Dictionary<Tile, int> myTraversalMap;
+    private int myTraversalIterationCost;
 
     private void Start()
     {
         myGridTileMap = new Dictionary<Vector2, Tile>();
+        myTraversalMap = new Dictionary<Tile, int>();
 
         for (int row = 0; row < GridSize; row++)
         {
@@ -91,38 +95,88 @@ public class Gameboard : MonoBehaviour
         return hitTiles;
     }
 
-    public List<TileResult> GetValidMovementTiles(Tile originTile, int distance)
+    public List<TileResult> GetTilesInRadius(Tile originTile, int distance)
     {
         var results = new List<TileResult>();
-        var origin = originTile.transform.position.TransformToGridspace();
-
-        distance = Mathf.Min(GridSize * 2, distance);
 
         for (int x = 0; x < distance + 1; x++)
         {
-            for (int y = 0; y < distance + 1 - x; y++)
+            for (int y = 0; y < distance - x + 1; y++)
             {
                 if (x == 0 && y == 0)
                     continue;
 
-                var rightUp = GetTile(origin + new Vector2(x, y));
-                var rightDown = GetTile(origin + new Vector2(x, -y));
-
-                var leftUp = GetTile(origin + new Vector2(-x, y));
-                var leftDown = GetTile(origin + new Vector2(-x, -y));
-
-                if (rightUp != null) results.Add(new TileResult(rightUp, x + y));
-                if (rightDown != null) results.Add(new TileResult(rightDown, x + y));
-                if (leftUp != null) results.Add(new TileResult(leftUp, x + y));
-                if (leftDown != null) results.Add(new TileResult(leftDown, x + y));
+                GetTile(originTile.Position + new Vector2(x, y), (tile) => results.Add(new TileResult(tile, x + y)));
+                GetTile(originTile.Position + new Vector2(x, -y), (tile) => results.Add(new TileResult(tile, x + y)));
+                GetTile(originTile.Position + new Vector2(-x, y), (tile) => results.Add(new TileResult(tile, x + y)));
+                GetTile(originTile.Position + new Vector2(-x, -y), (tile) => results.Add(new TileResult(tile, x + y)));
             }
         }
 
         return results;
     }
 
-    public Tile GetTile(Vector2 position)
+    public List<TileResult> GetReachableTiles(Tile originTile, int distance)
     {
-        return myGridTileMap.ContainsKey(position) ? myGridTileMap[position] : null;
+        myTraversalMap.Clear();
+
+        distance = Mathf.Clamp(distance, 1, GridSize);
+
+        myTraversalIterationCost = 0;
+
+        Traverse(originTile, myTraversalMap, 0, distance);
+
+        var results = new List<TileResult>();
+        foreach (var kvp in myTraversalMap)
+        {
+            if (kvp.Key.transform.position.TransformToGridspace() != Vector2.zero)
+                results.Add(new TileResult(kvp.Key, kvp.Value));
+        }
+
+        return results;
+    }
+
+    void Traverse(Tile origin, Dictionary<Tile, int> traversalMap, int accumulatedMoves, int movementRange)
+    {
+        accumulatedMoves += 1;
+        myTraversalIterationCost++;
+
+        for (int i = 0; i < GridHelper.AllDirections.Count(); i++)
+        {
+            var nextTile = GetTileInDirection(origin, GridHelper.AllDirections.ElementAt(i));
+
+            if(nextTile != null && !nextTile.Occupied)
+            {
+                if (!traversalMap.ContainsKey(nextTile))
+                    traversalMap.Add(nextTile, accumulatedMoves);
+
+                if (traversalMap[nextTile] > accumulatedMoves)
+                    traversalMap[nextTile] = accumulatedMoves;
+
+                if (accumulatedMoves != movementRange)
+                    Traverse(nextTile, traversalMap, accumulatedMoves, movementRange);
+            }
+        }
+    }
+
+    Tile GetTileInDirection(Tile origin, GameboardDirection direction)
+    {
+        if (origin == null)
+        {
+            return null;
+        }
+        else
+        {
+            return GetTile(origin.Position + GridHelper.GetVectorFromDirection(direction));
+        }
+    }
+
+    public Tile GetTile(Vector2 position) { return myGridTileMap.ContainsKey(position) ? myGridTileMap[position] : null; }
+
+    public void GetTile(Vector2 position, Action<Tile> onGet)
+    {
+        var tile = GetTile(position);
+        if (tile != null)
+            onGet(tile);
     }
 }

@@ -386,9 +386,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b7625b3bfe1a3c40a22f1e03cd21748, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Type: 1
-  Distance: 3
-  GridPosition: {x: 4, y: 4}
+  Type: 2
+  Distance: 12
+  GridPosition: {x: 0, y: 0}
+  TargetGridPosition: {x: 1, y: 8}
   Direction: 1
 --- !u!1001 &1607971371
 Prefab:

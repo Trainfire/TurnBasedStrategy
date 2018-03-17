@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -10,14 +11,17 @@ public class GameboardDebugger : MonoBehaviour
     {
         Radius,
         Line,
+        Reachable,
     };
 
     public DebugType Type;
     public int Distance;
     public Vector2 GridPosition;
+    public Vector2 TargetGridPosition;
     public GameboardDirection Direction;
 
     private Gameboard myGameboard;
+    private List<TileResult> myTileResults;
 
     private void Awake()
     {
@@ -25,34 +29,45 @@ public class GameboardDebugger : MonoBehaviour
         Assert.IsNotNull(myGameboard);
     }
 
-    private void OnGUI()
+    private void Start()
+    {
+        UpdateTiles();
+    }
+
+    private void FixedUpdate()
+    {
+        UpdateTiles();
+    }
+
+    private void UpdateTiles()
     {
         var originTile = myGameboard.GetTile(GridPosition);
 
         if (originTile != null)
         {
-            var results = new List<TileResult>();
-
             switch (Type)
             {
-                case DebugType.Radius: results = myGameboard.GetValidMovementTiles(originTile, Distance); break;
-                case DebugType.Line: results = myGameboard.GetTiles(originTile, Direction, Distance); break;
+                case DebugType.Radius: myTileResults = myGameboard.GetTilesInRadius(originTile, Distance); break;
+                case DebugType.Reachable: myTileResults = myGameboard.GetReachableTiles(originTile, Distance); break;
+                case DebugType.Line: myTileResults = myGameboard.GetTiles(originTile, Direction, Distance); break;
             }
+        }
+    }
 
-            results.ForEach(x => x.Tile.Marker.SetPositive());
-
-            foreach (var result in results)
+    private void OnGUI()
+    {
+        foreach (var result in myTileResults)
+        {
+            if (result.Tile.Occupied)
             {
-                if (result.Tile.Occupied)
-                {
-                    result.Tile.Marker.SetNegative();
-                }
-                else
-                {
-                    result.Tile.Marker.SetPositive();
-                }
-                result.Tile.Marker.DrawText(result.Distance.ToString());
+                result.Tile.Marker.SetNegative();
             }
+            else
+            {
+                result.Tile.Marker.SetPositive();
+            }
+
+            result.Tile.Marker.DrawText(result.Distance.ToString());
         }
     }
 }
