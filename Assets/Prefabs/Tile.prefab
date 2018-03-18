@@ -51,8 +51,8 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4267910050287140}
-  - component: {fileID: 114491365496323132}
   - component: {fileID: 65290514551821210}
+  - component: {fileID: 114875786017153114}
   - component: {fileID: 114742698689477546}
   m_Layer: 0
   m_Name: Tile
@@ -328,17 +328,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: -0.5, z: 0}
---- !u!114 &114491365496323132
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1400334576273914}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 56adba333c2d1ba459fb37497fa0c4a2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &114742698689477546
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -352,3 +341,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PositiveMarker: {fileID: 1282701012605152}
   NegativeMarker: {fileID: 1873077025175640}
+--- !u!114 &114875786017153114
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1400334576273914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56adba333c2d1ba459fb37497fa0c4a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -3,6 +3,7 @@ using UnityEngine.Assertions;
 using System.Linq;
 using System.Collections.Generic;
 using System;
+using Framework;
 
 public enum GameboardDirection
 {
@@ -24,149 +25,80 @@ public class TileResult
     }
 }
 
-public class Gameboard : MonoBehaviour
+public class Gameboard : GameEntity
 {
-    public GameObject Prefab;
-    public int GridSize;
+    public event Action<Unit> UnitAdded;
+    public event Action<Unit> UnitRemoved;
 
-    private Dictionary<Vector2, Tile> myGridTileMap;
-    private Dictionary<Tile, int> myTraversalMap;
-    private int myTraversalIterationCost;
+    public int GridSize { get { return _gridSize; } }
+    public IReadOnlyDictionary<Vector2, Tile> TileMap { get { return _tileMap; } }
 
-    private void Start()
+    [SerializeField] private GameObject _prefab;
+    [SerializeField] private int _gridSize;
+
+    private List<Unit> _units;
+    private Dictionary<Vector2, Tile> _tileMap;
+
+    private void Awake()
     {
-        myGridTileMap = new Dictionary<Vector2, Tile>();
-        myTraversalMap = new Dictionary<Tile, int>();
+        _units = new List<Unit>();
+        _tileMap = new Dictionary<Vector2, Tile>();
+    }
 
-        for (int row = 0; row < GridSize; row++)
+    protected override void OnInitialize()
+    {
+        base.OnInitialize();
+
+        for (int row = 0; row < _gridSize; row++)
         {
-            for (int column = 0; column < GridSize; column++)
+            for (int column = 0; column < _gridSize; column++)
             {
                 var position = new Vector3(column, 0f, row);
 
-                var gridTileInstance = GameObject.Instantiate(Prefab, transform);
+                var gridTileInstance = GameObject.Instantiate(_prefab, transform);
                 gridTileInstance.name = string.Format("Tile {0}/{1}", column, row);
                 gridTileInstance.transform.position = position;
 
-                var worldGridTile = gridTileInstance.GetComponent<Tile>();
+                var worldGridTile = gridTileInstance.GetComponentAssert<Tile>();
 
-                Assert.IsNotNull(worldGridTile, "Missing WorldGridTile component from specified prefab.");
-
-                myGridTileMap.Add(position.TransformToGridspace(), worldGridTile);
+                if (worldGridTile != null)
+                    _tileMap.Add(position.TransformToGridspace(), worldGridTile);
             }
         }
     }
 
-    public List<TileResult> GetTiles(Tile origin, GameboardDirection direction, int length, bool filterOccupiedTiles = false)
+    public void SpawnUnit(UnitData unitData, Tile tile)
     {
-        var vector = GridHelper.GetVectorFromDirection(direction);
+        Assert.IsNotNull(unitData);
+        Assert.IsNotNull(tile);
 
-        length = Mathf.Min(GridSize, length);
-
-        var hitTiles = new List<TileResult>();
-
-        // Start one tile away from origin.
-        for (int i = 1; i < length + 1; i++)
+        if (tile.Occupied)
         {
-            var vectorFromDirection = GridHelper.GetVectorFromDirection(direction);
-            var iteratorPosition = origin.transform.position.TransformToGridspace() + vectorFromDirection * i;
-
-            if (myGridTileMap.ContainsKey(iteratorPosition))
-            {
-                var hitTile = myGridTileMap[iteratorPosition];
-
-                if (filterOccupiedTiles && !hitTile.Occupied || !filterOccupiedTiles)
-                    hitTiles.Add(new TileResult(hitTile, i));
-            }
+            DebugEx.LogWarning<Gameboard>("Cannot place a unit at occupied tile '{0}'", tile.transform.position.TransformToGridspace());
+            return;
         }
 
-        return hitTiles;
+        var unit = new GameObject(unitData.Name + " (Unit)").AddComponent<Unit>();
+        _units.Add(unit);
+
+        unit.Died += OnUnitDied;
+
+        tile.SetOccupant(unit);
+
+        UnitAdded.InvokeSafe(unit);
     }
 
-    public List<TileResult> GetTilesFromAllDirections(Tile origin, int length, bool filterOccupiedTiles = false)
+    void OnUnitDied(Unit unit)
     {
-        var hitTiles = new List<TileResult>();
+        var hasUnit = _units.Contains(unit);
 
-        foreach (var direction in GridHelper.AllDirections)
-        {
-            hitTiles.AddRange(GetTiles(origin, direction, length, filterOccupiedTiles));
-        }
+        Assert.IsTrue(hasUnit);
 
-        return hitTiles;
-    }
+        if (!hasUnit)
+            return;
 
-    public List<TileResult> GetTilesInRadius(Tile originTile, int distance)
-    {
-        var results = new List<TileResult>();
+        _units.Remove(unit);
 
-        for (int x = 0; x < distance + 1; x++)
-        {
-            for (int y = 0; y < distance - x + 1; y++)
-            {
-                if (x == 0 && y == 0)
-                    continue;
-
-                GetTile(originTile.Position + new Vector2(x, y), (tile) => results.Add(new TileResult(tile, x + y)));
-                GetTile(originTile.Position + new Vector2(x, -y), (tile) => results.Add(new TileResult(tile, x + y)));
-                GetTile(originTile.Position + new Vector2(-x, y), (tile) => results.Add(new TileResult(tile, x + y)));
-                GetTile(originTile.Position + new Vector2(-x, -y), (tile) => results.Add(new TileResult(tile, x + y)));
-            }
-        }
-
-        return results;
-    }
-
-    public List<TileResult> GetReachableTiles(Tile originTile, int distance)
-    {
-        myTraversalMap.Clear();
-
-        distance = Mathf.Clamp(distance, 1, GridSize);
-
-        myTraversalIterationCost = 0;
-
-        var queue = new Queue<TileResult>();
-        queue.Enqueue(new TileResult(originTile, 0));
-
-        while (queue.Count > 0)
-        {
-            myTraversalIterationCost++;
-
-            var current = queue.Dequeue();
-            if (current.Tile == null || current.Tile.Occupied || current.Distance > distance || current.Distance > GridSize || myTraversalMap.ContainsKey(current.Tile))
-                continue;
-
-            var direction = (current.Tile.Position - originTile.Position).normalized;
-
-            if (direction.y != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.North), current.Distance + 1));
-            if (direction.x != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.East), current.Distance + 1));
-            if (direction.y != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.South), current.Distance + 1));
-            if (direction.x != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.West), current.Distance + 1));
-
-            if (current.Tile.Position != originTile.Position)
-                myTraversalMap.Add(current.Tile, current.Distance);
-        }
-
-        var results = new List<TileResult>();
-        foreach (var kvp in myTraversalMap)
-        {
-            if (kvp.Key.transform.position.TransformToGridspace() != Vector2.zero)
-                results.Add(new TileResult(kvp.Key, kvp.Value));
-        }
-
-        return results;
-    }
-
-    Tile GetTileInDirection(Tile origin, GameboardDirection direction)
-    {
-        return GetTile(origin.Position + GridHelper.GetVectorFromDirection(direction));
-    }
-
-    public Tile GetTile(Vector2 position) { return myGridTileMap.ContainsKey(position) ? myGridTileMap[position] : null; }
-
-    public void GetTile(Vector2 position, Action<Tile> onGet)
-    {
-        var tile = GetTile(position);
-        if (tile != null)
-            onGet(tile);
+        UnitRemoved.InvokeSafe(unit);
     }
 }

@@ -113,10 +113,7 @@ namespace Framework
             var types = _interfaceToComponentMapping[typeof(T)];
 
             if (types == null || types.Count <= 0)
-            {
-                Debug.LogError("No descendants found for type " + typeof(T));
                 return new List<T>();
-            }
 
             foreach (var curType in types)
             {

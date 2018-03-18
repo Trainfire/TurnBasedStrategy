@@ -132,6 +132,19 @@ namespace Framework
             }
         }
 
+        /// <summary>
+        /// Throws an assertion if the specified component is missing.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static T GetComponentAssert<T>(this GameObject obj) where T : Component
+        {
+            var comp = obj.GetComponent<T>();
+            Assert.IsNotNull(comp, string.Format("{0} is missing component '{1}'", obj.name, typeof(T)));
+            return comp;
+        }
+
         public static T GetComponent<T>(this GameObject obj, Action<T> onGet)
         {
             var comp = obj.GetComponent<T>();

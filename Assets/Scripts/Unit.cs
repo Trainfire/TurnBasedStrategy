@@ -1,10 +1,23 @@
 ﻿using UnityEngine;
+using UnityEngine.Assertions;
 using System;
 using Framework;
 
 public class Unit : MonoBehaviour
 {
     public event Action<Unit> Moved;
+    public event Action<Unit> Died;
+
+    [SerializeField] private UnitData _unitData;
+
+    public void Initialize(UnitData unitData)
+    {
+        _unitData = unitData;
+
+        var healthComp = gameObject.GetOrAddComponent<HealthComponent>();
+        healthComp.Initialize(unitData.MaxHealth);
+        healthComp.Died += HealthComp_Died;
+    }
 
     public void Move(Tile tile)
     {
@@ -17,5 +30,10 @@ public class Unit : MonoBehaviour
         transform.position = tile.transform.position;
         Moved.InvokeSafe(this);
         tile.SetOccupant(this);
+    }
+
+    private void HealthComp_Died(HealthComponent healthComponent)
+    {
+        Died.InvokeSafe(this);
     }
 }
