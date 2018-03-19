@@ -25,6 +25,18 @@ public class TileResult
     }
 }
 
+public struct SpawnAction
+{
+    public UnitData Unit;
+    public Tile Tile;
+
+    public SpawnAction(UnitData unit, Tile tile)
+    {
+        Unit = unit;
+        Tile = tile;
+    }
+}
+
 public class Gameboard : GameEntity
 {
     public event Action<Unit> UnitAdded;
@@ -32,17 +44,20 @@ public class Gameboard : GameEntity
 
     public int GridSize { get { return _gridSize; } }
     public IReadOnlyDictionary<Vector2, Tile> TileMap { get { return _tileMap; } }
+    public GameboardHelper Helper { get { return _helper; } }
 
     [SerializeField] private GameObject _prefab;
     [SerializeField] private int _gridSize;
 
     private List<Unit> _units;
     private Dictionary<Vector2, Tile> _tileMap;
+    private GameboardHelper _helper;
 
     private void Awake()
     {
         _units = new List<Unit>();
         _tileMap = new Dictionary<Vector2, Tile>();
+        _helper = new GameboardHelper(this);
     }
 
     protected override void OnInitialize()
@@ -67,38 +82,38 @@ public class Gameboard : GameEntity
         }
     }
 
-    public bool CanSpawn(UnitData unitData, Tile tile)
+    public bool CanSpawn(SpawnAction spawnAction)
     {
-        Assert.IsNotNull(unitData);
-        Assert.IsNotNull(tile);
+        Assert.IsNotNull(spawnAction.Tile);
+        Assert.IsNotNull(spawnAction.Unit);
 
-        if (tile.Occupied)
+        if (spawnAction.Tile.Occupied)
         {
-            DebugEx.LogWarning<Gameboard>("Cannot place a unit at occupied tile '{0}'", tile.transform.position.TransformToGridspace());
+            DebugEx.LogWarning<Gameboard>("Cannot place a unit at occupied tile '{0}'", spawnAction.Tile.transform.position.TransformToGridspace());
             return false;
         }
 
-        if (unitData.Prefab == null)
+        if (spawnAction.Unit.Prefab == null)
         {
-            DebugEx.LogWarning<Gameboard>("Cannot place unit '{0}' as the specified prefab is null.", unitData.Name);
+            DebugEx.LogWarning<Gameboard>("Cannot place unit '{0}' as the specified prefab is null.", spawnAction.Unit.Name);
             return false;
         }
 
         return true;
     }
 
-    public void SpawnUnit(UnitData unitData, Tile tile)
+    public void SpawnUnit(SpawnAction spawnAction)
     {
-        if (CanSpawn(unitData, tile))
+        if (CanSpawn(spawnAction))
         {
-            var unitInstance = GameObject.Instantiate(unitData.Prefab);
+            var unitInstance = GameObject.Instantiate(spawnAction.Unit.Prefab);
             var unitComponent = unitInstance.gameObject.GetOrAddComponent<Unit>();
-            unitComponent.Initialize(unitData);
+            unitComponent.Initialize(spawnAction.Unit);
 
             _units.Add(unitComponent);
             unitComponent.Died += OnUnitDied;
 
-            tile.SetOccupant(unitComponent);
+            spawnAction.Tile.SetOccupant(unitComponent);
 
             UnitAdded.InvokeSafe(unitComponent);
         }

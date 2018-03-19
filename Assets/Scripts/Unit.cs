@@ -9,6 +9,7 @@ public class Unit : MonoBehaviour
     public event Action<Unit> Died;
 
     public HealthComponent Health { get; private set; }
+    public int MovementRange { get { return _unitData.MovementRange; } }
 
     [SerializeField] private UnitData _unitData;
 

@@ -1,103 +1,77 @@
 ﻿using UnityEngine;
+using UnityEngine.Assertions;
 using Framework;
+using System;
+
+public enum UnitActionType
+{
+    Unassigned,
+    Move,
+    AttackPrimary,
+    AttackSecondary,
+}
+
+public struct UnitAction
+{
+    public Unit Actor;
+    public UnitActionType Action;
+}
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] private UnitData _unitData;
+    public Unit Selection { get; private set; }
+    public UnitActionType CurrentAction { get; private set; }
 
-    private PlayerUnitPlacer _unitPlacer;
-    private Unit _selectedUnit;
-    private Tile _tileUnderMouse;
-    private bool _inputEnabled;
+    [SerializeField] private UnitData _defaultUnit;
 
-    private void Awake()
+    private Gameboard _gameboard;
+
+    void Awake()
     {
-        _unitPlacer = gameObject.GetOrAddComponent<PlayerUnitPlacer>();
-        _inputEnabled = true;
+        _gameboard = FindObjectOfType<Gameboard>();
+        Assert.IsNotNull(_gameboard);
     }
 
-    void Update()
+    public void SpawnDefaultUnit(Tile tile)
     {
-        _tileUnderMouse = GetTileUnderMouse();
-
-        // Highlight tile under mouse
-        if (_tileUnderMouse)
-            _tileUnderMouse.Marker.SetPositive();
+        if (tile != null && _defaultUnit != null && _gameboard != null)
+            _gameboard.SpawnUnit(new SpawnAction(_defaultUnit, tile));
     }
 
-    void OnGUI()
+    public void SetCurrentAction(UnitActionType actionType)
     {
-        GUILayout.BeginVertical();
-        GUILayout.Label("Selected Unit: " + (_selectedUnit != null ? _selectedUnit.name : "Null"));
-        GUILayout.Label("Tile Under Mouse: " + (_tileUnderMouse != null ? _tileUnderMouse.transform.position.TransformToGridspace().ToString() : "Null"));
-        GUILayout.EndVertical();
+        CurrentAction = actionType;
     }
 
-    void LateUpdate()
+    public void CommitCurrentAction(Tile targetTile)
     {
-        if (!_inputEnabled)
+        if (Selection == null || CurrentAction == UnitActionType.Unassigned || targetTile == null)
             return;
 
-        if (Input.GetKeyDown(KeyCode.R))
+        DebugEx.Log<Player>("Commit action '{0}' on tile {1} using unit {2}", CurrentAction, targetTile.Position, Selection.name);
+
+        if(CurrentAction == UnitActionType.Move)
+            Selection.Move(targetTile);
+    }
+
+    public void Select(Tile tile)
+    {
+        if (tile == null)
+            return;
+
+        if (tile.Occupied)
         {
-            var unitUnderMouse = GetUnitUnderMouse();
-
-            if (unitUnderMouse != null)
-                unitUnderMouse.Health.Modify(-1);
-        }
-
-        if (_unitPlacer.IsPlacingUnit)
-        {
-            if (Input.GetMouseButtonUp(1))
-                _unitPlacer.CancelPlacingUnit();
-
-            if (Input.GetMouseButtonDown(0))
-                _unitPlacer.PlaceUnit(_tileUnderMouse);
+            Selection = tile.Occupant;
         }
         else
         {
-            if (Input.GetKeyDown(KeyCode.F))
-                _unitPlacer.BeginPlacingUnit(_unitData);
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                var unitUnderMouse = GetUnitUnderMouse();
-
-                // Deselect unit if unit is selected.
-                if (_selectedUnit != null && unitUnderMouse == null)
-                {
-                    _selectedUnit = null;
-                }
-                else
-                {
-                    _selectedUnit = unitUnderMouse;
-                }
-            }
-
-            // Move.
-            if (Input.GetMouseButtonDown(1) && _tileUnderMouse != null && _selectedUnit != null)
-                _selectedUnit.Move(_tileUnderMouse);
+            Selection = null;
+            CurrentAction = UnitActionType.Unassigned;
         }
     }
 
-    static T GetComponentUnderMouse<T>() where T : MonoBehaviour
+    public void Undo()
     {
-        var mouseToScreen = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-        var rayResult = new RaycastHit();
-        Physics.Raycast(new Ray(mouseToScreen, Camera.main.transform.forward), out rayResult, Mathf.Infinity);
-
-        return rayResult.collider != null ? rayResult.collider.GetComponent<T>() : null;
-    }
-
-    public static Tile GetTileUnderMouse()
-    {
-        return GetComponentUnderMouse<Tile>();
-    }
-
-    public static Unit GetUnitUnderMouse()
-    {
-        var tile = GetTileUnderMouse();
-        return tile != null && tile.Occupant != null ? tile.Occupant : null;
+        DebugEx.Log<Player>("Not implemented: Undo");
     }
 }

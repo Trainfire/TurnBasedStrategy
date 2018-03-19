@@ -28,7 +28,7 @@ public class PlayerUnitPlacer : MonoBehaviour
     public void PlaceUnit(Tile tile)
     {
         if (!tile.Occupied)
-            _gameboard.SpawnUnit(_unitData, tile);
+            _gameboard.SpawnUnit(new SpawnAction(_unitData, tile));
 
         IsPlacingUnit = false;
     }

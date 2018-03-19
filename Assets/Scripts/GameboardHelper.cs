@@ -73,12 +73,22 @@ public class GameboardHelper
 
     public List<TileResult> GetReachableTiles(Tile originTile, int distance)
     {
+        return GetReachableTiles(originTile.Position, distance);
+    }
+
+    public List<TileResult> GetReachableTiles(Unit unit)
+    {
+        return GetReachableTiles(unit.transform.position.TransformToGridspace(), unit.MovementRange);
+    }
+
+    public List<TileResult> GetReachableTiles(Vector2 gridPosition, int distance)
+    {
         _traversalMap.Clear();
 
         distance = Mathf.Clamp(distance, 1, _gameBoard.GridSize);
 
         var queue = new Queue<TileResult>();
-        queue.Enqueue(new TileResult(originTile, 0));
+        queue.Enqueue(new TileResult(GetTile(gridPosition), 0));
 
         while (queue.Count > 0)
         {
@@ -86,14 +96,14 @@ public class GameboardHelper
             if (current.Tile == null || current.Tile.Occupied || current.Distance > distance || current.Distance > _gameBoard.GridSize || _traversalMap.ContainsKey(current.Tile))
                 continue;
 
-            var direction = (current.Tile.Position - originTile.Position).normalized;
+            var direction = (current.Tile.Position - gridPosition).normalized;
 
             if (direction.y != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.North), current.Distance + 1));
             if (direction.x != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.East), current.Distance + 1));
             if (direction.y != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.South), current.Distance + 1));
             if (direction.x != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.West), current.Distance + 1));
 
-            if (current.Tile.Position != originTile.Position)
+            if (current.Tile.Position != gridPosition)
                 _traversalMap.Add(current.Tile, current.Distance);
         }
 
