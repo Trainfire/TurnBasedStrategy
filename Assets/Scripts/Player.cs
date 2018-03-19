@@ -38,6 +38,14 @@ public class Player : MonoBehaviour
         if (!_inputEnabled)
             return;
 
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            var unitUnderMouse = GetUnitUnderMouse();
+
+            if (unitUnderMouse != null)
+                unitUnderMouse.Health.Modify(-1);
+        }
+
         if (_unitPlacer.IsPlacingUnit)
         {
             if (Input.GetMouseButtonUp(1))

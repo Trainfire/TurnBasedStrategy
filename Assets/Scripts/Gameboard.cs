@@ -93,6 +93,7 @@ public class Gameboard : GameEntity
         {
             var unitInstance = GameObject.Instantiate(unitData.Prefab);
             var unitComponent = unitInstance.gameObject.GetOrAddComponent<Unit>();
+            unitComponent.Initialize(unitData);
 
             _units.Add(unitComponent);
             unitComponent.Died += OnUnitDied;
@@ -111,6 +112,8 @@ public class Gameboard : GameEntity
 
         if (!hasUnit)
             return;
+
+        unit.Died -= OnUnitDied;
 
         _units.Remove(unit);
 

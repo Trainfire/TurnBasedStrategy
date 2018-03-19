@@ -5,12 +5,12 @@ using Framework;
 
 public class HealthChangeEvent
 {
-    public HealthComponent Sender { get; private set; }
+    public HealthComponent Health { get; private set; }
     public int PreviousHealth { get; private set; }
 
     public HealthChangeEvent(HealthComponent sender, int oldHealth)
     {
-        Sender = sender;
+        Health = sender;
         PreviousHealth = oldHealth;
     }
 }

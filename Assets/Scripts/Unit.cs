@@ -8,15 +8,17 @@ public class Unit : MonoBehaviour
     public event Action<Unit> Moved;
     public event Action<Unit> Died;
 
+    public HealthComponent Health { get; private set; }
+
     [SerializeField] private UnitData _unitData;
 
     public void Initialize(UnitData unitData)
     {
         _unitData = unitData;
 
-        var healthComp = gameObject.GetOrAddComponent<HealthComponent>();
-        healthComp.Initialize(unitData.MaxHealth);
-        healthComp.Died += HealthComp_Died;
+        Health = gameObject.GetOrAddComponent<HealthComponent>();
+        Health.Initialize(unitData.MaxHealth);
+        Health.Died += HealthComp_Died;
     }
 
     public void Move(Tile tile)
