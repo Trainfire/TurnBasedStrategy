@@ -27,16 +27,26 @@ public class Tile : MonoBehaviour
     public void SetOccupant(Unit occupant)
     {
         if (_occupant != null)
+        {
             _occupant.Moved -= OnOccupantMoved;
+            _occupant.Died -= OnOccupantDeath;
+        }
 
         _occupant = occupant;
 
         Debug.LogFormat("{0} is now occupied by {1}", name, OccupantName);
 
-        _occupant.transform.position = Position.TransformFromGridspace();
-
         if (_occupant != null)
+        {
+            _occupant.transform.position = Position.TransformFromGridspace();
             _occupant.Moved += OnOccupantMoved;
+            _occupant.Died += OnOccupantDeath;
+        }
+    }
+
+    private void OnOccupantDeath(Unit unit)
+    {
+        SetOccupant(null);
     }
 
     private void OnOccupantMoved(Unit unit)

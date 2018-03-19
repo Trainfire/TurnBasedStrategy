@@ -118,5 +118,7 @@ public class Gameboard : GameEntity
         _units.Remove(unit);
 
         UnitRemoved.InvokeSafe(unit);
+
+        Destroy(unit.gameObject);
     }
 }

@@ -48,7 +48,7 @@ public class UIHud : GameEntity
     {
         Assert.IsTrue(_healthbars.ContainsKey(unit));
 
-        Destroy(_healthbars[unit]);
+        Destroy(_healthbars[unit].gameObject);
 
         _healthbars.Remove(unit);
     }
