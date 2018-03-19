@@ -8,10 +8,12 @@ public class Tile : MonoBehaviour
     public TileMarker Marker { get; private set; }
 
     public Vector2 Position { get { return transform.position.TransformToGridspace(); } }
-    public bool Occupied { get { return myOccupant != null; } }
-    public Unit Occupant { get { return myOccupant; } }
+    public bool Occupied { get { return _occupant != null; } }
+    public Unit Occupant { get { return _occupant; } }
 
-    private Unit myOccupant;
+    private string OccupantName { get { return _occupant != null ? _occupant.name : "Nobody"; } }
+
+    private Unit _occupant;
 
     private void Awake()
     {
@@ -24,25 +26,22 @@ public class Tile : MonoBehaviour
     /// <param name="occupant">Set to null to clear the occupant.</param>
     public void SetOccupant(Unit occupant)
     {
-        if (myOccupant != null)
-            myOccupant.Moved -= MyOccupant_Moved;
+        if (_occupant != null)
+            _occupant.Moved -= OnOccupantMoved;
 
-        myOccupant = occupant;
+        _occupant = occupant;
 
-        Debug.LogFormat("{0} is now occupied by {1}", name, GetOccupantName());
+        Debug.LogFormat("{0} is now occupied by {1}", name, OccupantName);
 
-        if (myOccupant != null)
-            myOccupant.Moved += MyOccupant_Moved;
+        _occupant.transform.position = Position.TransformFromGridspace();
+
+        if (_occupant != null)
+            _occupant.Moved += OnOccupantMoved;
     }
 
-    private string GetOccupantName()
+    private void OnOccupantMoved(Unit unit)
     {
-        return myOccupant != null ? myOccupant.name : "Nobody";
-    }
-
-    private void MyOccupant_Moved(Unit unit)
-    {
-        Debug.LogFormat("Occupant {0} vacated from {1} ", GetOccupantName(), name);
+        Debug.LogFormat("Occupant {0} vacated from {1} ", OccupantName, name);
         SetOccupant(null);
     }
 }

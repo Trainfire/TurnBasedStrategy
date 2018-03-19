@@ -67,7 +67,7 @@ public class Gameboard : GameEntity
         }
     }
 
-    public void SpawnUnit(UnitData unitData, Tile tile)
+    public bool CanSpawn(UnitData unitData, Tile tile)
     {
         Assert.IsNotNull(unitData);
         Assert.IsNotNull(tile);
@@ -75,20 +75,35 @@ public class Gameboard : GameEntity
         if (tile.Occupied)
         {
             DebugEx.LogWarning<Gameboard>("Cannot place a unit at occupied tile '{0}'", tile.transform.position.TransformToGridspace());
-            return;
+            return false;
         }
 
-        var unit = new GameObject(unitData.Name + " (Unit)").AddComponent<Unit>();
-        _units.Add(unit);
+        if (unitData.Prefab == null)
+        {
+            DebugEx.LogWarning<Gameboard>("Cannot place unit '{0}' as the specified prefab is null.", unitData.Name);
+            return false;
+        }
 
-        unit.Died += OnUnitDied;
-
-        tile.SetOccupant(unit);
-
-        UnitAdded.InvokeSafe(unit);
+        return true;
     }
 
-    void OnUnitDied(Unit unit)
+    public void SpawnUnit(UnitData unitData, Tile tile)
+    {
+        if (CanSpawn(unitData, tile))
+        {
+            var unitInstance = GameObject.Instantiate(unitData.Prefab);
+            var unitComponent = unitInstance.gameObject.GetOrAddComponent<Unit>();
+
+            _units.Add(unitComponent);
+            unitComponent.Died += OnUnitDied;
+
+            tile.SetOccupant(unitComponent);
+
+            UnitAdded.InvokeSafe(unitComponent);
+        }
+    }
+
+    private void OnUnitDied(Unit unit)
     {
         var hasUnit = _units.Contains(unit);
 

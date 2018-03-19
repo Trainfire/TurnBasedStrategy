@@ -3,75 +3,72 @@ using Framework;
 
 public class Player : MonoBehaviour
 {
-    public Unit UnitPrototype; // Temp.
+    [SerializeField] private UnitData _unitData;
 
-    private PlayerUnitPlacer myUnitPlacer;
-    private Unit mySelectedUnit;
-    private Tile myTileUnderMouse;
-    private bool myInputEnabled;
+    private PlayerUnitPlacer _unitPlacer;
+    private Unit _selectedUnit;
+    private Tile _tileUnderMouse;
+    private bool _inputEnabled;
 
     private void Awake()
     {
-        myUnitPlacer = gameObject.GetOrAddComponent<PlayerUnitPlacer>();
-        myInputEnabled = true;
+        _unitPlacer = gameObject.GetOrAddComponent<PlayerUnitPlacer>();
+        _inputEnabled = true;
     }
 
     void Update()
     {
-        myTileUnderMouse = GetTileUnderMouse();
+        _tileUnderMouse = GetTileUnderMouse();
 
         // Highlight tile under mouse
-        if (myTileUnderMouse)
-            myTileUnderMouse.Marker.SetPositive();
+        if (_tileUnderMouse)
+            _tileUnderMouse.Marker.SetPositive();
     }
 
     void OnGUI()
     {
         GUILayout.BeginVertical();
-        GUILayout.Label("Selected Unit: " + (mySelectedUnit != null ? mySelectedUnit.name : "Null"));
-        GUILayout.Label("Tile Under Mouse: " + (myTileUnderMouse != null ? myTileUnderMouse.transform.position.TransformToGridspace().ToString() : "Null"));
+        GUILayout.Label("Selected Unit: " + (_selectedUnit != null ? _selectedUnit.name : "Null"));
+        GUILayout.Label("Tile Under Mouse: " + (_tileUnderMouse != null ? _tileUnderMouse.transform.position.TransformToGridspace().ToString() : "Null"));
         GUILayout.EndVertical();
     }
 
     void LateUpdate()
     {
-        if (!myInputEnabled)
+        if (!_inputEnabled)
             return;
 
-        if (myUnitPlacer.IsPlacingUnit)
+        if (_unitPlacer.IsPlacingUnit)
         {
             if (Input.GetMouseButtonUp(1))
-                myUnitPlacer.CancelPlacingUnit();
+                _unitPlacer.CancelPlacingUnit();
 
             if (Input.GetMouseButtonDown(0))
-            {
-                var placementResult = myUnitPlacer.PlaceUnit(myTileUnderMouse);
-                Debug.LogFormat("Place unit on tile {0}", placementResult.Tile.name);
-            }
+                _unitPlacer.PlaceUnit(_tileUnderMouse);
         }
         else
         {
             if (Input.GetKeyDown(KeyCode.F))
-                myUnitPlacer.BeginPlacingUnit(UnitPrototype);
+                _unitPlacer.BeginPlacingUnit(_unitData);
 
             if (Input.GetMouseButtonDown(0))
             {
                 var unitUnderMouse = GetUnitUnderMouse();
 
                 // Deselect unit if unit is selected.
-                if (mySelectedUnit != null && unitUnderMouse == null)
+                if (_selectedUnit != null && unitUnderMouse == null)
                 {
-                    mySelectedUnit = null;
+                    _selectedUnit = null;
                 }
                 else
                 {
-                    mySelectedUnit = unitUnderMouse;
+                    _selectedUnit = unitUnderMouse;
                 }
             }
 
             // Move.
-            if (Input.GetMouseButtonDown(1) && myTileUnderMouse != null && mySelectedUnit != null)
-                mySelectedUnit.Move(myTileUnderMouse);
+            if (Input.GetMouseButtonDown(1) && _tileUnderMouse != null && _selectedUnit != null)
+                _selectedUnit.Move(_tileUnderMouse);
         }
     }
 

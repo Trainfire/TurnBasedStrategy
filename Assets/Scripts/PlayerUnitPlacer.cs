@@ -1,52 +1,36 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
 
-public class UnitPlacementResult
-{
-    public Unit Unit { get; private set; }
-    public Tile Tile { get; private set; }
-
-    public UnitPlacementResult(Unit unit, Tile tile)
-    {
-        Unit = unit;
-        Tile = tile;
-    }
-}
-
 public class PlayerUnitPlacer : MonoBehaviour
 {
-    private Unit myUnit;
+    [SerializeField] private Gameboard _gameboard;
+
+    private UnitData _unitData;
 
     public bool IsPlacingUnit { get; private set; }
 
-    public void BeginPlacingUnit(Unit unitPrototype)
+    private void Awake()
     {
-        Assert.IsNotNull(unitPrototype);
+        Assert.IsNotNull(_gameboard);
+    }
 
-        if (unitPrototype != null)
+    public void BeginPlacingUnit(UnitData unitData)
+    {
+        Assert.IsNotNull(unitData);
+
+        if (unitData != null)
         {
             IsPlacingUnit = true;
-            myUnit = GameObject.Instantiate(unitPrototype);
+            _unitData = unitData;
         }
     }
 
-    public UnitPlacementResult PlaceUnit(Tile tile)
+    public void PlaceUnit(Tile tile)
     {
-        if (tile != null && !tile.Occupied)
-        {
-            var placementData = new UnitPlacementResult(myUnit, tile);
+        if (!tile.Occupied)
+            _gameboard.SpawnUnit(_unitData, tile);
 
-            tile.SetOccupant(placementData.Unit);
-
-            myUnit = null;
-            IsPlacingUnit = false;
-
-            return placementData;
-        }
-
-        Debug.LogWarning("Cannot place unit in occupied or null space");
-
-        return null;
+        IsPlacingUnit = false;
     }
 
     public void CancelPlacingUnit()
@@ -54,22 +38,6 @@ public class PlayerUnitPlacer : MonoBehaviour
         Debug.Log("Cancel unit placement");
 
         IsPlacingUnit = false;
-
-        if (myUnit != null)
-        {
-            Destroy(myUnit.gameObject);
-            myUnit = null;
-        }
-    }
-
-    void Update()
-    {
-        if (IsPlacingUnit && myUnit != null)
-        {
-            var myTileUnderMouse = Player.GetTileUnderMouse();
-
-            myUnit.transform.position = myTileUnderMouse != null ? myTileUnderMouse.transform.position : Vector3.zero;
-            myUnit.gameObject.SetActive(myTileUnderMouse != null);
-        }
+        _unitData = null;
     }
 }
