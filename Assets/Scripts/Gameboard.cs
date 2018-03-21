@@ -44,7 +44,8 @@ public class Gameboard : GameEntity
 
     public int GridSize { get { return _gridSize; } }
     public IReadOnlyDictionary<Vector2, Tile> TileMap { get { return _tileMap; } }
-    public GameboardHelper Helper { get { return _helper; } }
+    public GameboardHelper Helper { get; private set; }
+    public GameboardVisualizer Visualizer { get; private set; }
 
     [SerializeField] private GameObject _prefab;
     [SerializeField] private int _gridSize;
@@ -57,7 +58,9 @@ public class Gameboard : GameEntity
     {
         _units = new List<Unit>();
         _tileMap = new Dictionary<Vector2, Tile>();
-        _helper = new GameboardHelper(this);
+
+        Helper = new GameboardHelper(this);
+        Visualizer = gameObject.GetComponentAssert<GameboardVisualizer>();
     }
 
     protected override void OnInitialize()
@@ -108,12 +111,11 @@ public class Gameboard : GameEntity
         {
             var unitInstance = GameObject.Instantiate(spawnAction.Unit.Prefab);
             var unitComponent = unitInstance.gameObject.GetOrAddComponent<Unit>();
-            unitComponent.Initialize(spawnAction.Unit);
+            unitComponent.Initialize(spawnAction.Unit, spawnAction.Tile, Helper);
 
             _units.Add(unitComponent);
-            unitComponent.Died += OnUnitDied;
 
-            spawnAction.Tile.SetOccupant(unitComponent);
+            unitComponent.Died += OnUnitDied;
 
             UnitAdded.InvokeSafe(unitComponent);
         }

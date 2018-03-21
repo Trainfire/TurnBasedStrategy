@@ -3,9 +3,21 @@ using UnityEngine.Assertions;
 using System;
 using Framework;
 
+public struct UnitMoveEvent
+{
+    public Unit Unit { get; private set; }
+    public Tile TargetTile { get; private set; }
+
+    public UnitMoveEvent(Unit unit, Tile target)
+    {
+        Unit = unit;
+        TargetTile = target;
+    }
+}
+
 public class Unit : MonoBehaviour
 {
-    public event Action<Unit> Moved;
+    public event Action<UnitMoveEvent> Moved;
     public event Action<Unit> Died;
 
     public HealthComponent Health { get; private set; }
@@ -13,26 +25,44 @@ public class Unit : MonoBehaviour
 
     [SerializeField] private UnitData _unitData;
 
-    public void Initialize(UnitData unitData)
+    private GameboardHelper _gameboardHelper;
+
+    public void Initialize(UnitData unitData, Tile targetTile, GameboardHelper gameboardHelper)
     {
         _unitData = unitData;
+        _gameboardHelper = gameboardHelper;
+
+        MoveTo(targetTile, true);
 
         Health = gameObject.GetOrAddComponent<HealthComponent>();
         Health.Initialize(unitData.MaxHealth);
         Health.Died += HealthComp_Died;
     }
 
-    public void Move(Tile tile)
+    public bool MoveTo(Tile targetTile, bool ignoreDistance = false)
     {
-        if (tile.Occupied)
+        if (targetTile == null)
         {
-            Debug.LogWarningFormat("Unit {0} cannot move to tile {1} as it is occupied.", name, tile.name);
-            return;
+            DebugEx.LogWarning<Unit>("Cannot move to a null tile.");
+            return false;
         }
 
-        transform.position = tile.transform.position;
-        Moved.InvokeSafe(this);
-        tile.SetOccupant(this);
+        if (!ignoreDistance && !_gameboardHelper.CanReachTile(transform.position.TransformToGridspace(), targetTile.Position, MovementRange))
+            return false;
+
+        if (!targetTile.Occupied)
+        {
+            Moved.InvokeSafe(new UnitMoveEvent(this, targetTile));
+            targetTile.SetOccupant(this);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void Attack(Tile targetTile)
+    {
+        // TODO.
     }
 
     private void HealthComp_Died(HealthComponent healthComponent)

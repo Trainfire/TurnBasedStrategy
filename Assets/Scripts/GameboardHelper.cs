@@ -2,6 +2,7 @@
 using UnityEngine.Assertions;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 public class GameboardHelper
 {
@@ -93,7 +94,7 @@ public class GameboardHelper
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
-            if (current.Tile == null || current.Tile.Occupied || current.Distance > distance || current.Distance > _gameBoard.GridSize || _traversalMap.ContainsKey(current.Tile))
+            if (current.Tile == null || current.Tile.Occupied && current.Tile.Position != gridPosition || current.Distance > distance || current.Distance > _gameBoard.GridSize || _traversalMap.ContainsKey(current.Tile))
                 continue;
 
             var direction = (current.Tile.Position - gridPosition).normalized;
@@ -117,12 +118,20 @@ public class GameboardHelper
         return results;
     }
 
+    public bool CanReachTile(Vector2 origin, Vector2 target, int distance)
+    {
+        return GetReachableTiles(origin, distance).Any(x => x.Tile.Position == target);
+    }
+
     public Tile GetTileInDirection(Tile origin, GameboardDirection direction)
     {
         return GetTile(origin.Position + GridHelper.GetVectorFromDirection(direction));
     }
 
-    public Tile GetTile(Vector2 position) { return _gameBoard.TileMap.ContainsKey(position) ? _gameBoard.TileMap[position] : null; }
+    public Tile GetTile(Vector2 position)
+    {
+        return _gameBoard.TileMap.ContainsKey(position) ? _gameBoard.TileMap[position] : null;
+    }
 
     public void GetTile(Vector2 position, Action<Tile> onGet)
     {

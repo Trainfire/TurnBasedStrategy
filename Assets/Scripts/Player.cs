@@ -25,36 +25,66 @@ public class Player : MonoBehaviour
     [SerializeField] private UnitData _defaultUnit;
 
     private Gameboard _gameboard;
+    private PlayerInput _playerInput;
 
     void Awake()
     {
         _gameboard = FindObjectOfType<Gameboard>();
         Assert.IsNotNull(_gameboard);
+
+        _playerInput = gameObject.GetOrAddComponent<PlayerInput>();
+        _playerInput.SpawnDefaultUnit += PlayerInput_SpawnDefaultUnit;
+        _playerInput.Select += PlayerInput_Select;
+        _playerInput.CommitCurrentAction += PlayerInput_CommitCurrentAction;
+        _playerInput.SetCurrentAction += PlayerInput_SetCurrentAction;
+        _playerInput.Undo += PlayerInput_Undo;
     }
 
-    public void SpawnDefaultUnit(Tile tile)
+    private void PlayerInput_SpawnDefaultUnit(Tile tile)
     {
-        if (tile != null && _defaultUnit != null && _gameboard != null)
-            _gameboard.SpawnUnit(new SpawnAction(_defaultUnit, tile));
+        if (tile != null &&  _gameboard != null)
+        {
+            if (_defaultUnit == null)
+            {
+                DebugEx.LogWarning<Player>("Cannot spawn unit as no default unit is assigned.");
+            }
+            else
+            {
+                _gameboard.SpawnUnit(new SpawnAction(_defaultUnit, tile));
+            }
+        }
     }
 
-    public void SetCurrentAction(UnitActionType actionType)
+    private void PlayerInput_SetCurrentAction(UnitActionType actionType)
     {
+        if (Selection == null)
+            return;
+
         CurrentAction = actionType;
+
+        if (CurrentAction == UnitActionType.Move)
+            _gameboard.Visualizer.ShowReachablePositions(Selection);
     }
 
-    public void CommitCurrentAction(Tile targetTile)
+    private void PlayerInput_CommitCurrentAction(Tile targetTile)
     {
         if (Selection == null || CurrentAction == UnitActionType.Unassigned || targetTile == null)
             return;
 
-        DebugEx.Log<Player>("Commit action '{0}' on tile {1} using unit {2}", CurrentAction, targetTile.Position, Selection.name);
-
+        var actionComplete = false;
         if(CurrentAction == UnitActionType.Move)
-            Selection.Move(targetTile);
+        {
+            actionComplete = Selection.MoveTo(targetTile);
+        }
+
+        if (actionComplete)
+        {
+            DebugEx.Log<Player>("Commit action '{0}' on tile {1} using unit {2}", CurrentAction, targetTile.Position, Selection.name);
+            ClearSelection();
+        }
     }
 
-    public void Select(Tile tile)
+    private void PlayerInput_Select(Tile tile)
     {
         if (tile == null)
             return;
@@ -65,13 +95,19 @@ public class Player : MonoBehaviour
         }
         else
         {
-            Selection = null;
-            CurrentAction = UnitActionType.Unassigned;
+            ClearSelection();
         }
     }
 
-    public void Undo()
+    private void PlayerInput_Undo()
     {
         DebugEx.Log<Player>("Not implemented: Undo");
+    }
+
+    private void ClearSelection()
+    {
+        Selection = null;
+        CurrentAction = UnitActionType.Unassigned;
+        _gameboard.Visualizer.Clear();
     }
 }

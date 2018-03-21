@@ -28,8 +28,8 @@ public class Tile : MonoBehaviour
     {
         if (_occupant != null)
         {
-            _occupant.Moved -= OnOccupantMoved;
             _occupant.Died -= OnOccupantDeath;
+            _occupant.Moved -= OnOccupantMoved;
         }
 
         _occupant = occupant;
@@ -38,9 +38,9 @@ public class Tile : MonoBehaviour
 
         if (_occupant != null)
         {
-            _occupant.transform.position = Position.TransformFromGridspace();
-            _occupant.Moved += OnOccupantMoved;
             _occupant.Died += OnOccupantDeath;
+            _occupant.Moved += OnOccupantMoved;
+            _occupant.transform.position = Position.TransformFromGridspace();
         }
     }
 
@@ -49,7 +49,7 @@ public class Tile : MonoBehaviour
         SetOccupant(null);
     }
 
-    private void OnOccupantMoved(Unit unit)
+    private void OnOccupantMoved(UnitMoveEvent unitMoveEvent)
     {
         Debug.LogFormat("Occupant {0} vacated from {1} ", OccupantName, name);
         SetOccupant(null);

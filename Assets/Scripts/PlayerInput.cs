@@ -1,8 +1,15 @@
 ﻿using UnityEngine;
 using Framework;
+using System;
 
 public class PlayerInput : MonoBehaviour
 {
+    public event Action<Tile> SpawnDefaultUnit;
+    public event Action<Tile> Select;
+    public event Action<Tile> CommitCurrentAction;
+    public event Action<UnitActionType> SetCurrentAction;
+    public event Action Undo;
+
     private Player _player;
 
     private void Awake()
@@ -14,14 +21,20 @@ public class PlayerInput : MonoBehaviour
     {
         var tileUnderMouse = GetTileUnderMouse();
 
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            SetCurrentAction.InvokeSafe(UnitActionType.Move);
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+            SetCurrentAction.InvokeSafe(UnitActionType.AttackPrimary);
+
         if (Input.GetKeyDown(KeyCode.F))
-            _player.SpawnDefaultUnit(tileUnderMouse);
+            SpawnDefaultUnit.InvokeSafe(tileUnderMouse);
 
         if (Input.GetMouseButtonDown(0))
-            _player.Select(tileUnderMouse);
+            Select.InvokeSafe(tileUnderMouse);
 
         if (Input.GetMouseButtonDown(1))
-            _player.CommitCurrentAction(tileUnderMouse);
+            CommitCurrentAction.InvokeSafe(tileUnderMouse);
     }
 
     private void OnGUI()
@@ -36,10 +49,10 @@ public class PlayerInput : MonoBehaviour
         GUILayout.BeginHorizontal();
 
         if (GUILayout.Button("Move"))
-            _player.SetCurrentAction(UnitActionType.Move);
+            SetCurrentAction.InvokeSafe(UnitActionType.Move);
 
         if (GUILayout.Button("AttacK"))
-            _player.SetCurrentAction(UnitActionType.AttackPrimary);
+            SetCurrentAction.InvokeSafe(UnitActionType.AttackPrimary);
 
         GUILayout.EndHorizontal();
 

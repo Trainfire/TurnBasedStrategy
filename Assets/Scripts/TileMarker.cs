@@ -14,31 +14,31 @@ public class TileMarker : MonoBehaviour
     public GameObject PositiveMarker;
     public GameObject NegativeMarker;
 
-    private Dictionary<TileHighlightType, GameObject> myMarkers;
-    private TileHighlightType myHighlightType;
+    private Dictionary<TileHighlightType, GameObject> _markers;
+    private TileHighlightType _highlightType;
 
     private void Awake()
     {
-        myMarkers = new Dictionary<TileHighlightType, GameObject>();
+        _markers = new Dictionary<TileHighlightType, GameObject>();
 
         if (PositiveMarker != null)
-            myMarkers.Add(TileHighlightType.Positive, PositiveMarker);
+            _markers.Add(TileHighlightType.Positive, PositiveMarker);
 
         if (NegativeMarker != null)
-            myMarkers.Add(TileHighlightType.Negative, NegativeMarker);
+            _markers.Add(TileHighlightType.Negative, NegativeMarker);
     }
 
     private void Update()
     {
-        foreach (var kvp in myMarkers)
+        foreach (var kvp in _markers)
         {
-            kvp.Value.SetActive(kvp.Key == myHighlightType);
+            kvp.Value.SetActive(kvp.Key == _highlightType);
         }
     }
 
     private void LateUpdate()
     {
-        myHighlightType = TileHighlightType.None;
+        _highlightType = TileHighlightType.None;
     }
 
     public void DrawText(string text)
@@ -53,7 +53,7 @@ public class TileMarker : MonoBehaviour
         GUILayout.EndArea();
     }
 
-    public void Clear() { myHighlightType = TileHighlightType.None; }
-    public void SetPositive() { myHighlightType = TileHighlightType.Positive; }
-    public void SetNegative() { myHighlightType = TileHighlightType.Negative; }
+    public void Clear() { _highlightType = TileHighlightType.None; }
+    public void SetPositive() { _highlightType = TileHighlightType.Positive; }
+    public void SetNegative() { _highlightType = TileHighlightType.Negative; }
 }
