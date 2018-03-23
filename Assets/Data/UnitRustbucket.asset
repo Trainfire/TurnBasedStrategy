@@ -15,3 +15,5 @@ MonoBehaviour:
   _maxHealth: 3
   _movementRange: 3
   _prefab: {fileID: 1343557365762394, guid: 2c0cb8db2f967c544bad8a398e4fa9e9, type: 2}
+  _defaultPrimaryWeapon: {fileID: 11400000, guid: 20f84ece44bef514aa9673479eea9a6a,
+    type: 2}

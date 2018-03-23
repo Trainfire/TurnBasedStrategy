@@ -73,9 +73,10 @@ public class Player : MonoBehaviour
 
         var actionComplete = false;
         if(CurrentAction == UnitActionType.Move)
-        {
             actionComplete = Selection.MoveTo(targetTile);
-        }
+
+        if (CurrentAction == UnitActionType.AttackPrimary)
+            actionComplete = Selection.Attack(targetTile);
 
         if (actionComplete)
         {

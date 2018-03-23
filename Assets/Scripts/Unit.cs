@@ -3,6 +3,20 @@ using UnityEngine.Assertions;
 using System;
 using Framework;
 
+public struct UnitAttackEvent
+{
+    public Unit Source { get; private set; }
+    public Tile TargetTile { get; private set; }
+    public WeaponData WeaponData { get; private set; }
+
+    public UnitAttackEvent(Unit source, Tile targetTile, WeaponData weaponData)
+    {
+        Source = source;
+        TargetTile = targetTile;
+        WeaponData = weaponData;
+    }
+}
+
 public struct UnitMoveEvent
 {
     public Unit Unit { get; private set; }
@@ -24,12 +38,14 @@ public class Unit : MonoBehaviour
     public int MovementRange { get { return _unitData.MovementRange; } }
 
     [SerializeField] private UnitData _unitData;
+    [SerializeField] private WeaponData _primaryWeaponData;
 
     private GameboardHelper _gameboardHelper;
 
     public void Initialize(UnitData unitData, Tile targetTile, GameboardHelper gameboardHelper)
     {
         _unitData = unitData;
+        _primaryWeaponData = _unitData.DefaultPrimaryWeapon;
         _gameboardHelper = gameboardHelper;
 
         MoveTo(targetTile, true);
@@ -60,9 +76,15 @@ public class Unit : MonoBehaviour
         return false;
     }
 
-    public void Attack(Tile targetTile)
+    public bool Attack(Tile targetTile)
     {
-        // TODO.
+        Assert.IsNotNull(_primaryWeaponData, "Primary weapon data is missing.");
+        Assert.IsNotNull(_primaryWeaponData.EffectPrototype, "Effect prototype is missing from primary weapon data.");
+
+        var effectInstance = Instantiate<EffectRoot>(_primaryWeaponData.EffectPrototype);
+        effectInstance.Apply(_gameboardHelper, new UnitAttackEvent(this, targetTile, _primaryWeaponData));
+
+        return true;
     }
 
     private void HealthComp_Died(HealthComponent healthComponent)

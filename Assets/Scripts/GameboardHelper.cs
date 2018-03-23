@@ -139,4 +139,9 @@ public class GameboardHelper
         if (tile != null)
             onGet(tile);
     }
+
+    public Tile GetTile(Unit unit)
+    {
+        return GetTile(unit.transform.position.TransformToGridspace());
+    }
 }
