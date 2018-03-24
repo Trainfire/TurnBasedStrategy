@@ -36,6 +36,7 @@ public class Unit : MonoBehaviour
 
     public HealthComponent Health { get; private set; }
     public int MovementRange { get { return _unitData.MovementRange; } }
+    public WeaponData PrimaryWeapon { get { return _primaryWeaponData; } }
 
     [SerializeField] private UnitData _unitData;
     [SerializeField] private WeaponData _primaryWeaponData;
@@ -80,6 +81,9 @@ public class Unit : MonoBehaviour
     {
         Assert.IsNotNull(_primaryWeaponData, "Primary weapon data is missing.");
         Assert.IsNotNull(_primaryWeaponData.EffectPrototype, "Effect prototype is missing from primary weapon data.");
+
+        if (!_gameboardHelper.CanAttackTile(this, targetTile, _primaryWeaponData))
+            return false;
 
         var effectInstance = Instantiate<EffectRoot>(_primaryWeaponData.EffectPrototype);
         effectInstance.Apply(_gameboardHelper, new UnitAttackEvent(this, targetTile, _primaryWeaponData));

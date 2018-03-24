@@ -20,6 +20,11 @@ public class GameboardVisualizer : MonoBehaviour
         _tileResults = _gameboard.Helper.GetReachableTiles(unit);
     }
 
+    public void ShowTargetableTiles(Unit unit, WeaponData weaponData)
+    {
+        _tileResults = _gameboard.Helper.GetTargetableTiles(unit, weaponData);
+    }
+
     public void Clear()
     {
         _tileResults.Clear();

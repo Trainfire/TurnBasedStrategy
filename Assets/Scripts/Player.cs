@@ -64,6 +64,9 @@ public class Player : MonoBehaviour
 
         if (CurrentAction == UnitActionType.Move)
             _gameboard.Visualizer.ShowReachablePositions(Selection);
+
+        if (CurrentAction == UnitActionType.AttackPrimary)
+            _gameboard.Visualizer.ShowTargetableTiles(Selection, Selection.PrimaryWeapon);
     }
 
     private void PlayerInput_CommitCurrentAction(Tile targetTile)

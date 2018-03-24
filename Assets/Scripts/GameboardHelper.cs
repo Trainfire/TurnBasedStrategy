@@ -16,17 +16,16 @@ public class GameboardHelper
         _traversalMap = new Dictionary<Tile, int>();
     }
 
-    public List<TileResult> GetTiles(Tile origin, GameboardDirection direction, int length, bool filterOccupiedTiles = false)
+    public List<TileResult> GetTiles(Tile origin, GameboardDirection direction, int offset, int length, bool filterOccupiedTiles = false)
     {
         length = Mathf.Min(_gameBoard.GridSize, length);
 
         var hitTiles = new List<TileResult>();
 
         // Start one tile away from origin.
-        for (int i = 1; i < length + 1; i++)
+        for (int i = offset + 1; i < offset + 1 + length; i++)
         {
             var vectorFromDirection = GridHelper.GetVectorFromDirection(direction);
-            //var iteratorPosition = origin.transform.position.TransformToGridspace() + vectorFromDirection * i;
 
             var nextTile = GetTile(origin.Position + vectorFromDirection * i);
             if (nextTile)
@@ -39,13 +38,14 @@ public class GameboardHelper
         return hitTiles;
     }
 
-    public List<TileResult> GetTilesFromAllDirections(Tile origin, int length, bool filterOccupiedTiles = false)
+    public List<TileResult> GetTilesFromAllDirections(Tile origin, int offset, int length, bool filterOccupiedTiles = false)
     {
         var hitTiles = new List<TileResult>();
 
         foreach (var direction in GridHelper.AllDirections)
         {
-            hitTiles.AddRange(GetTiles(origin, direction, length, filterOccupiedTiles));
+            var offsetTile = GetTile(origin.Position + GridHelper.GetVectorFromDirection(direction) * offset);
+            hitTiles.AddRange(GetTiles(offsetTile, direction, 0, length, filterOccupiedTiles));
         }
 
         return hitTiles;
@@ -118,9 +118,21 @@ public class GameboardHelper
         return results;
     }
 
+    public List<TileResult> GetTargetableTiles(Unit unit, WeaponData weaponData)
+    {
+        var offset = Mathf.Max(weaponData.MinRange, 0);
+        var length = weaponData.MaxRange == -1 ? _gameBoard.GridSize : weaponData.MaxRange;
+        return GetTilesFromAllDirections(GetTile(unit), offset, length);
+    }
+
     public bool CanReachTile(Vector2 origin, Vector2 target, int distance)
     {
         return GetReachableTiles(origin, distance).Any(x => x.Tile.Position == target);
+    }
+
+    public bool CanAttackTile(Unit unit, Tile target, WeaponData weaponData)
+    {
+        return GetTargetableTiles(unit, weaponData).Any(x => x.Tile == target);
     }
 
     public Tile GetTileInDirection(Tile origin, GameboardDirection direction)

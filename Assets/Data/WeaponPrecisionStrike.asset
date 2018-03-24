@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Name: WeaponPrecisionStrike
   m_EditorClassIdentifier: 
   _minRange: 1
-  _maxRange: -1
+  _maxRange: 1
   _effectPrototype: {fileID: 114125261030118332, guid: ca7b4cd8dbc349041b032423154efbe3,
     type: 2}
