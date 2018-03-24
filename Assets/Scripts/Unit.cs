@@ -34,6 +34,7 @@ public class Unit : MonoBehaviour
     public event Action<UnitMoveEvent> Moved;
     public event Action<Unit> Died;
 
+    public Vector2 Position { get { return transform.position.TransformToGridspace(); } }
     public HealthComponent Health { get; private set; }
     public int MovementRange { get { return _unitData.MovementRange; } }
     public WeaponData PrimaryWeapon { get { return _primaryWeaponData; } }

@@ -30,30 +30,28 @@ public abstract class EffectBase : MonoBehaviour
             case EffectReceiver.Target: receivingTile = unitAttackEvent.TargetTile; break;
         }
 
-        receivingTile = gameboardHelper.GetTile(receivingTile.Position + GetVectorFromDirection(_effectDirection));
+        var attackDirection = (unitAttackEvent.TargetTile.Position - unitAttackEvent.Source.Position).normalized;
+
+        var offsetDirection = Vector2.zero;
+        switch (_effectDirection)
+        {
+            case EffectDirection.Forward: offsetDirection = attackDirection; break;
+            case EffectDirection.Right: offsetDirection = Vector3.Cross(attackDirection, Vector3.up); break;
+            case EffectDirection.Back: offsetDirection = -attackDirection; break;
+            case EffectDirection.Left: offsetDirection = -Vector3.Cross(attackDirection, Vector3.up); break;
+        }
+
+        receivingTile = gameboardHelper.GetTile(receivingTile.Position + offsetDirection * _relativeOffset);
 
         if (_effectReceiver == EffectReceiver.Source)
         {
-            ApplyEffect(gameboardHelper, gameboardHelper.GetTile(unitAttackEvent.Source));
+            ApplyEffect(gameboardHelper, receivingTile);
         }
         else
         {
-            ApplyEffect(gameboardHelper, unitAttackEvent.TargetTile);
+            ApplyEffect(gameboardHelper, receivingTile);
         }
     }
 
     protected abstract void ApplyEffect(GameboardHelper gameboardHelper, Tile sourceTile);
-
-    private Vector2 GetVectorFromDirection(EffectDirection effectDirection)
-    {
-        switch (_effectDirection)
-        {
-            case EffectDirection.Forward: return Vector2.up;
-            case EffectDirection.Right: return Vector2.right;
-            case EffectDirection.Back: return Vector2.down;
-            case EffectDirection.Left: return Vector2.left;
-        }
-
-        return Vector2.zero;
-    }
 }
