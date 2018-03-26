@@ -29,6 +29,18 @@ public struct UnitMoveEvent
     }
 }
 
+public struct UnitPushbackEvent
+{
+    public Unit Unit { get; private set; }
+    public WorldDirection Direction { get; private set; }
+
+    public UnitPushbackEvent(Unit unit, WorldDirection direction)
+    {
+        Unit = unit;
+        Direction = direction;
+    }
+}
+
 public class Unit : MonoBehaviour
 {
     public event Action<UnitMoveEvent> Moved;
@@ -76,6 +88,34 @@ public class Unit : MonoBehaviour
         }
 
         return false;
+    }
+
+    public bool MoveTo(WorldDirection worldDirection)
+    {
+        return MoveTo(_gameboardHelper.GetTileInDirection(this, worldDirection));
+    }
+
+    public void Push(WorldDirection worldDirection)
+    {
+        var pushbackResults = _gameboardHelper.GetPushbackResults(this, worldDirection);
+
+        // Push unit if no other units will be hit.
+        // Otherwise apply 1 damage to each unit.
+        if (pushbackResults.Count == 1)
+        {
+            Assert.IsTrue(pushbackResults[0].Unit == this);
+            MoveTo(worldDirection);
+        }
+        else
+        {
+            foreach (var pushbackResult in pushbackResults)
+            {
+                pushbackResult.Unit.Health.Modify(-1);
+
+                if (_gameboardHelper.CanReachTile(pushbackResult.Unit.Position, worldDirection))
+                    pushbackResult.Unit.MoveTo(worldDirection);
+            }
+        }
     }
 
     public bool Attack(Tile targetTile)

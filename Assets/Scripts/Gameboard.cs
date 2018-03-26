@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System;
 using Framework;
 
-public enum GameboardDirection
+public enum WorldDirection
 {
     North,
     East,
@@ -13,16 +13,12 @@ public enum GameboardDirection
     West,
 }
 
-public class TileResult
+public enum RelativeDirection
 {
-    public Tile Tile { get; private set; }
-    public int Distance { get; private set; }
-
-    public TileResult(Tile tile, int distance)
-    {
-        Tile = tile;
-        Distance = distance;
-    }
+    Forward,
+    Right,
+    Back,
+    Left,
 }
 
 public struct SpawnAction

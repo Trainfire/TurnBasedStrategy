@@ -20,7 +20,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4325088297436056}
   - component: {fileID: 114125261030118332}
-  - component: {fileID: 114751393674542664}
+  - component: {fileID: 114339320235237832}
+  - component: {fileID: 114979517751266310}
   m_Layer: 0
   m_Name: EffectWeaponPrecisionStrike
   m_TagString: Untagged
@@ -52,7 +53,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d892059ac1017274dab2c3f1acfa85e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &114751393674542664
+--- !u!114 &114339320235237832
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -66,4 +67,18 @@ MonoBehaviour:
   _effectReceiver: 1
   _effectDirection: 0
   _relativeOffset: 0
-  _amount: -2
+  _amount: -1
+--- !u!114 &114979517751266310
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1556400452687264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd22fbb80575a44594406b126a36fa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _effectReceiver: 1
+  _effectDirection: 0
+  _relativeOffset: 0

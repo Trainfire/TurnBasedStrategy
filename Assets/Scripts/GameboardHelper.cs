@@ -4,6 +4,30 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 
+public class TileResult
+{
+    public Tile Tile { get; private set; }
+    public int Distance { get; private set; }
+
+    public TileResult(Tile tile, int distance)
+    {
+        Tile = tile;
+        Distance = distance;
+    }
+}
+
+public class PushbackResult
+{
+    public Unit Unit { get; private set; }
+    public int Damage { get; private set; }
+
+    public PushbackResult(Unit unit, int damage)
+    {
+        Unit = unit;
+        Damage = damage;
+    }
+}
+
 public class GameboardHelper
 {
     private Gameboard _gameBoard;
@@ -16,7 +40,7 @@ public class GameboardHelper
         _traversalMap = new Dictionary<Tile, int>();
     }
 
-    public List<TileResult> GetTiles(Tile origin, GameboardDirection direction, int offset, int length, bool filterOccupiedTiles = false)
+    public List<TileResult> GetTiles(Tile origin, WorldDirection direction, int offset, int length, bool filterOccupiedTiles = false)
     {
         length = Mathf.Min(_gameBoard.GridSize, length);
 
@@ -25,7 +49,7 @@ public class GameboardHelper
         // Start one tile away from origin.
         for (int i = offset + 1; i < offset + 1 + length; i++)
         {
-            var vectorFromDirection = GridHelper.GetVectorFromDirection(direction);
+            var vectorFromDirection = GridHelper.DirectionToVector(direction);
 
             var nextTile = GetTile(origin.Position + vectorFromDirection * i);
             if (nextTile)
@@ -44,7 +68,7 @@ public class GameboardHelper
 
         foreach (var direction in GridHelper.AllDirections)
         {
-            var offsetTile = GetTile(origin.Position + GridHelper.GetVectorFromDirection(direction) * offset);
+            var offsetTile = GetTile(origin.Position + GridHelper.DirectionToVector(direction) * offset);
             hitTiles.AddRange(GetTiles(offsetTile, direction, 0, length, filterOccupiedTiles));
         }
 
@@ -99,10 +123,10 @@ public class GameboardHelper
 
             var direction = (current.Tile.Position - gridPosition).normalized;
 
-            if (direction.y != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.North), current.Distance + 1));
-            if (direction.x != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.East), current.Distance + 1));
-            if (direction.y != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.South), current.Distance + 1));
-            if (direction.x != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, GameboardDirection.West), current.Distance + 1));
+            if (direction.y != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, WorldDirection.North), current.Distance + 1));
+            if (direction.x != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, WorldDirection.East), current.Distance + 1));
+            if (direction.y != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, WorldDirection.South), current.Distance + 1));
+            if (direction.x != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, WorldDirection.West), current.Distance + 1));
 
             if (current.Tile.Position != gridPosition)
                 _traversalMap.Add(current.Tile, current.Distance);
@@ -125,9 +149,30 @@ public class GameboardHelper
         return GetTilesFromAllDirections(GetTile(unit), offset, length);
     }
 
+    public List<PushbackResult> GetPushbackResults(Unit source, WorldDirection direction)
+    {
+        var results = new List<PushbackResult>();
+
+        var nextTile = GetTile(source);
+
+        while (nextTile != null && nextTile.Occupied)
+        {
+            results.Add(new PushbackResult(nextTile.Occupant, 1));
+
+            nextTile = GetTileInDirection(nextTile, direction);
+        }
+
+        return results;
+    }
+
     public bool CanReachTile(Vector2 origin, Vector2 target, int distance)
     {
         return GetReachableTiles(origin, distance).Any(x => x.Tile.Position == target);
+    }
+
+    public bool CanReachTile(Vector2 origin, WorldDirection direction, int distance = 0)
+    {
+        return GetReachableTiles(origin, distance).Count > 0;
     }
 
     public bool CanAttackTile(Unit unit, Tile target, WeaponData weaponData)
@@ -135,9 +180,14 @@ public class GameboardHelper
         return GetTargetableTiles(unit, weaponData).Any(x => x.Tile == target);
     }
 
-    public Tile GetTileInDirection(Tile origin, GameboardDirection direction)
+    public Tile GetTileInDirection(Tile origin, WorldDirection direction)
     {
-        return GetTile(origin.Position + GridHelper.GetVectorFromDirection(direction));
+        return GetTile(origin.Position + GridHelper.DirectionToVector(direction));
+    }
+
+    public Tile GetTileInDirection(Unit origin, WorldDirection direction)
+    {
+        return GetTile(origin.Position + GridHelper.DirectionToVector(direction));
     }
 
     public Tile GetTile(Vector2 position)

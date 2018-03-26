@@ -6,18 +6,12 @@ public enum EffectReceiver
     Target
 }
 
-public enum EffectDirection
-{
-    Forward,
-    Right,
-    Back,
-    Left,
-}
-
 public abstract class EffectBase : MonoBehaviour
 {
+    protected Vector2 AttackDirection { get; private set; }
+
     [SerializeField] private EffectReceiver _effectReceiver;
-    [SerializeField] private EffectDirection _effectDirection;
+    [SerializeField] private RelativeDirection _effectDirection;
     [SerializeField] private int _relativeOffset;
 
     public void Apply(GameboardHelper gameboardHelper, UnitAttackEvent unitAttackEvent)
@@ -30,18 +24,20 @@ public abstract class EffectBase : MonoBehaviour
             case EffectReceiver.Target: receivingTile = unitAttackEvent.TargetTile; break;
         }
 
-        var attackDirection = (unitAttackEvent.TargetTile.Position - unitAttackEvent.Source.Position).normalized;
+        var directionToTarget = (unitAttackEvent.TargetTile.Position - unitAttackEvent.Source.Position).normalized;
 
-        var offsetDirection = Vector2.zero;
         switch (_effectDirection)
         {
-            case EffectDirection.Forward: offsetDirection = attackDirection; break;
-            case EffectDirection.Right: offsetDirection = Vector3.Cross(attackDirection, Vector3.up); break;
-            case EffectDirection.Back: offsetDirection = -attackDirection; break;
-            case EffectDirection.Left: offsetDirection = -Vector3.Cross(attackDirection, Vector3.up); break;
+            case RelativeDirection.Forward: AttackDirection = directionToTarget; break;
+            case RelativeDirection.Right: AttackDirection = Vector3.Cross(directionToTarget, Vector3.up); break;
+            case RelativeDirection.Back: AttackDirection = -directionToTarget; break;
+            case RelativeDirection.Left: AttackDirection = -Vector3.Cross(directionToTarget, Vector3.up); break;
         }
 
-        receivingTile = gameboardHelper.GetTile(receivingTile.Position + offsetDirection * _relativeOffset);
+        receivingTile = gameboardHelper.GetTile(receivingTile.Position + AttackDirection * _relativeOffset);
+
+        if (receivingTile == null || !receivingTile.Occupied)
+            return;
 
         if (_effectReceiver == EffectReceiver.Source)
         {
