@@ -7,6 +7,7 @@ public static class GridHelper
 {
     public static Vector2 TransformToGridspace(this Vector3 v) { return new Vector2(v.x, v.z); }
     public static Vector3 TransformFromGridspace(this Vector2 v) { return new Vector3(v.x, 0f, v.y); }
+    public static Vector2 Cross(Vector2 direction) { return Vector3.Cross(direction.TransformFromGridspace(), Vector3.up); }
 
     public static readonly IEnumerable<WorldDirection> AllDirections = new List<WorldDirection>()
     {

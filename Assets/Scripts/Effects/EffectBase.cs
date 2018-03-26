@@ -29,9 +29,9 @@ public abstract class EffectBase : MonoBehaviour
         switch (_effectDirection)
         {
             case RelativeDirection.Forward: AttackDirection = directionToTarget; break;
-            case RelativeDirection.Right: AttackDirection = Vector3.Cross(directionToTarget, Vector3.up); break;
+            case RelativeDirection.Right: AttackDirection = -GridHelper.Cross(directionToTarget); break;
             case RelativeDirection.Back: AttackDirection = -directionToTarget; break;
-            case RelativeDirection.Left: AttackDirection = -Vector3.Cross(directionToTarget, Vector3.up); break;
+            case RelativeDirection.Left: AttackDirection = GridHelper.Cross(directionToTarget); break;
         }
 
         receivingTile = gameboardHelper.GetTile(receivingTile.Position + AttackDirection * _relativeOffset);
@@ -39,14 +39,7 @@ public abstract class EffectBase : MonoBehaviour
         if (receivingTile == null || !receivingTile.Occupied)
             return;
 
-        if (_effectReceiver == EffectReceiver.Source)
-        {
-            ApplyEffect(gameboardHelper, receivingTile);
-        }
-        else
-        {
-            ApplyEffect(gameboardHelper, receivingTile);
-        }
+        ApplyEffect(gameboardHelper, receivingTile);
     }
 
     protected abstract void ApplyEffect(GameboardHelper gameboardHelper, Tile sourceTile);
