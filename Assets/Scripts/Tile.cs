@@ -7,7 +7,6 @@ public class Tile : MonoBehaviour
 {
     public TileMarker Marker { get; private set; }
 
-    public Vector2 Position { get { return transform.position.TransformToGridspace(); } }
     public bool Occupied { get { return _occupant != null; } }
     public Unit Occupant { get { return _occupant; } }
 
@@ -40,7 +39,7 @@ public class Tile : MonoBehaviour
         {
             _occupant.Died += OnOccupantDeath;
             _occupant.Moved += OnOccupantMoved;
-            _occupant.transform.position = Position.TransformFromGridspace();
+            _occupant.transform.SetGridPosition(transform.GetGridPosition());
         }
     }
 

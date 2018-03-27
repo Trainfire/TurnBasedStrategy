@@ -88,7 +88,7 @@ public class Gameboard : GameEntity
 
         if (spawnAction.Tile.Occupied)
         {
-            DebugEx.LogWarning<Gameboard>("Cannot place a unit at occupied tile '{0}'", spawnAction.Tile.transform.position.TransformToGridspace());
+            DebugEx.LogWarning<Gameboard>("Cannot place a unit at occupied tile '{0}'", spawnAction.Tile.transform.GetGridPosition());
             return false;
         }
 

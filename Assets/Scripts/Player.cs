@@ -87,7 +87,7 @@ public class Player : MonoBehaviour
 
         if (actionComplete)
         {
-            DebugEx.Log<Player>("Commit action '{0}' on tile {1} using unit {2}", CurrentAction, targetTile.Position, Selection.name);
+            DebugEx.Log<Player>("Commit action '{0}' on tile {1} using unit {2}", CurrentAction, targetTile.transform.GetGridPosition(), Selection.name);
             ClearSelection();
         }
     }

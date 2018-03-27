@@ -29,7 +29,13 @@ public class Projectile : MonoBehaviour
 
     private void Update()
     {
-        transform.position += GridHelper.DirectionToVector(_moveDirection).TransformFromGridspace() * _speed * Time.deltaTime;
+        if (GameboardHelper.OutOfBounds(transform.GetGridPosition()))
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        transform.SetGridPosition(transform.GetGridPosition() + GridHelper.DirectionToVector(_moveDirection) * _speed * Time.deltaTime);
     }
 
     private void OnTriggerEnter(Collider other)

@@ -9,6 +9,12 @@ public static class GridHelper
     public static Vector3 TransformFromGridspace(this Vector2 v) { return new Vector3(v.x, 0f, v.y); }
     public static Vector2 Cross(Vector2 direction) { return Vector3.Cross(direction.TransformFromGridspace(), Vector3.up); }
 
+    public static Vector2 GetGridPosition(this Transform transform) { return transform.position.TransformToGridspace(); }
+    public static void SetGridPosition(this Transform transform, Vector2 position) { transform.position = position.TransformFromGridspace(); }
+
+    public static Vector2 DirectionBetween(Vector2 from, Vector2 to) { return (to - from).normalized; }
+    public static Vector2 DirectionBetween(Transform from, Transform to) { return DirectionBetween(from.GetGridPosition(), to.GetGridPosition()); }
+
     public static readonly IEnumerable<WorldDirection> AllDirections = new List<WorldDirection>()
     {
         WorldDirection.North,

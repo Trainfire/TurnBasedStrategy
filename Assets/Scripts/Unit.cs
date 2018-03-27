@@ -46,7 +46,6 @@ public class Unit : MonoBehaviour
     public event Action<UnitMoveEvent> Moved;
     public event Action<Unit> Died;
 
-    public Vector2 Position { get { return transform.position.TransformToGridspace(); } }
     public HealthComponent Health { get; private set; }
     public int MovementRange { get { return _unitData.MovementRange; } }
     public Weapon PrimaryWeapon { get { return _primaryWeapon; } }
@@ -80,7 +79,7 @@ public class Unit : MonoBehaviour
             return false;
         }
 
-        if (!ignoreDistance && !_gameboardHelper.CanReachTile(transform.position.TransformToGridspace(), targetTile.Position, MovementRange))
+        if (!ignoreDistance && !_gameboardHelper.CanReachTile(transform.GetGridPosition(), targetTile.transform.GetGridPosition(), MovementRange))
             return false;
 
         if (!targetTile.Occupied)
@@ -115,7 +114,7 @@ public class Unit : MonoBehaviour
             {
                 pushbackResult.Unit.Health.Modify(-1);
 
-                if (_gameboardHelper.CanReachTile(pushbackResult.Unit.Position, worldDirection))
+                if (_gameboardHelper.CanReachTile(pushbackResult.Unit.transform.GetGridPosition(), worldDirection))
                     pushbackResult.Unit.MoveTo(worldDirection);
             }
         }

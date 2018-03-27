@@ -39,7 +39,7 @@ public class Weapon
         {
             Assert.IsNotNull(Data.ProjectilePrototype, "Projectile prototype is missing from weapon data.");
 
-            var direction = (targetTile.Position - _owner.Position).normalized;
+            var direction = (targetTile.transform.GetGridPosition() - _owner.transform.GetGridPosition()).normalized;
 
             var projectile = GameObject.Instantiate<Projectile>(Data.ProjectilePrototype);
             projectile.transform.position = _owner.transform.position;

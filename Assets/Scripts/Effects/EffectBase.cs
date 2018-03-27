@@ -24,7 +24,7 @@ public abstract class EffectBase : MonoBehaviour
             case EffectReceiver.Target: receivingTile = unitAttackEvent.TargetTile; break;
         }
 
-        var directionToTarget = (unitAttackEvent.TargetTile.Position - unitAttackEvent.Source.Position).normalized;
+        var directionToTarget = GridHelper.DirectionBetween(unitAttackEvent.Source.transform, unitAttackEvent.TargetTile.transform);
 
         switch (_effectDirection)
         {
@@ -34,7 +34,7 @@ public abstract class EffectBase : MonoBehaviour
             case RelativeDirection.Left: AttackDirection = GridHelper.Cross(directionToTarget); break;
         }
 
-        receivingTile = gameboardHelper.GetTile(receivingTile.Position + AttackDirection * _relativeOffset);
+        receivingTile = gameboardHelper.GetTile(receivingTile.transform.GetGridPosition() + AttackDirection * _relativeOffset);
 
         if (receivingTile == null || !receivingTile.Occupied)
             return;

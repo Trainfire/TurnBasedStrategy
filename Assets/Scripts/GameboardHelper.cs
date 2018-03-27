@@ -30,6 +30,8 @@ public class PushbackResult
 
 public class GameboardHelper
 {
+    public const int GridSize = 8;
+
     private Gameboard _gameBoard;
     private Dictionary<Tile, int> _traversalMap;
 
@@ -51,7 +53,7 @@ public class GameboardHelper
         {
             var vectorFromDirection = GridHelper.DirectionToVector(direction);
 
-            var nextTile = GetTile(origin.Position + vectorFromDirection * i);
+            var nextTile = GetTile(origin.transform.GetGridPosition() + vectorFromDirection * i);
             if (nextTile)
             {
                 if (filterOccupiedTiles && !nextTile.Occupied || !filterOccupiedTiles)
@@ -68,7 +70,7 @@ public class GameboardHelper
 
         foreach (var direction in GridHelper.AllDirections)
         {
-            var offsetTile = GetTile(origin.Position + GridHelper.DirectionToVector(direction) * offset);
+            var offsetTile = GetTile(origin.transform.GetGridPosition() + GridHelper.DirectionToVector(direction) * offset);
             hitTiles.AddRange(GetTiles(offsetTile, direction, 0, length, filterOccupiedTiles));
         }
 
@@ -86,10 +88,10 @@ public class GameboardHelper
                 if (x == 0 && y == 0)
                     continue;
 
-                GetTile(originTile.Position + new Vector2(x, y), (tile) => results.Add(new TileResult(tile, x + y)));
-                GetTile(originTile.Position + new Vector2(x, -y), (tile) => results.Add(new TileResult(tile, x + y)));
-                GetTile(originTile.Position + new Vector2(-x, y), (tile) => results.Add(new TileResult(tile, x + y)));
-                GetTile(originTile.Position + new Vector2(-x, -y), (tile) => results.Add(new TileResult(tile, x + y)));
+                GetTile(originTile.transform.GetGridPosition() + new Vector2(x, y), (tile) => results.Add(new TileResult(tile, x + y)));
+                GetTile(originTile.transform.GetGridPosition() + new Vector2(x, -y), (tile) => results.Add(new TileResult(tile, x + y)));
+                GetTile(originTile.transform.GetGridPosition() + new Vector2(-x, y), (tile) => results.Add(new TileResult(tile, x + y)));
+                GetTile(originTile.transform.GetGridPosition() + new Vector2(-x, -y), (tile) => results.Add(new TileResult(tile, x + y)));
             }
         }
 
@@ -98,12 +100,12 @@ public class GameboardHelper
 
     public List<TileResult> GetReachableTiles(Tile originTile, int distance)
     {
-        return GetReachableTiles(originTile.Position, distance);
+        return GetReachableTiles(originTile.transform.GetGridPosition(), distance);
     }
 
     public List<TileResult> GetReachableTiles(Unit unit)
     {
-        return GetReachableTiles(unit.transform.position.TransformToGridspace(), unit.MovementRange);
+        return GetReachableTiles(unit.transform.GetGridPosition(), unit.MovementRange);
     }
 
     public List<TileResult> GetReachableTiles(Vector2 gridPosition, int distance)
@@ -118,24 +120,24 @@ public class GameboardHelper
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
-            if (current.Tile == null || current.Tile.Occupied && current.Tile.Position != gridPosition || current.Distance > distance || current.Distance > _gameBoard.GridSize || _traversalMap.ContainsKey(current.Tile))
+            if (current.Tile == null || current.Tile.Occupied && current.Tile.transform.GetGridPosition() != gridPosition || current.Distance > distance || current.Distance > _gameBoard.GridSize || _traversalMap.ContainsKey(current.Tile))
                 continue;
 
-            var direction = (current.Tile.Position - gridPosition).normalized;
+            var direction = (current.Tile.transform.GetGridPosition() - gridPosition).normalized;
 
             if (direction.y != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, WorldDirection.North), current.Distance + 1));
             if (direction.x != -1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, WorldDirection.East), current.Distance + 1));
             if (direction.y != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, WorldDirection.South), current.Distance + 1));
             if (direction.x != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, WorldDirection.West), current.Distance + 1));
 
-            if (current.Tile.Position != gridPosition)
+            if (current.Tile.transform.GetGridPosition() != gridPosition)
                 _traversalMap.Add(current.Tile, current.Distance);
         }
 
         var results = new List<TileResult>();
         foreach (var kvp in _traversalMap)
         {
-            if (kvp.Key.transform.position.TransformToGridspace() != Vector2.zero)
+            if (kvp.Key.transform.GetGridPosition() != Vector2.zero)
                 results.Add(new TileResult(kvp.Key, kvp.Value));
         }
 
@@ -167,7 +169,7 @@ public class GameboardHelper
 
     public bool CanReachTile(Vector2 origin, Vector2 target, int distance)
     {
-        return GetReachableTiles(origin, distance).Any(x => x.Tile.Position == target);
+        return GetReachableTiles(origin, distance).Any(x => x.Tile.transform.GetGridPosition() == target);
     }
 
     public bool CanReachTile(Vector2 origin, WorldDirection direction, int distance = 0)
@@ -182,12 +184,12 @@ public class GameboardHelper
 
     public Tile GetTileInDirection(Tile origin, WorldDirection direction)
     {
-        return GetTile(origin.Position + GridHelper.DirectionToVector(direction));
+        return GetTile(origin.transform.GetGridPosition() + GridHelper.DirectionToVector(direction));
     }
 
     public Tile GetTileInDirection(Unit origin, WorldDirection direction)
     {
-        return GetTile(origin.Position + GridHelper.DirectionToVector(direction));
+        return GetTile(origin.transform.GetGridPosition() + GridHelper.DirectionToVector(direction));
     }
 
     public Tile GetTile(Vector2 position)
@@ -204,6 +206,11 @@ public class GameboardHelper
 
     public Tile GetTile(Unit unit)
     {
-        return GetTile(unit.transform.position.TransformToGridspace());
+        return GetTile(unit.transform.GetGridPosition());
+    }
+
+    public static bool OutOfBounds(Vector2 position)
+    {
+        return position.x < 0f || position.x > GridSize || position.y < 0f || position.y > GridSize;
     }
 }
