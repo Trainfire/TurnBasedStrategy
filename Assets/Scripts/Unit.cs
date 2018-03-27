@@ -49,12 +49,13 @@ public class Unit : MonoBehaviour
     public Vector2 Position { get { return transform.position.TransformToGridspace(); } }
     public HealthComponent Health { get; private set; }
     public int MovementRange { get { return _unitData.MovementRange; } }
-    public WeaponData PrimaryWeapon { get { return _primaryWeaponData; } }
+    public Weapon PrimaryWeapon { get { return _primaryWeapon; } }
 
     [SerializeField] private UnitData _unitData;
     [SerializeField] private WeaponData _primaryWeaponData;
 
     private GameboardHelper _gameboardHelper;
+    private Weapon _primaryWeapon;
 
     public void Initialize(UnitData unitData, Tile targetTile, GameboardHelper gameboardHelper)
     {
@@ -67,6 +68,8 @@ public class Unit : MonoBehaviour
         Health = gameObject.GetOrAddComponent<HealthComponent>();
         Health.Initialize(unitData.MaxHealth);
         Health.Died += HealthComp_Died;
+
+        _primaryWeapon = new Weapon(this, _primaryWeaponData, _gameboardHelper);
     }
 
     public bool MoveTo(Tile targetTile, bool ignoreDistance = false)
@@ -118,18 +121,9 @@ public class Unit : MonoBehaviour
         }
     }
 
-    public bool Attack(Tile targetTile)
+    public void Attack(Tile targetTile, Action<bool> onCompleteCallback = null)
     {
-        Assert.IsNotNull(_primaryWeaponData, "Primary weapon data is missing.");
-        Assert.IsNotNull(_primaryWeaponData.EffectPrototype, "Effect prototype is missing from primary weapon data.");
-
-        if (!_gameboardHelper.CanAttackTile(this, targetTile, _primaryWeaponData))
-            return false;
-
-        var effectInstance = Instantiate<EffectRoot>(_primaryWeaponData.EffectPrototype);
-        effectInstance.Apply(_gameboardHelper, new UnitAttackEvent(this, targetTile, _primaryWeaponData));
-
-        return true;
+        _primaryWeapon.Use(targetTile);
     }
 
     private void HealthComp_Died(HealthComponent healthComponent)

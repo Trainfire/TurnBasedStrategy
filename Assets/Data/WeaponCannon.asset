@@ -9,11 +9,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a83f084e359d2a64fb50bfa3bebe9198, type: 3}
-  m_Name: WeaponPrecisionStrike
+  m_Name: WeaponCannon
   m_EditorClassIdentifier: 
-  _weaponType: 1
+  _weaponType: 2
   _minRange: 0
   _maxRange: -1
-  _effectPrototype: {fileID: 114125261030118332, guid: ca7b4cd8dbc349041b032423154efbe3,
+  _effectPrototype: {fileID: 114125261030118332, guid: 1cd8edba234df284797b2a449bd37dee,
     type: 2}
-  _projectilePrototype: {fileID: 0}
+  _projectilePrototype: {fileID: 114830319985092554, guid: 5068c500ee9d8624ebf0f63281f5b275,
+    type: 2}

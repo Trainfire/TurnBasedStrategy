@@ -66,7 +66,7 @@ public class Player : MonoBehaviour
             _gameboard.Visualizer.ShowReachablePositions(Selection);
 
         if (CurrentAction == UnitActionType.AttackPrimary)
-            _gameboard.Visualizer.ShowTargetableTiles(Selection, Selection.PrimaryWeapon);
+            _gameboard.Visualizer.ShowTargetableTiles(Selection, Selection.PrimaryWeapon.Data);
     }
 
     private void PlayerInput_CommitCurrentAction(Tile targetTile)
@@ -79,7 +79,11 @@ public class Player : MonoBehaviour
             actionComplete = Selection.MoveTo(targetTile);
 
         if (CurrentAction == UnitActionType.AttackPrimary)
-            actionComplete = Selection.Attack(targetTile);
+        {
+            // Temp
+            Selection.Attack(targetTile);
+            actionComplete = true;
+        }
 
         if (actionComplete)
         {

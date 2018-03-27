@@ -11,7 +11,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a83f084e359d2a64fb50bfa3bebe9198, type: 3}
   m_Name: WeaponPush
   m_EditorClassIdentifier: 
+  _weaponType: 1
   _minRange: 0
   _maxRange: 1
   _effectPrototype: {fileID: 114125261030118332, guid: 779c3017fc10e0e45927dd306c77762e,
     type: 2}
+  _projectilePrototype: {fileID: 0}
