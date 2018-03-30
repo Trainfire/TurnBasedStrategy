@@ -75,7 +75,8 @@ public class GameboardHelper
         foreach (var direction in GridHelper.AllDirections)
         {
             var offsetTile = GetTile(origin.transform.GetGridPosition() + GridHelper.DirectionToVector(direction) * offset);
-            hitTiles.AddRange(GetTiles(offsetTile, direction, 0, length, filterOccupiedTiles));
+            if (offsetTile != null)
+                hitTiles.AddRange(GetTiles(offsetTile, direction, 0, length, filterOccupiedTiles));
         }
 
         return hitTiles;
