@@ -34,7 +34,7 @@ public class GameboardVisualizer : MonoBehaviour
     {
         foreach (var result in _tileResults)
         {
-            if (result.Tile.Occupied)
+            if (result.Tile.Blocked)
             {
                 result.Tile.Marker.SetNegative();
             }

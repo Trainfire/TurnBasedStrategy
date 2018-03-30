@@ -3,20 +3,6 @@ using UnityEngine.Assertions;
 using System;
 using Framework;
 
-public struct UnitAttackEvent
-{
-    public Unit Source { get; private set; }
-    public Tile TargetTile { get; private set; }
-    public WeaponData WeaponData { get; private set; }
-
-    public UnitAttackEvent(Unit source, Tile targetTile, WeaponData weaponData)
-    {
-        Source = source;
-        TargetTile = targetTile;
-        WeaponData = weaponData;
-    }
-}
-
 public struct UnitMoveEvent
 {
     public Unit Unit { get; private set; }
@@ -66,7 +52,7 @@ public class Unit : MonoBehaviour
             return false;
         }
 
-        if (!targetTile.Occupied)
+        if (!targetTile.Blocked)
         {
             Moved.InvokeSafe(new UnitMoveEvent(this, targetTile));
             targetTile.SetOccupant(this);

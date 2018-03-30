@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Assertions;
 using Framework;
 
 public class EffectHealthModifierComponent : EffectComponent
@@ -7,6 +8,6 @@ public class EffectHealthModifierComponent : EffectComponent
 
     protected override void ApplyEffect(ApplyEffectParameters applyEffectParameters)
     {
-        applyEffectParameters.Receiver.Occupant.Health.Modify(_amount);
+        applyEffectParameters.Receiver.ApplyHealthChange(_amount);
     }
 }

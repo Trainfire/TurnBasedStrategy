@@ -60,7 +60,7 @@ public class Player : MonoBehaviour
         if (tile == null)
             return;
 
-        if (tile.Occupied)
+        if (tile.Occupant != null)
         {
             Selection = tile.Occupant;
 

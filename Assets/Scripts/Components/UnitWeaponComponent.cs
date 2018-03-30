@@ -37,7 +37,7 @@ public class UnitWeaponComponent : UnitComponent
             projectile.ApplyForce(GridHelper.VectorToDirection(direction), (collision) =>
             {
                 var tile = collision.Collider.GetComponentInParent<Tile>();
-                if (tile != null && tile.Occupied && tile.Occupant != ParentUnit)
+                if (tile != null && tile.Occupant != null && tile.Occupant != ParentUnit)
                 {
                     SpawnEffect(tile);
                     GameObject.Destroy(projectile.gameObject);
@@ -49,7 +49,9 @@ public class UnitWeaponComponent : UnitComponent
     private void SpawnEffect(Tile target)
     {
         Assert.IsNotNull(target);
-        var effectInstance = GameObject.Instantiate<Effect>(WeaponData.EffectPrototype);
-        effectInstance.Apply(Helper, new UnitAttackEvent(ParentUnit, target, WeaponData));
+        Effect.Spawn(WeaponData.EffectPrototype, (effect) =>
+        {
+            effect.Apply(Helper, new SpawnEffectParameters(Helper.GetTile(ParentUnit.transform.GetGridPosition()), target));
+        });
     }
 }

@@ -22,21 +22,23 @@ public abstract class EffectComponent : MonoBehaviour
         }
     }
 
+    protected virtual bool OnlyAffectOccupiedTiles { get { return true; } }
+
     [SerializeField] private EffectReceiver _effectReceiver;
     [SerializeField] private RelativeDirection _effectDirection;
     [SerializeField] private int _relativeOffset;
 
-    public void Apply(GameboardHelper gameboardHelper, UnitAttackEvent unitAttackEvent)
+    public void Apply(GameboardHelper gameboardHelper, SpawnEffectParameters unitAttackEvent)
     {
         Tile receivingTile = null;
 
         switch (_effectReceiver)
         {
-            case EffectReceiver.Source: receivingTile = gameboardHelper.GetTile(unitAttackEvent.Source); break;
-            case EffectReceiver.Target: receivingTile = unitAttackEvent.TargetTile; break;
+            case EffectReceiver.Source: receivingTile = unitAttackEvent.Source; break;
+            case EffectReceiver.Target: receivingTile = unitAttackEvent.Target; break;
         }
 
-        var directionToTarget = GridHelper.DirectionBetween(unitAttackEvent.Source.transform, unitAttackEvent.TargetTile.transform);
+        var directionToTarget = GridHelper.DirectionBetween(unitAttackEvent.Source.transform, unitAttackEvent.Target.transform);
         var direction = Vector2.zero;
 
         switch (_effectDirection)
@@ -49,7 +51,7 @@ public abstract class EffectComponent : MonoBehaviour
 
         receivingTile = gameboardHelper.GetTile(receivingTile.transform.GetGridPosition() + direction * _relativeOffset);
 
-        if (receivingTile == null || !receivingTile.Occupied)
+        if (receivingTile == null || OnlyAffectOccupiedTiles && receivingTile.Occupant == null)
             return;
 
         ApplyEffect(new ApplyEffectParameters(gameboardHelper, receivingTile, direction));

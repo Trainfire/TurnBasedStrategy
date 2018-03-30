@@ -82,6 +82,7 @@ public class Gameboard : GameEntity
                 gridTileInstance.transform.position = position;
 
                 var worldGridTile = gridTileInstance.GetComponentAssert<Tile>();
+                worldGridTile.Initialize(Helper);
 
                 if (worldGridTile != null)
                     _tileMap.Add(position.TransformToGridspace(), worldGridTile);
@@ -98,7 +99,7 @@ public class Gameboard : GameEntity
     {
         Assert.IsNotNull(targetTile);
 
-        if (targetTile.Occupied)
+        if (targetTile.Blocked)
         {
             DebugEx.LogWarning<Gameboard>("Cannot place a unit at occupied tile '{0}'", targetTile.transform.GetGridPosition());
             return;
@@ -106,13 +107,11 @@ public class Gameboard : GameEntity
 
         ObjectEx.Instantiate<T>((unit) =>
         {
-            RegisterUnit(unit);
-
             onSpawn(unit);
 
             targetTile.SetOccupant(unit);
 
-            UnitAdded.InvokeSafe(unit);
+            RegisterUnit(unit);
         });
     }
 
@@ -121,6 +120,8 @@ public class Gameboard : GameEntity
         Assert.IsFalse(_units.Contains(unit));
 
         _units.Add(unit);
+
+        UnitAdded.InvokeSafe(unit);
 
         unit.Removed += OnUnitKilled;
     }

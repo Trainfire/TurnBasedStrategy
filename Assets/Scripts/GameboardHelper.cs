@@ -58,7 +58,7 @@ public class GameboardHelper
             var nextTile = GetTile(origin.transform.GetGridPosition() + vectorFromDirection * i);
             if (nextTile)
             {
-                if (filterOccupiedTiles && !nextTile.Occupied || !filterOccupiedTiles)
+                if (filterOccupiedTiles && !nextTile.Blocked || !filterOccupiedTiles)
                     hitTiles.Add(new TileResult(nextTile, i));
             }
         }
@@ -120,7 +120,7 @@ public class GameboardHelper
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
-            if (current.Tile == null || current.Tile.Occupied && current.Tile.transform.GetGridPosition() != gridPosition || current.Distance > distance || current.Distance > _gameBoard.GridSize || _traversalMap.ContainsKey(current.Tile))
+            if (current.Tile == null || current.Tile.Blocked && current.Tile.transform.GetGridPosition() != gridPosition || current.Distance > distance || current.Distance > _gameBoard.GridSize || _traversalMap.ContainsKey(current.Tile))
                 continue;
 
             var direction = (current.Tile.transform.GetGridPosition() - gridPosition).normalized;
@@ -157,7 +157,7 @@ public class GameboardHelper
 
         var nextTile = GetTile(source);
 
-        while (nextTile != null && nextTile.Occupied)
+        while (nextTile != null && nextTile.Occupant != null)
         {
             results.Add(new PushbackResult(nextTile.Occupant, 1));
 
