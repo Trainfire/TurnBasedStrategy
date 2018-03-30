@@ -36,7 +36,7 @@ public class UIHud : GameEntity
         Assert.IsNotNull(unit);
         Assert.IsFalse(_healthbars.ContainsKey(unit));
 
-        unit.Died += OnUnitDied;
+        unit.Removed += OnUnitRemoved;
 
         var comp = UIUtility.Add<UIHealthbar>(gameObject.transform, _healthbarPrototype.gameObject);
         comp.Initialize(unit);
@@ -44,7 +44,7 @@ public class UIHud : GameEntity
         _healthbars.Add(unit, comp);
     }
 
-    private void OnUnitDied(Unit unit)
+    private void OnUnitRemoved(Unit unit)
     {
         Assert.IsTrue(_healthbars.ContainsKey(unit));
 
