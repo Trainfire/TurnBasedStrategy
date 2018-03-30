@@ -27,7 +27,6 @@ public class Mech : Unit
         PrimaryWeapon.WeaponData = MechData.DefaultPrimaryWeapon;
 
         SecondaryWeapon = AddUnitComponent<UnitWeaponComponent>();
-        SecondaryWeapon.Initialize(this);
         SecondaryWeapon.WeaponData = MechData.DefaultSecondaryWeapon;
 
         Assert.IsNotNull(MechData.View, "Missing view.");
