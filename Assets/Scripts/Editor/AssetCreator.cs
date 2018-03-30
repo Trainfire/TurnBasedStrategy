@@ -4,10 +4,10 @@ using UnityEditor;
 
 public class AssetCreator
 {
-    [MenuItem("Assets/Create/GameData/UnitData")]
-    public static void CreateUnitData()
+    [MenuItem("Assets/Create/GameData/MechData")]
+    public static void CreateMechData()
     {
-        ScriptableObjectUtility.CreateAsset<UnitData>();
+        ScriptableObjectUtility.CreateAsset<MechData>();
     }
 
     [MenuItem("Assets/Create/GameData/WeaponData")]

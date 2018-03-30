@@ -15,9 +15,9 @@ public class GameboardVisualizer : MonoBehaviour
         _tileResults = new List<TileResult>();
     }
 
-    public void ShowReachablePositions(Unit unit)
+    public void ShowReachablePositions(Mech mech)
     {
-        _tileResults = _gameboard.Helper.GetReachableTiles(unit);
+        _tileResults = _gameboard.Helper.GetReachableTiles(mech.transform.GetGridPosition(), mech.MovementRange);
     }
 
     public void ShowTargetableTiles(Unit unit, WeaponData weaponData)

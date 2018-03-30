@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5dc8ca69d3fcb246b87c2938b03bff5, type: 3}
+  m_Name: MechRustbucket
+  m_EditorClassIdentifier: 
+  _name: Rustbucket
+  _maxHealth: 3
+  _movementRange: 3
+  _view: {fileID: 1343557365762394, guid: 2c0cb8db2f967c544bad8a398e4fa9e9, type: 2}
+  _defaultPrimaryWeapon: {fileID: 11400000, guid: 716b456adb584db418a18af1518e5a9a,
+    type: 2}
+  _defaultSecondaryWeapon: {fileID: 0}

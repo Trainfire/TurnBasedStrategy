@@ -21,15 +21,23 @@ public enum RelativeDirection
     Left,
 }
 
-public struct SpawnAction
+public class SpawnUnitAction
 {
-    public UnitData Unit;
-    public Tile Tile;
+    public Tile Tile { get; private set; }
 
-    public SpawnAction(UnitData unit, Tile tile)
+    public SpawnUnitAction(Tile tile)
     {
-        Unit = unit;
         Tile = tile;
+    }
+}
+
+public class SpawnMechAction : SpawnUnitAction
+{
+    public MechData MechData { get; private set; }
+
+    public SpawnMechAction(MechData mech, Tile tile) : base (tile)
+    {
+        MechData = mech;
     }
 }
 
@@ -81,57 +89,50 @@ public class Gameboard : GameEntity
         }
     }
 
-    public bool CanSpawn(SpawnAction spawnAction)
+    public void Spawn(Tile targetTile, MechData mechData)
     {
-        Assert.IsNotNull(spawnAction.Tile);
-        Assert.IsNotNull(spawnAction.Unit);
-
-        if (spawnAction.Tile.Occupied)
-        {
-            DebugEx.LogWarning<Gameboard>("Cannot place a unit at occupied tile '{0}'", spawnAction.Tile.transform.GetGridPosition());
-            return false;
-        }
-
-        if (spawnAction.Unit.Prefab == null)
-        {
-            DebugEx.LogWarning<Gameboard>("Cannot place unit '{0}' as the specified prefab is null.", spawnAction.Unit.Name);
-            return false;
-        }
-
-        return true;
+        Spawn<Mech>(targetTile, (mech) => mech.Initialize(mechData, Helper));
     }
 
-    public void SpawnUnit(SpawnAction spawnAction)
+    private void Spawn<T>(Tile targetTile, Action<T> onSpawn) where T : Unit
     {
-        if (CanSpawn(spawnAction))
+        Assert.IsNotNull(targetTile);
+
+        if (targetTile.Occupied)
         {
-            var unitInstance = GameObject.Instantiate(spawnAction.Unit.Prefab);
-            var unitComponent = unitInstance.gameObject.GetOrAddComponent<Unit>();
-            unitComponent.Initialize(spawnAction.Unit, spawnAction.Tile, Helper);
-
-            _units.Add(unitComponent);
-
-            unitComponent.Died += OnUnitDied;
-
-            UnitAdded.InvokeSafe(unitComponent);
-        }
-    }
-
-    private void OnUnitDied(Unit unit)
-    {
-        var hasUnit = _units.Contains(unit);
-
-        Assert.IsTrue(hasUnit);
-
-        if (!hasUnit)
+            DebugEx.LogWarning<Gameboard>("Cannot place a unit at occupied tile '{0}'", targetTile.transform.GetGridPosition());
             return;
+        }
 
-        unit.Died -= OnUnitDied;
+        ObjectEx.Instantiate<T>((unit) =>
+        {
+            RegisterUnit(unit);
+
+            onSpawn(unit);
+
+            targetTile.SetOccupant(unit);
+
+            UnitAdded.InvokeSafe(unit);
+        });
+    }
+
+    private void RegisterUnit(Unit unit)
+    {
+        Assert.IsFalse(_units.Contains(unit));
+
+        _units.Add(unit);
+
+        unit.Removed += OnUnitKilled;
+    }
+
+    private void OnUnitKilled(Unit unit)
+    {
+        Assert.IsTrue(_units.Contains(unit));
+
+        unit.Removed -= OnUnitKilled;
 
         _units.Remove(unit);
 
         UnitRemoved.InvokeSafe(unit);
-
-        Destroy(unit.gameObject);
     }
 }

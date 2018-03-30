@@ -120,6 +120,13 @@ namespace Framework
                 onFind(obj);
             return obj;
         }
+
+        public static T Instantiate<T>(Action<T> onSpawn) where T : MonoBehaviour
+        {
+            var instance = new GameObject().AddComponent<T>();
+            onSpawn(instance);
+            return instance;
+        }
     }
 
     static class GameObjectEx

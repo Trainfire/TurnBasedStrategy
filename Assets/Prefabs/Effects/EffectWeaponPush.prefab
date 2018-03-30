@@ -21,6 +21,9 @@ GameObject:
   - component: {fileID: 4325088297436056}
   - component: {fileID: 114125261030118332}
   - component: {fileID: 114013286328339284}
+  - component: {fileID: 114847590824820316}
+  - component: {fileID: 114634222780249938}
+  - component: {fileID: 114641473996941410}
   m_Layer: 0
   m_Name: EffectWeaponPush
   m_TagString: Untagged
@@ -53,7 +56,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _effectReceiver: 0
-  _effectDirection: 1
+  _effectDirection: 0
   _relativeOffset: 1
 --- !u!114 &114125261030118332
 MonoBehaviour:
@@ -66,3 +69,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d892059ac1017274dab2c3f1acfa85e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &114634222780249938
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1556400452687264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd22fbb80575a44594406b126a36fa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _effectReceiver: 0
+  _effectDirection: 2
+  _relativeOffset: 1
+--- !u!114 &114641473996941410
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1556400452687264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd22fbb80575a44594406b126a36fa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _effectReceiver: 0
+  _effectDirection: 3
+  _relativeOffset: 1
+--- !u!114 &114847590824820316
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1556400452687264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd22fbb80575a44594406b126a36fa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _effectReceiver: 0
+  _effectDirection: 1
+  _relativeOffset: 1

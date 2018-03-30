@@ -44,6 +44,8 @@ public class GameboardHelper
 
     public List<TileResult> GetTiles(Tile origin, WorldDirection direction, int offset, int length, bool filterOccupiedTiles = false)
     {
+        Assert.IsNotNull(origin, "Origin tile is null.");
+
         length = Mathf.Min(_gameBoard.GridSize, length);
 
         var hitTiles = new List<TileResult>();
@@ -66,6 +68,8 @@ public class GameboardHelper
 
     public List<TileResult> GetTilesFromAllDirections(Tile origin, int offset, int length, bool filterOccupiedTiles = false)
     {
+        Assert.IsNotNull(origin);
+
         var hitTiles = new List<TileResult>();
 
         foreach (var direction in GridHelper.AllDirections)
@@ -101,11 +105,6 @@ public class GameboardHelper
     public List<TileResult> GetReachableTiles(Tile originTile, int distance)
     {
         return GetReachableTiles(originTile.transform.GetGridPosition(), distance);
-    }
-
-    public List<TileResult> GetReachableTiles(Unit unit)
-    {
-        return GetReachableTiles(unit.transform.GetGridPosition(), unit.MovementRange);
     }
 
     public List<TileResult> GetReachableTiles(Vector2 gridPosition, int distance)
