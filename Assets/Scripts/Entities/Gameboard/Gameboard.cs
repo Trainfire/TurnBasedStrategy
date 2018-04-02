@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 using Framework;
 
 public class Gameboard : GameEntity
@@ -12,7 +13,8 @@ public class Gameboard : GameEntity
     public GameboardState State { get; private set; }
     public Player Player { get; private set; }
 
-    [SerializeField] private Tile _prefab;
+    [SerializeField] private Tile _tilePrefab;
+    [SerializeField] private Building _buildingPrefab;
     [SerializeField] private int _gridSize;
 
     private void Awake()
@@ -20,11 +22,14 @@ public class Gameboard : GameEntity
         GridSize = _gridSize;
 
         // Temp: Just generate a random world.
-        var worldGenerator = new GameboardWorldGenerator(transform, _prefab);
+        var worldParameters = new GameboardWorldParameters(transform, _tilePrefab);
+        worldParameters.Add(_buildingPrefab);
+
+        var worldGenerator = new GameboardWorldGenerator(worldParameters);
         var world = worldGenerator.Generate(_gridSize);
 
         Helper = new GameboardWorldHelper(world);
-        Objects = new GameboardObjects(Helper);
+        Objects = new GameboardObjects(Helper, world);
         Input = gameObject.GetOrAddComponent<GameboardInput>();
 
         // TODO: Make this a regular class. Not a MonoBehaviour.

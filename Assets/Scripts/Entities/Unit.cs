@@ -31,7 +31,7 @@ public class Unit : MonoBehaviour
         Health.Killed += OnKill;
     }
 
-    protected void Initialize(GameboardWorldHelper gameboardHelper)
+    public virtual void Initialize(GameboardWorldHelper gameboardHelper)
     {
         _gameboardHelper = gameboardHelper;
         name = "Unnamed Unit";

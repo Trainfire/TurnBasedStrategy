@@ -30,27 +30,34 @@ public class GameboardObjects
     public event Action<Unit> UnitAdded;
     public event Action<Unit> UnitRemoved;
 
+    public IReadOnlyList<Unit> Units { get { return _units; } }
     public IReadOnlyList<Mech> Mechs { get { return _units.OfType<Mech>().ToList(); } }
 
     private List<Unit> _units;
 
-    private GameboardWorldHelper _gameboardTileMap;
+    private GameboardWorldHelper _worldHelper;
 
-    public GameboardObjects(GameboardWorldHelper gameboardTileMap)
+    public GameboardObjects(GameboardWorldHelper worldHelper, GameboardWorld world)
     {
-        _gameboardTileMap = gameboardTileMap;
+        _worldHelper = worldHelper;
 
         _units = new List<Unit>();
+
+        world.Units.ToList().ForEach(unit =>
+        {
+            unit.Initialize(worldHelper);
+            RegisterUnit(unit);
+        });
     }
 
     public void Spawn(Tile targetTile, MechData mechData)
     {
-        Spawn<Mech>(targetTile, (mech) => mech.Initialize(mechData, _gameboardTileMap));
+        Spawn<Mech>(targetTile, (mech) => mech.Initialize(mechData, _worldHelper));
     }
 
     private void Spawn<T>(Tile targetTile, Action<T> onSpawn) where T : Unit
     {
-        Assert.IsNotNull(_gameboardTileMap);
+        Assert.IsNotNull(_worldHelper);
         Assert.IsNotNull(targetTile);
 
         if (targetTile.Blocked)

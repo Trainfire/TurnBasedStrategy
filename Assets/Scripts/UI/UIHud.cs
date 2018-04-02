@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Framework;
@@ -28,7 +29,11 @@ public class UIHud : GameEntity
         Assert.IsNotNull(_gameboard);
 
         if (_gameboard != null)
+        {
             _gameboard.Objects.UnitAdded += OnUnitAdded;
+
+            _gameboard.Objects.Units.ToList().ForEach(unit => OnUnitAdded(unit));
+        }
     }
 
     private void OnUnitAdded(Unit unit)
