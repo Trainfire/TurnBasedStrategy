@@ -2,6 +2,7 @@
 using UnityEngine.Assertions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Framework;
 
 public enum GameboardStateID
@@ -13,7 +14,41 @@ public enum GameboardStateID
     GameOver,
 }
 
-public class GameboardStateController
+public class ValidPlayerActions
+{
+    public bool CanContinue { get; set; }
+    public bool CanControlUnits { get; set; }
+    public bool CanUndo { get; set; }
+
+    public void Clear()
+    {
+        CanContinue = false;
+        CanControlUnits = false;
+        CanUndo = false;
+    }
+
+    public ReadOnlyValidPlayerActions AsReadOnly()
+    {
+        return new ReadOnlyValidPlayerActions(this);
+    }
+}
+
+public struct ReadOnlyValidPlayerActions
+{
+    public readonly bool CanContinue;
+    public readonly bool CanControlUnits;
+    public readonly bool CanUndo;
+
+    public ReadOnlyValidPlayerActions(ValidPlayerActions validPlayerActions)
+    {
+        CanContinue = validPlayerActions.CanContinue;
+        CanControlUnits = validPlayerActions.CanControlUnits;
+        CanUndo = validPlayerActions.CanUndo;
+    }
+}
+
+
+public class GameboardState
 {
     public const int MaxTurns = 5; // TODO: Define via data.
 
@@ -21,26 +56,24 @@ public class GameboardStateController
     public event Action GameOver;
 
     public GameboardStateID Current { get; private set; }
+    public ReadOnlyValidPlayerActions ValidPlayerActions { get { return _states[Current].ValidPlayerActions.AsReadOnly(); } }
     public int TurnCount { get; private set; }
 
-    private Gameboard _gameboard;
-    private Dictionary<GameboardStateID, GameboardState> _states;
+    private Dictionary<GameboardStateID, GameboardStateBase> _states;
 
-    public GameboardStateController(Gameboard gameboard)
+    public GameboardState(GameboardObjects gameboardObjects, GameboardInput playerInput)
     {
-        _gameboard = gameboard;
+        _states = new Dictionary<GameboardStateID, GameboardStateBase>();
 
-        _states = new Dictionary<GameboardStateID, GameboardState>();
-
-        Register(new GameboardStateSetupPhase(_gameboard));
-        Register(new GameboardStatePlayerMovePhase(_gameboard));
+        Register(new GameboardStateSetupPhase(gameboardObjects, playerInput));
+        Register(new GameboardStatePlayerMovePhase(playerInput));
 
         Current = GameboardStateID.Setup;
 
         _states[Current].Enter();
     }
 
-    private void Register(GameboardState gameboardState)
+    private void Register(GameboardStateBase gameboardState)
     {
         Assert.IsFalse(_states.ContainsKey(gameboardState.StateID));
 
@@ -63,16 +96,13 @@ public class GameboardStateController
             return;
         }
 
-        if (previousStateID == GameboardStateID.EnemyMove)
-        {
+        // TODO: Add logic for moving to other states.
+        if (previousStateID == GameboardStateID.Setup)
             Current = GameboardStateID.PlayerMove;
-        }
-        else
-        {
-            Current = GameboardStateID.EnemyMove;
-        }
 
         TurnCount++;
+
+        Assert.IsTrue(_states.ContainsKey(Current), "No handler found for state.");
 
         _states[Current].Enter();
     }
@@ -83,22 +113,20 @@ public class GameboardStateController
     }
 }
 
-public abstract class GameboardState
+public abstract class GameboardStateBase
 {
     public event Action<GameboardStateID> Exited;
 
     public abstract GameboardStateID StateID { get; }
 
-    protected Gameboard Gameboard { get; private set; }
-
-    public GameboardState(Gameboard gameboard)
-    {
-        Gameboard = gameboard;
-    }
+    public virtual bool CanExitState { get { return true; } }
+    public virtual ValidPlayerActions ValidPlayerActions { get; private set; }
 
     public void Enter()
     {
-        Debug.LogFormat("Enter state: [{0}]", GetType().Name);
+        ValidPlayerActions = new ValidPlayerActions();
+
+        Debug.LogFormat("Enter state: [{0}]", StateID);
         OnEnter();
     }
 
@@ -106,28 +134,76 @@ public abstract class GameboardState
 
     protected void ExitState()
     {
-        Debug.LogFormat("Exit state: [{0}]", GetType().Name);
+        Debug.LogFormat("Exit state: [{0}]", StateID);
+        ValidPlayerActions.Clear();
         Exited.InvokeSafe(StateID);
     }
 }
 
-public class GameboardStateSetupPhase : GameboardState
+public class GameboardStateSetupPhase : GameboardStateBase
 {
     public override GameboardStateID StateID { get { return GameboardStateID.Setup; } }
 
-    public GameboardStateSetupPhase(Gameboard gameboard) : base(gameboard) { }
+    private GameboardObjects _gameboardObjects;
+    private GameboardInput _playerInput;
+
+    public GameboardStateSetupPhase(GameboardObjects gameboardObjects, GameboardInput playerInput)
+    {
+        _gameboardObjects = gameboardObjects;
+        _playerInput = playerInput;
+    }
+
+    protected override void OnEnter()
+    {
+        _gameboardObjects.UnitAdded += OnUnitAdded;
+        _playerInput.Continue += OnPlayerInputContinue;
+    }
+
+    private void OnUnitAdded(Unit unit)
+    {
+        ValidPlayerActions.CanContinue = _gameboardObjects.Mechs.Count == 3;
+    }
+
+    private void OnPlayerInputContinue()
+    {
+        if (ValidPlayerActions.CanContinue)
+        {
+            _gameboardObjects.UnitAdded -= OnUnitAdded;
+            _playerInput.Continue -= OnPlayerInputContinue;
+            ExitState();
+        }
+    }
 }
 
-public class GameboardStatePlayerMovePhase : GameboardState
+public class GameboardStatePlayerMovePhase : GameboardStateBase
 {
     public override GameboardStateID StateID { get { return GameboardStateID.PlayerMove; } }
 
-    public GameboardStatePlayerMovePhase(Gameboard gameboard) : base(gameboard) { }
-}
+    private GameboardInput _playerInput;
 
-public class GameboardStateEnemyMovePhase : GameboardState
-{
-    public override GameboardStateID StateID { get { return GameboardStateID.EnemyMove; } }
+    public GameboardStatePlayerMovePhase(GameboardInput playerInput)
+    {
+        _playerInput = playerInput;
+    }
 
-    public GameboardStateEnemyMovePhase(Gameboard gameboard) : base(gameboard) { }
+    protected override void OnEnter()
+    {
+        _playerInput.Undo += OnPlayerInputUndo;
+        _playerInput.Continue += OnPlayerInputContinue;
+
+        ValidPlayerActions.CanControlUnits = true;
+    }
+
+    private void OnPlayerInputContinue()
+    {
+        _playerInput.Undo -= OnPlayerInputUndo;
+        _playerInput.Continue -= OnPlayerInputContinue;
+
+        ExitState();
+    }
+
+    private void OnPlayerInputUndo()
+    {
+        // TODO.
+    }
 }

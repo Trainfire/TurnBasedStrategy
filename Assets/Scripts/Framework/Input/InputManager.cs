@@ -104,6 +104,11 @@ namespace Framework
             }
         }
 
+        public static void Trigger(InputActionEvent action)
+        {
+            Relay(null, action);
+        }
+
         private static void Relay(object sender, InputActionEvent action)
         {
             if (action.Context != context)

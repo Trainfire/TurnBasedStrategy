@@ -21,27 +21,43 @@ public class Player : MonoBehaviour
 {
     public Unit Selection { get; private set; }
     public PlayerMechHandler MechHandler { get; private set; }
-    public PlayerInput Input { get; private set; }
-    public Gameboard Gameboard { get; private set; }
 
     [SerializeField] private MechData _defaultMech;
 
+    private Gameboard _gameboard;
+
     public void Initialize(Gameboard gameboard)
     {
-        Gameboard = gameboard;
+        _gameboard = gameboard;
+        _gameboard.Input.SpawnDefaultUnit += OnInputSpawnDefaultUnit;
+        _gameboard.Input.Select += OnInputSelect;
+        _gameboard.Input.Undo += OnInputUndo;
+        _gameboard.Input.SetCurrentActionToMove += OnInputSetCurrentActionToMove;
+        _gameboard.Input.SetCurrentActionToAttack += OnInputSetCurrentActionToAttack;
+        _gameboard.Input.CommitCurrentAction += OnInputCommitCurrentAction;
 
-        Input = gameObject.GetOrAddComponent<PlayerInput>();
-        Input.SpawnDefaultUnit += PlayerInput_SpawnDefaultUnit;
-        Input.Select += PlayerInput_Select;
-        Input.Undo += PlayerInput_Undo;
-
-        MechHandler = new PlayerMechHandler(this);
+        MechHandler = new PlayerMechHandler(_gameboard.Helper, _gameboard.Visualizer, _gameboard.State);
         MechHandler.ActionCommitted += MechHandler_ActionCommitted;
     }
 
-    private void PlayerInput_SpawnDefaultUnit(Tile tile)
+    private void OnInputCommitCurrentAction(Tile tile)
     {
-        if (tile != null &&  Gameboard != null)
+        MechHandler.CommitCurrentAction(tile);
+    }
+
+    private void OnInputSetCurrentActionToAttack()
+    {
+        MechHandler.SetCurrentAction(UnitActionType.AttackPrimary);
+    }
+
+    private void OnInputSetCurrentActionToMove()
+    {
+        MechHandler.SetCurrentAction(UnitActionType.Move);
+    }
+
+    private void OnInputSpawnDefaultUnit(Tile tile)
+    {
+        if (tile != null &&  _gameboard != null)
         {
             if (_defaultMech == null)
             {
@@ -49,12 +65,12 @@ public class Player : MonoBehaviour
             }
             else
             {
-                Gameboard.Objects.Spawn(tile, _defaultMech);
+                _gameboard.Objects.Spawn(tile, _defaultMech);
             }
         }
     }
 
-    private void PlayerInput_Select(Tile tile)
+    private void OnInputSelect(Tile tile)
     {
         if (tile == null)
             return;
@@ -73,7 +89,7 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void PlayerInput_Undo()
+    private void OnInputUndo()
     {
         DebugEx.Log<Player>("Not implemented: Undo");
     }
@@ -86,7 +102,7 @@ public class Player : MonoBehaviour
     private void ClearSelection()
     {
         Selection = null;
-        Gameboard.Visualizer.Clear();
+        _gameboard.Visualizer.Clear();
         MechHandler.Clear();
     }
 }

@@ -269,7 +269,6 @@ GameObject:
   m_Component:
   - component: {fileID: 899946268}
   - component: {fileID: 899946269}
-  - component: {fileID: 899946270}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -302,17 +301,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _defaultMech: {fileID: 11400000, guid: f0ccddbcfd116b846bf4e7f95897751b, type: 2}
---- !u!114 &899946270
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 899946267}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db1add87c42bcd6409f1faacea5598b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1272696670
 GameObject:
   m_ObjectHideFlags: 0
@@ -398,7 +386,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a6c0d77262350d4d9e40dcf6e2f4b04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _prefab: {fileID: 1400334576273914, guid: 8bc73abfd3c455d47961d84af4ab6d40, type: 2}
+  _prefab: {fileID: 114946297969680578, guid: 8bc73abfd3c455d47961d84af4ab6d40, type: 2}
   _gridSize: 8
 --- !u!114 &1303235485
 MonoBehaviour:

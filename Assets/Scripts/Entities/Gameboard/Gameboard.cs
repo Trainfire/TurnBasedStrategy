@@ -6,8 +6,11 @@ public class Gameboard : GameEntity
     public static int GridSize { get; private set; }
 
     public GameboardWorldHelper Helper { get; private set; }
-    public GameboardVisualizer Visualizer { get; private set; }
     public GameboardObjects Objects { get; private set; }
+    public GameboardInput Input { get; private set; }
+    public GameboardVisualizer Visualizer { get; private set; }
+    public GameboardState State { get; private set; }
+    public Player Player { get; private set; }
 
     [SerializeField] private Tile _prefab;
     [SerializeField] private int _gridSize;
@@ -21,14 +24,16 @@ public class Gameboard : GameEntity
         var world = worldGenerator.Generate(_gridSize);
 
         Helper = new GameboardWorldHelper(world);
+        Objects = new GameboardObjects(Helper);
+        Input = gameObject.GetOrAddComponent<GameboardInput>();
 
         // TODO: Make this a regular class. Not a MonoBehaviour.
         Visualizer = gameObject.GetComponentAssert<GameboardVisualizer>();
         Visualizer.Initialize(this);
 
-        Objects = new GameboardObjects(Helper);
+        State = new GameboardState(Objects, Input);
 
-        var player = FindObjectOfType<Player>();
-        player.Initialize(this);
+        Player = FindObjectOfType<Player>();
+        Player.Initialize(this);
     }
 }

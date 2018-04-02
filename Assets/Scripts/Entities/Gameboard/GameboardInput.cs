@@ -2,33 +2,36 @@
 using Framework;
 using System;
 
-public class PlayerInput : MonoBehaviour
+public class GameboardInput : MonoBehaviour
 {
     public event Action<Tile> SpawnDefaultUnit;
     public event Action<Tile> Select;
     public event Action<Tile> CommitCurrentAction;
-    public event Action<UnitActionType> SetCurrentAction;
+    public event Action SetCurrentActionToMove;
+    public event Action SetCurrentActionToAttack;
     public event Action Undo;
+    public event Action Continue;
 
-    private Player _player;
-
-    private void Awake()
-    {
-        _player = gameObject.GetComponentAssert<Player>();
-    }
+    private const KeyCode MoveKey = KeyCode.Alpha1;
+    private const KeyCode PrimaryAttackKey = KeyCode.Alpha2;
+    private const KeyCode SpawnDefaultUnitKey = KeyCode.F;
+    private const KeyCode ContinueKey = KeyCode.Space;
 
     private void LateUpdate()
     {
         var tileUnderMouse = GetTileUnderMouse();
 
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-            SetCurrentAction.InvokeSafe(UnitActionType.Move);
+        if (Input.GetKeyDown(MoveKey))
+            SetCurrentActionToMove.InvokeSafe();
 
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-            SetCurrentAction.InvokeSafe(UnitActionType.AttackPrimary);
+        if (Input.GetKeyDown(PrimaryAttackKey))
+            SetCurrentActionToAttack.InvokeSafe();
 
-        if (Input.GetKeyDown(KeyCode.F))
+        if (Input.GetKeyDown(SpawnDefaultUnitKey))
             SpawnDefaultUnit.InvokeSafe(tileUnderMouse);
+
+        if (Input.GetKeyDown(ContinueKey))
+            Continue.InvokeSafe();
 
         if (Input.GetMouseButtonDown(0))
             Select.InvokeSafe(tileUnderMouse);
@@ -43,22 +46,13 @@ public class PlayerInput : MonoBehaviour
 
         GUILayout.BeginVertical();
 
-        GUILayout.BeginHorizontal();
-        GUILayout.Label(_player.Selection != null ? _player.Selection.name : "N/A");
-        GUILayout.Label(_player.MechHandler.CurrentAction.ToString());
-        GUILayout.EndHorizontal();
+        GUILayout.Label("Move: " + MoveKey.ToString());
+        GUILayout.Label("Attack: " + PrimaryAttackKey.ToString());
+        GUILayout.Label("Continue: " + ContinueKey.ToString());
 
-        GUILayout.BeginHorizontal();
-
-        if (GUILayout.Button("Move"))
-            SetCurrentAction.InvokeSafe(UnitActionType.Move);
-
-        if (GUILayout.Button("AttacK"))
-            SetCurrentAction.InvokeSafe(UnitActionType.AttackPrimary);
+        GUILayout.Label("Spawn: " + SpawnDefaultUnitKey.ToString());
 
         GUILayout.EndHorizontal();
-
-        GUILayout.EndVertical();
 
         // End temp garbage.
     }

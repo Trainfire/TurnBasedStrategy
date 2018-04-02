@@ -30,6 +30,8 @@ public class GameboardObjects
     public event Action<Unit> UnitAdded;
     public event Action<Unit> UnitRemoved;
 
+    public IReadOnlyList<Mech> Mechs { get { return _units.OfType<Mech>().ToList(); } }
+
     private List<Unit> _units;
 
     private GameboardWorldHelper _gameboardTileMap;
