@@ -61,12 +61,23 @@ public class GameboardState
 
     private Dictionary<GameboardStateID, GameboardStateBase> _states;
 
+    private GameboardObjects _gameboardObjects;
+
     public GameboardState(GameboardObjects gameboardObjects, GameboardInput playerInput)
     {
+        _gameboardObjects = gameboardObjects;
+
         _states = new Dictionary<GameboardStateID, GameboardStateBase>();
 
         Register(new GameboardStateSetupPhase(gameboardObjects, playerInput));
         Register(new GameboardStatePlayerMovePhase(playerInput));
+        Register(new GameboardStateGameOver());
+
+        foreach (var unit in gameboardObjects.Units.ToList())
+        {
+            if (unit.GetType() == typeof(Building))
+                unit.Health.Changed += OnBuildingHealthChanged;
+        }
 
         Current = GameboardStateID.Setup;
 
@@ -90,12 +101,6 @@ public class GameboardState
             return;
         }
 
-        if (IsGameOver())
-        {
-            GameOver.InvokeSafe();
-            return;
-        }
-
         // TODO: Add logic for moving to other states.
         if (previousStateID == GameboardStateID.Setup)
             Current = GameboardStateID.PlayerMove;
@@ -107,9 +112,14 @@ public class GameboardState
         _states[Current].Enter();
     }
 
-    private bool IsGameOver()
+    private void OnBuildingHealthChanged(HealthChangeEvent healthChangeEvent)
     {
-        return false;
+        if (_gameboardObjects.Buildings.All(x => x.Health.Current == 0))
+        {
+            Current = GameboardStateID.GameOver;
+            _states[Current].Enter();
+            GameOver.InvokeSafe();
+        }
     }
 }
 
@@ -205,5 +215,20 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
     private void OnPlayerInputUndo()
     {
         // TODO.
+    }
+}
+
+public class GameboardStateGameOver : GameboardStateBase
+{
+    public override GameboardStateID StateID { get { return GameboardStateID.GameOver; } }
+
+    protected override void OnEnter()
+    {
+        base.OnEnter();
+
+        ValidPlayerActions.CanContinue = false;
+        ValidPlayerActions.CanControlUnits = false;
+
+        DebugEx.Log<GameboardStateGameOver>("Game over, man.");
     }
 }

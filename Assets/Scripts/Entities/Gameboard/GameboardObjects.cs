@@ -32,6 +32,7 @@ public class GameboardObjects
 
     public IReadOnlyList<Unit> Units { get { return _units; } }
     public IReadOnlyList<Mech> Mechs { get { return _units.OfType<Mech>().ToList(); } }
+    public IReadOnlyList<Building> Buildings { get { return _units.OfType<Building>().ToList(); } }
 
     private List<Unit> _units;
 
