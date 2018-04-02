@@ -18,7 +18,7 @@ public class Tile : MonoBehaviour
 
     private string OccupantName { get { return _occupant != null ? _occupant.name : "Nobody"; } }
 
-    private GameboardHelper _gameboardHelper;
+    private GameboardWorldHelper _gameboardHelper;
     private Unit _occupant;
     private List<TileHazard> _hazards;
 
@@ -28,7 +28,7 @@ public class Tile : MonoBehaviour
         _hazards = new List<TileHazard>();
     }
 
-    public void Initialize(GameboardHelper gameboardHelper)
+    public void Initialize(GameboardWorldHelper gameboardHelper)
     {
         _gameboardHelper = gameboardHelper;
     }

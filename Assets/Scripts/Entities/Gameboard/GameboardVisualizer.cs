@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-[RequireComponent(typeof(Gameboard))]
 public class GameboardVisualizer : MonoBehaviour
 {
     private Gameboard _gameboard;
@@ -11,8 +10,12 @@ public class GameboardVisualizer : MonoBehaviour
 
     private void Awake()
     {
-        _gameboard = gameObject.GetComponentAssert<Gameboard>();
         _tileResults = new List<TileResult>();
+    }
+
+    public void Initialize(Gameboard gameboard)
+    {
+        _gameboard = gameboard;
     }
 
     public void ShowReachablePositions(Mech mech)
@@ -43,6 +46,7 @@ public class GameboardVisualizer : MonoBehaviour
                 result.Tile.Marker.SetPositive();
             }
 
+            // TODO: ???. Move this.
             result.Tile.Marker.DrawText(result.Distance.ToString());
         }
     }

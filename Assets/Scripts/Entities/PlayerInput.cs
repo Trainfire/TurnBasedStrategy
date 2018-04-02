@@ -39,6 +39,8 @@ public class PlayerInput : MonoBehaviour
 
     private void OnGUI()
     {
+        // Begin temp garbage.
+
         GUILayout.BeginVertical();
 
         GUILayout.BeginHorizontal();
@@ -57,6 +59,8 @@ public class PlayerInput : MonoBehaviour
         GUILayout.EndHorizontal();
 
         GUILayout.EndVertical();
+
+        // End temp garbage.
     }
 
     private T GetComponentUnderMouse<T>() where T : MonoBehaviour

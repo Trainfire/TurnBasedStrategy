@@ -3,6 +3,22 @@ using UnityEditor;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 
+public enum WorldDirection
+{
+    North,
+    East,
+    South,
+    West,
+}
+
+public enum RelativeDirection
+{
+    Forward,
+    Right,
+    Back,
+    Left,
+}
+
 public static class GridHelper
 {
     public static Vector2 TransformToGridspace(this Vector3 v) { return new Vector2(v.x, v.z); }

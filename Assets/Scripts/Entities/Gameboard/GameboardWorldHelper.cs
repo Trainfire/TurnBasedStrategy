@@ -3,6 +3,7 @@ using UnityEngine.Assertions;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using Framework;
 
 public class TileResult
 {
@@ -28,25 +29,29 @@ public class PushbackResult
     }
 }
 
-public class GameboardHelper
+public class GameboardWorldHelper
 {
-    public const int GridSize = 8;
+    private static int GridSize { get; set; }
 
-    private Gameboard _gameBoard;
-    private Dictionary<Tile, int> _traversalMap;
+    private GameboardWorld _world;
 
-    public GameboardHelper(Gameboard gameboard)
+    public GameboardWorldHelper(GameboardWorld world)
     {
-        Assert.IsNotNull(gameboard);
-        _gameBoard = gameboard;
-        _traversalMap = new Dictionary<Tile, int>();
+        GridSize = world.GridSize;
+
+        _world = world;
+
+        foreach (var tile in _world.Tiles)
+        {
+            tile.Value.Initialize(this);
+        }
     }
 
     public List<TileResult> GetTiles(Tile origin, WorldDirection direction, int offset, int length, bool filterOccupiedTiles = false)
     {
         Assert.IsNotNull(origin, "Origin tile is null.");
 
-        length = Mathf.Min(_gameBoard.GridSize, length);
+        length = Mathf.Min(GridSize, length);
 
         var hitTiles = new List<TileResult>();
 
@@ -110,9 +115,9 @@ public class GameboardHelper
 
     public List<TileResult> GetReachableTiles(Vector2 gridPosition, int distance)
     {
-        _traversalMap.Clear();
+        var traversalMap = new Dictionary<Tile, int>();
 
-        distance = Mathf.Clamp(distance, 1, _gameBoard.GridSize);
+        distance = Mathf.Clamp(distance, 1, GridSize);
 
         var queue = new Queue<TileResult>();
         queue.Enqueue(new TileResult(GetTile(gridPosition), 0));
@@ -120,7 +125,7 @@ public class GameboardHelper
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
-            if (current.Tile == null || current.Tile.Blocked && current.Tile.transform.GetGridPosition() != gridPosition || current.Distance > distance || current.Distance > _gameBoard.GridSize || _traversalMap.ContainsKey(current.Tile))
+            if (current.Tile == null || current.Tile.Blocked && current.Tile.transform.GetGridPosition() != gridPosition || current.Distance > distance || current.Distance > GridSize || traversalMap.ContainsKey(current.Tile))
                 continue;
 
             var direction = (current.Tile.transform.GetGridPosition() - gridPosition).normalized;
@@ -131,11 +136,11 @@ public class GameboardHelper
             if (direction.x != 1f) queue.Enqueue(new TileResult(GetTileInDirection(current.Tile, WorldDirection.West), current.Distance + 1));
 
             if (current.Tile.transform.GetGridPosition() != gridPosition)
-                _traversalMap.Add(current.Tile, current.Distance);
+                traversalMap.Add(current.Tile, current.Distance);
         }
 
         var results = new List<TileResult>();
-        foreach (var kvp in _traversalMap)
+        foreach (var kvp in traversalMap)
         {
             if (kvp.Key.transform.GetGridPosition() != Vector2.zero)
                 results.Add(new TileResult(kvp.Key, kvp.Value));
@@ -147,7 +152,7 @@ public class GameboardHelper
     public List<TileResult> GetTargetableTiles(Unit unit, WeaponData weaponData)
     {
         var offset = Mathf.Max(weaponData.MinRange, 0);
-        var length = weaponData.MaxRange == -1 ? _gameBoard.GridSize : weaponData.MaxRange;
+        var length = weaponData.MaxRange == -1 ? GridSize : weaponData.MaxRange;
         return GetTilesFromAllDirections(GetTile(unit), offset, length);
     }
 
@@ -194,7 +199,7 @@ public class GameboardHelper
 
     public Tile GetTile(Vector2 position)
     {
-        return _gameBoard.TileMap.ContainsKey(position) ? _gameBoard.TileMap[position] : null;
+        return _world.Tiles.ContainsKey(position) ? _world.Tiles[position] : null;
     }
 
     public void GetTile(Vector2 position, Action<Tile> onGet)

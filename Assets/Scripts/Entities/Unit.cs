@@ -21,9 +21,9 @@ public class Unit : MonoBehaviour
     public event Action<Unit> Removed;
 
     public HealthComponent Health { get; private set; }
-    public GameboardHelper Helper { get { return _gameboardHelper; } }
+    public GameboardWorldHelper Helper { get { return _gameboardHelper; } }
 
-    private GameboardHelper _gameboardHelper;
+    private GameboardWorldHelper _gameboardHelper;
 
     private void Awake()
     {
@@ -31,7 +31,7 @@ public class Unit : MonoBehaviour
         Health.Killed += OnKill;
     }
 
-    protected void Initialize(GameboardHelper gameboardHelper)
+    protected void Initialize(GameboardWorldHelper gameboardHelper)
     {
         _gameboardHelper = gameboardHelper;
         name = "Unnamed Unit";

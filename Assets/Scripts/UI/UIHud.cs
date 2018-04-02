@@ -28,7 +28,7 @@ public class UIHud : GameEntity
         Assert.IsNotNull(_gameboard);
 
         if (_gameboard != null)
-            _gameboard.UnitAdded += OnUnitAdded;
+            _gameboard.Objects.UnitAdded += OnUnitAdded;
     }
 
     private void OnUnitAdded(Unit unit)

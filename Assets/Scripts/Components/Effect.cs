@@ -26,7 +26,7 @@ public class Effect : MonoBehaviour
         GetComponents(_effects);
     }
 
-    public void Apply(GameboardHelper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
+    public void Apply(GameboardWorldHelper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
     {
         _effects.ForEach(x => x.Apply(gameboardHelper, spawnEffectParameters));
         Destroy(gameObject);

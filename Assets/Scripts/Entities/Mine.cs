@@ -9,7 +9,7 @@ public class Mine : TileHazard
 
     [SerializeField] private Effect _triggerEffect;
 
-    public override void Initialize(Tile tile, GameboardHelper gameboardHelper)
+    public override void Initialize(Tile tile, GameboardWorldHelper gameboardHelper)
     {
         base.Initialize(tile, gameboardHelper);
 

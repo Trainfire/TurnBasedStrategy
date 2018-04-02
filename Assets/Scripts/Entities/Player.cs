@@ -26,10 +26,9 @@ public class Player : MonoBehaviour
 
     [SerializeField] private MechData _defaultMech;
 
-    void Awake()
+    public void Initialize(Gameboard gameboard)
     {
-        Gameboard = FindObjectOfType<Gameboard>();
-        Assert.IsNotNull(Gameboard);
+        Gameboard = gameboard;
 
         Input = gameObject.GetOrAddComponent<PlayerInput>();
         Input.SpawnDefaultUnit += PlayerInput_SpawnDefaultUnit;
@@ -50,7 +49,7 @@ public class Player : MonoBehaviour
             }
             else
             {
-                Gameboard.Spawn(tile, _defaultMech);
+                Gameboard.Objects.Spawn(tile, _defaultMech);
             }
         }
     }

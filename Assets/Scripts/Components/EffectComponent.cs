@@ -10,11 +10,11 @@ public abstract class EffectComponent : MonoBehaviour
 {
     public struct ApplyEffectParameters
     {
-        public GameboardHelper Helper { get; private set; }
+        public GameboardWorldHelper Helper { get; private set; }
         public Tile Receiver { get; private set; }
         public Vector2 Direction { get; private set; }
 
-        public ApplyEffectParameters(GameboardHelper helper, Tile receiver, Vector2 direction)
+        public ApplyEffectParameters(GameboardWorldHelper helper, Tile receiver, Vector2 direction)
         {
             Helper = helper;
             Receiver = receiver;
@@ -28,7 +28,7 @@ public abstract class EffectComponent : MonoBehaviour
     [SerializeField] private RelativeDirection _effectDirection;
     [SerializeField] private int _relativeOffset;
 
-    public void Apply(GameboardHelper gameboardHelper, SpawnEffectParameters unitAttackEvent)
+    public void Apply(GameboardWorldHelper gameboardHelper, SpawnEffectParameters unitAttackEvent)
     {
         Tile receivingTile = null;
 
