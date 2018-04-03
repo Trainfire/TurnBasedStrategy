@@ -341,6 +341,9 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         }
 
         _visualizer.Clear();
+        _moveUndoRecords.Clear();
+
+        UpdateFlags();
     }
 
     private void OnPlayerInputContinue()
@@ -369,7 +372,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         // - Restore health of units affected by the move.
         // - Restore any hazards that were destroyed as a result of the mine. (Mines, for example).
 
-        Flags.CanUndo = _moveUndoRecords.Count != 0;
+        UpdateFlags();
     }
 
     private void MoveUnit(Mech mech, Tile targetTile)
@@ -385,6 +388,13 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         // TODO
         // - Record any health changes to units affected by the move.
         // - Record any hazards that were destroyed as a result of the mine. (Mines, for example).
+
+        UpdateFlags();
+    }
+
+    private void UpdateFlags()
+    {
+        Flags.CanUndo = _moveUndoRecords.Count != 0;
     }
 }
 
