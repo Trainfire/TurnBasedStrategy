@@ -5,14 +5,15 @@ using Framework;
 public class Gameboard : GameEntity
 {
     public static int GridSize { get; private set; }
+    public static MechData DefaultMech { get; private set; }
 
     public GameboardWorldHelper Helper { get; private set; }
     public GameboardObjects Objects { get; private set; }
     public GameboardInput Input { get; private set; }
     public GameboardVisualizer Visualizer { get; private set; }
     public GameboardState State { get; private set; }
-    public Player Player { get; private set; }
 
+    [SerializeField] private MechData _defaultMech;
     [SerializeField] private Tile _tilePrefab;
     [SerializeField] private Building _buildingPrefab;
     [SerializeField] private int _gridSize;
@@ -20,6 +21,7 @@ public class Gameboard : GameEntity
     private void Awake()
     {
         GridSize = _gridSize;
+        DefaultMech = _defaultMech;
 
         // Temp: Just generate a random world.
         var worldParameters = new GameboardWorldParameters(transform, _tilePrefab);
@@ -36,9 +38,6 @@ public class Gameboard : GameEntity
         Visualizer = gameObject.GetComponentAssert<GameboardVisualizer>();
         Visualizer.Initialize(this);
 
-        State = new GameboardState(Objects, Input);
-
-        Player = FindObjectOfType<Player>();
-        Player.Initialize(this);
+        State = new GameboardState(this);
     }
 }

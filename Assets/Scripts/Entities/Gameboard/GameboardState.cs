@@ -14,35 +14,39 @@ public enum GameboardStateID
     GameOver,
 }
 
-public class ValidPlayerActions
+public class GameboardStateFlags
 {
     public bool CanContinue { get; set; }
     public bool CanControlUnits { get; set; }
+    public bool CanSpawnUnits { get; set; }
     public bool CanUndo { get; set; }
 
     public void Clear()
     {
         CanContinue = false;
         CanControlUnits = false;
+        CanSpawnUnits = false;
         CanUndo = false;
     }
 
-    public ReadOnlyValidPlayerActions AsReadOnly()
+    public ReadOnlyGameboardStateFlags AsReadOnly()
     {
-        return new ReadOnlyValidPlayerActions(this);
+        return new ReadOnlyGameboardStateFlags(this);
     }
 }
 
-public struct ReadOnlyValidPlayerActions
+public struct ReadOnlyGameboardStateFlags
 {
     public readonly bool CanContinue;
     public readonly bool CanControlUnits;
+    public readonly bool CanSpawnUnits;
     public readonly bool CanUndo;
 
-    public ReadOnlyValidPlayerActions(ValidPlayerActions validPlayerActions)
+    public ReadOnlyGameboardStateFlags(GameboardStateFlags validPlayerActions)
     {
         CanContinue = validPlayerActions.CanContinue;
         CanControlUnits = validPlayerActions.CanControlUnits;
+        CanSpawnUnits = validPlayerActions.CanSpawnUnits;
         CanUndo = validPlayerActions.CanUndo;
     }
 }
@@ -55,25 +59,29 @@ public class GameboardState
     public event Action GameWon;
     public event Action GameOver;
 
+    public Tile CurrentSelection { get; private set; }
+
     public GameboardStateID Current { get; private set; }
-    public ReadOnlyValidPlayerActions ValidPlayerActions { get { return _states[Current].ValidPlayerActions.AsReadOnly(); } }
+    public ReadOnlyGameboardStateFlags Flags { get { return _states[Current].Flags.AsReadOnly(); } }
     public int TurnCount { get; private set; }
 
     private Dictionary<GameboardStateID, GameboardStateBase> _states;
 
     private GameboardObjects _gameboardObjects;
 
-    public GameboardState(GameboardObjects gameboardObjects, GameboardInput playerInput)
+    public GameboardState(Gameboard gameboard)
     {
-        _gameboardObjects = gameboardObjects;
+        _gameboardObjects = gameboard.Objects;
 
         _states = new Dictionary<GameboardStateID, GameboardStateBase>();
 
-        Register(new GameboardStateSetupPhase(gameboardObjects, playerInput));
-        Register(new GameboardStatePlayerMovePhase(playerInput));
+        gameboard.Input.Select += OnPlayerInputSelect;
+
+        Register(new GameboardStateSetupPhase(gameboard.Objects, gameboard.Input));
+        Register(new GameboardStatePlayerMovePhase(this, gameboard.Visualizer, gameboard.Input, gameboard.Helper));
         Register(new GameboardStateGameOver());
 
-        foreach (var unit in gameboardObjects.Units.ToList())
+        foreach (var unit in gameboard.Objects.Units.ToList())
         {
             if (unit.GetType() == typeof(Building))
                 unit.Health.Changed += OnBuildingHealthChanged;
@@ -112,6 +120,13 @@ public class GameboardState
         _states[Current].Enter();
     }
 
+    private void OnPlayerInputSelect(Tile selection)
+    {
+        CurrentSelection = selection;
+
+        DebugEx.Log<GameboardState>("Selected tile: " + selection != null ? selection.name : "Empty");
+    }
+
     private void OnBuildingHealthChanged(HealthChangeEvent healthChangeEvent)
     {
         if (_gameboardObjects.Buildings.All(x => x.Health.Current == 0))
@@ -130,11 +145,11 @@ public abstract class GameboardStateBase
     public abstract GameboardStateID StateID { get; }
 
     public virtual bool CanExitState { get { return true; } }
-    public virtual ValidPlayerActions ValidPlayerActions { get; private set; }
+    public virtual GameboardStateFlags Flags { get; private set; }
 
     public void Enter()
     {
-        ValidPlayerActions = new ValidPlayerActions();
+        Flags = new GameboardStateFlags();
 
         Debug.LogFormat("Enter state: [{0}]", StateID);
         OnEnter();
@@ -145,7 +160,7 @@ public abstract class GameboardStateBase
     protected void ExitState()
     {
         Debug.LogFormat("Exit state: [{0}]", StateID);
-        ValidPlayerActions.Clear();
+        Flags.Clear();
         Exited.InvokeSafe(StateID);
     }
 }
@@ -153,6 +168,8 @@ public abstract class GameboardStateBase
 public class GameboardStateSetupPhase : GameboardStateBase
 {
     public override GameboardStateID StateID { get { return GameboardStateID.Setup; } }
+
+    private bool AllMechsSpawned { get { return _gameboardObjects.Mechs.Count == 3; } }
 
     private GameboardObjects _gameboardObjects;
     private GameboardInput _playerInput;
@@ -166,19 +183,38 @@ public class GameboardStateSetupPhase : GameboardStateBase
     protected override void OnEnter()
     {
         _gameboardObjects.UnitAdded += OnUnitAdded;
+        _playerInput.SpawnDefaultUnit += OnPlayerInputSpawnDefaultUnit;
         _playerInput.Continue += OnPlayerInputContinue;
+    }
+
+    private void OnPlayerInputSpawnDefaultUnit(Tile targetTile)
+    {
+        Assert.IsNotNull(targetTile, "Cannot spawn a unit onto a null tile.");
+
+        if (AllMechsSpawned)
+        {
+            DebugEx.LogWarning<GameboardStateSetupPhase>("Cannot spawn a mech as all mechs have been spawned.");
+            return;
+        }
+
+        _gameboardObjects.Spawn(targetTile, Gameboard.DefaultMech);
     }
 
     private void OnUnitAdded(Unit unit)
     {
-        ValidPlayerActions.CanContinue = _gameboardObjects.Mechs.Count == 3;
+        if (!AllMechsSpawned)
+            return;
+
+        Flags.CanContinue = AllMechsSpawned;
+        Flags.CanSpawnUnits = false;
     }
 
     private void OnPlayerInputContinue()
     {
-        if (ValidPlayerActions.CanContinue)
+        if (Flags.CanContinue)
         {
             _gameboardObjects.UnitAdded -= OnUnitAdded;
+            _playerInput.SpawnDefaultUnit -= OnPlayerInputSpawnDefaultUnit;
             _playerInput.Continue -= OnPlayerInputContinue;
             ExitState();
         }
@@ -189,32 +225,166 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
 {
     public override GameboardStateID StateID { get { return GameboardStateID.PlayerMove; } }
 
-    private GameboardInput _playerInput;
-
-    public GameboardStatePlayerMovePhase(GameboardInput playerInput)
+    private struct MoveUndoRecord
     {
-        _playerInput = playerInput;
+        public Unit Unit { get; private set; }
+        public Tile PreviousTile { get; private set; }
+
+        public MoveUndoRecord(Unit unit, Tile previousTile)
+        {
+            Unit = unit;
+            PreviousTile = previousTile;
+        }
+
+        public void Undo()
+        {
+            Unit.MoveTo(PreviousTile);
+        }
+    }
+
+    private enum PlayerAction
+    {
+        Unassigned,
+        Move,
+        PrimaryAttack,
+        SecondaryAttack,
+    }
+
+    private Stack<MoveUndoRecord> _moveUndoRecords;
+    private PlayerAction _currentAction;
+    private Tile _previousSelectedTile;
+    private Mech _selectedMech;
+
+    private GameboardState _state;
+    private GameboardVisualizer _visualizer;
+    private GameboardInput _input;
+    private GameboardWorldHelper _helper;
+
+    public GameboardStatePlayerMovePhase(GameboardState state, GameboardVisualizer visualizer, GameboardInput input, GameboardWorldHelper helper)
+    {
+        _state = state;
+        _visualizer = visualizer;
+        _input = input;
+        _helper = helper;
+
+        _moveUndoRecords = new Stack<MoveUndoRecord>();
     }
 
     protected override void OnEnter()
     {
-        _playerInput.Undo += OnPlayerInputUndo;
-        _playerInput.Continue += OnPlayerInputContinue;
+        _moveUndoRecords.Clear();
 
-        ValidPlayerActions.CanControlUnits = true;
+        _input.Undo += OnPlayerInputUndo;
+        _input.Continue += OnPlayerInputContinue;
+        _input.Select += OnPlayerInputSelect;
+        _input.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
+        _input.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
+        _input.CommitCurrentAction += OnPlayerCommitCurrentAction;
+
+        Flags.CanControlUnits = true;
+    }
+
+    private void OnPlayerInputSelect(Tile targetTile)
+    {
+        if (targetTile != _previousSelectedTile)
+        {
+            _visualizer.Clear();
+            _currentAction = PlayerAction.Unassigned;
+        }
+
+        _selectedMech = _state?.CurrentSelection?.Occupant as Mech;
+
+        _previousSelectedTile = targetTile;
+    }
+
+    private void OnPlayerSetCurrentActionToMove()
+    {
+        if (_selectedMech == null)
+            return;
+
+        _currentAction = PlayerAction.Move;
+
+        _visualizer.ShowReachablePositions(_selectedMech);
+    }
+
+    private void OnPlayerSetCurrentActionToAttack()
+    {
+        if (_selectedMech == null)
+            return;
+
+        if (_selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
+        {
+            DebugEx.LogWarning<GameboardStatePlayerMovePhase>("Cannot attack using the primary weapon as the selected mech has no valid primary weapon and/or missing data.");
+            return;
+        }
+
+        _currentAction = PlayerAction.PrimaryAttack;
+
+        _visualizer.ShowTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData);
+    }
+
+    private void OnPlayerCommitCurrentAction(Tile targetTile)
+    {
+        if (targetTile == null || _selectedMech == null)
+            return;
+
+        switch (_currentAction)
+        {
+            case PlayerAction.Move:
+                MoveUnit(_selectedMech, targetTile);
+                break;
+            case PlayerAction.PrimaryAttack:
+                _selectedMech.PrimaryWeapon?.Use(targetTile);
+                _moveUndoRecords.Clear();
+                break;
+            default: break;
+        }
+
+        _visualizer.Clear();
     }
 
     private void OnPlayerInputContinue()
     {
-        _playerInput.Undo -= OnPlayerInputUndo;
-        _playerInput.Continue -= OnPlayerInputContinue;
+        _input.Undo -= OnPlayerInputUndo;
+        _input.Continue -= OnPlayerInputContinue;
+        _input.Select -= OnPlayerInputSelect;
+        _input.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
+        _input.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
+        _input.CommitCurrentAction -= OnPlayerCommitCurrentAction;
+
+        Assert.IsTrue(_moveUndoRecords.Count == 0, "The move undo stack isn't empty when it should be.");
 
         ExitState();
     }
 
     private void OnPlayerInputUndo()
     {
-        // TODO.
+        if (_moveUndoRecords.Count == 0)
+            return;
+
+        var moveUndoRecord = _moveUndoRecords.Pop();
+        moveUndoRecord.Undo();
+
+        // TODO
+        // - Restore health of units affected by the move.
+        // - Restore any hazards that were destroyed as a result of the mine. (Mines, for example).
+
+        Flags.CanUndo = _moveUndoRecords.Count != 0;
+    }
+
+    private void MoveUnit(Mech mech, Tile targetTile)
+    {
+        if (!_helper.CanReachTile(mech.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
+            return;
+
+        var moveRecord = new MoveUndoRecord(mech, _state.CurrentSelection);
+        _moveUndoRecords.Push(moveRecord);
+
+        mech.MoveTo(targetTile);
+
+        // TODO
+        // - Record any health changes to units affected by the move.
+        // - Record any hazards that were destroyed as a result of the mine. (Mines, for example).
     }
 }
 
@@ -226,8 +396,8 @@ public class GameboardStateGameOver : GameboardStateBase
     {
         base.OnEnter();
 
-        ValidPlayerActions.CanContinue = false;
-        ValidPlayerActions.CanControlUnits = false;
+        Flags.CanContinue = false;
+        Flags.CanControlUnits = false;
 
         DebugEx.Log<GameboardStateGameOver>("Game over, man.");
     }

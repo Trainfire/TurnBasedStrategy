@@ -16,6 +16,7 @@ public class GameboardInput : MonoBehaviour
     private const KeyCode PrimaryAttackKey = KeyCode.Alpha2;
     private const KeyCode SpawnDefaultUnitKey = KeyCode.F;
     private const KeyCode ContinueKey = KeyCode.Space;
+    private const KeyCode UndoKey = KeyCode.Z;
 
     private void LateUpdate()
     {
@@ -38,6 +39,9 @@ public class GameboardInput : MonoBehaviour
 
         if (Input.GetMouseButtonDown(1))
             CommitCurrentAction.InvokeSafe(tileUnderMouse);
+
+        if (Input.GetKeyDown(UndoKey))
+            Undo.InvokeSafe();
     }
 
     private void OnGUI()
@@ -49,6 +53,7 @@ public class GameboardInput : MonoBehaviour
         GUILayout.Label("Move: " + MoveKey.ToString());
         GUILayout.Label("Attack: " + PrimaryAttackKey.ToString());
         GUILayout.Label("Continue: " + ContinueKey.ToString());
+        GUILayout.Label("Undo: " + UndoKey.ToString());
 
         GUILayout.Label("Spawn: " + SpawnDefaultUnitKey.ToString());
 
