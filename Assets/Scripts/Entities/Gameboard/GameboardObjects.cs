@@ -51,11 +51,13 @@ public class GameboardObjects
             unit.Initialize(worldHelper);
             RegisterUnit(unit);
         });
+
+        world.Tiles.ToList().ForEach(tileMap => RegisterStateHandler(tileMap.Value));
     }
 
-    public void RecordState() => _stateHandlers.ForEach(x => x.Record());
-    public void UndoState() => _stateHandlers.ForEach(x => x.Undo());
-    public void CommitState() => _stateHandlers.ForEach(x => x.Commit());
+    public void SaveStateBeforeMove() => _stateHandlers.ForEach(x => x.SaveStateBeforeMove());
+    public void RestoreStateBeforeMove() => _stateHandlers.ForEach(x => x.RestoreStateBeforeMove());
+    public void CommitStateAfterAttack() => _stateHandlers.ForEach(x => x.CommitStateAfterAttack());
 
     public void Spawn(Tile targetTile, MechData mechData)
     {

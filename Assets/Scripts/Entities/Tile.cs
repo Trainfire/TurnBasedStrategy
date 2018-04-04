@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.Assertions;
 using Framework;
 
-public class Tile : MonoBehaviour
+public class Tile : MonoBehaviour, IStateHandler
 {
     public event Action<Tile> OccupantLeft;
     public event Action<Tile> OccupantEntered;
@@ -21,11 +21,13 @@ public class Tile : MonoBehaviour
     private GameboardWorldHelper _gameboardHelper;
     private Unit _occupant;
     private List<TileHazard> _hazards;
+    private List<IStateHandler> _stateHandlers;
 
     private void Awake()
     {
         Marker = gameObject.GetOrAddComponent<TileMarker>();
         _hazards = new List<TileHazard>();
+        _stateHandlers = new List<IStateHandler>();
     }
 
     public void Initialize(GameboardWorldHelper gameboardHelper)
@@ -66,6 +68,10 @@ public class Tile : MonoBehaviour
         hazard.transform.SetGridPosition(transform.GetGridPosition());
 
         _hazards.Add(hazard);
+
+        var stateHandler = hazard as IStateHandler;
+        if (stateHandler != null)
+            _stateHandlers.Add(stateHandler);
     }
 
     public void RemoveHazard(TileHazard hazard)
@@ -95,4 +101,8 @@ public class Tile : MonoBehaviour
         Debug.LogFormat("Occupant {0} vacated from {1} ", OccupantName, name);
         SetOccupant(null);
     }
+
+    void IStateHandler.SaveStateBeforeMove() => _stateHandlers.ForEach(handler => handler.SaveStateBeforeMove());
+    void IStateHandler.RestoreStateBeforeMove() => _stateHandlers.ForEach(handler => handler.RestoreStateBeforeMove());
+    void IStateHandler.CommitStateAfterAttack() => _stateHandlers.ForEach(handler => handler.CommitStateAfterAttack());
 }

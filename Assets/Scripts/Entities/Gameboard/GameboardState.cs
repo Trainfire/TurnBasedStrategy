@@ -332,7 +332,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
             case PlayerAction.PrimaryAttack:
                 _selectedMech.PrimaryWeapon?.Use(targetTile);
                 _moveUndoRecords.Clear();
-                _gameboard.Objects.CommitState();
+                _gameboard.Objects.CommitStateAfterAttack();
                 break;
             default: break;
         }
@@ -366,7 +366,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         var moveUndoRecord = _moveUndoRecords.Pop();
         moveUndoRecord.Undo();
 
-        _gameboard.Objects.UndoState();
+        _gameboard.Objects.RestoreStateBeforeMove();
 
         UpdateFlags();
     }
@@ -376,7 +376,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         if (!_gameboard.Helper.CanReachTile(mech.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
             return;
 
-        _gameboard.Objects.RecordState();
+        _gameboard.Objects.SaveStateBeforeMove();
 
         var moveRecord = new MoveUndoRecord(mech, _state.CurrentSelection);
         _moveUndoRecords.Push(moveRecord);

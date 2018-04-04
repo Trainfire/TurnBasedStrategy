@@ -1,13 +1,26 @@
 ﻿using UnityEngine;
 using UnityEngine.Assertions;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Framework;
 
-public class Mine : TileHazard
+public class Mine : TileHazard, IStateHandler
 {
-    public event Action<Mine> Triggered;
+    private class StateRecord
+    {
+        public bool Triggered { get; set; }
+    }
 
     [SerializeField] private Effect _triggerEffect;
+
+    private Stack<StateRecord> _stateRecords;
+    private bool _triggered;
+
+    private void Awake()
+    {
+        _stateRecords = new Stack<StateRecord>();
+    }
 
     public override void Initialize(Tile tile, GameboardWorldHelper gameboardHelper)
     {
@@ -21,18 +34,50 @@ public class Mine : TileHazard
 
     private void Trigger(Tile tile)
     {
-        tile.OccupantEntered -= Trigger;
-        tile.ReceivedHealthChange -= Trigger;
+        if (_triggered)
+            return;
+
+        _triggered = true;
+
+        if (_stateRecords.Count != 0)
+            _stateRecords.Peek().Triggered = true;
 
         Effect.Spawn(_triggerEffect, (effect) =>
         {
             effect.Apply(Helper, new SpawnEffectParameters(tile, tile));
         });
 
-        tile.RemoveHazard(this);
+        if (_stateRecords.Count == 0)
+            Remove();
+    }
 
-        Triggered.InvokeSafe(this);
+    private void Remove()
+    {
+        Tile.OccupantEntered -= Trigger;
+        Tile.ReceivedHealthChange -= Trigger;
+
+        Tile.RemoveHazard(this);
 
         Destroy(gameObject);
+    }
+
+    void IStateHandler.SaveStateBeforeMove()
+    {
+        _stateRecords.Push(new StateRecord());
+    }
+
+    void IStateHandler.RestoreStateBeforeMove()
+    {
+        Assert.IsTrue(_stateRecords.Count != 0);
+        _stateRecords.Pop();
+        _triggered = false;
+    }
+
+    void IStateHandler.CommitStateAfterAttack()
+    {
+        if (_stateRecords.Any(record => record.Triggered))
+            Remove();
+
+        _stateRecords.Clear();
     }
 }

@@ -58,18 +58,18 @@ public class HealthComponent : MonoBehaviour, IStateHandler
             Killed.InvokeSafe(this);
     }
 
-    void IStateHandler.Record()
+    void IStateHandler.SaveStateBeforeMove()
     {
         _undoStack.Push(Current);
     }
 
-    void IStateHandler.Undo()
+    void IStateHandler.RestoreStateBeforeMove()
     {
         Assert.IsFalse(_undoStack.Count == 0);
         Set(_undoStack.Pop());
     }
 
-    void IStateHandler.Commit()
+    void IStateHandler.CommitStateAfterAttack()
     {
         _undoStack.Clear();
 

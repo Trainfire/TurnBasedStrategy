@@ -1,6 +1,6 @@
 ﻿public interface IStateHandler
 {
-    void Record();
-    void Undo();
-    void Commit();
+    void SaveStateBeforeMove();
+    void RestoreStateBeforeMove();
+    void CommitStateAfterAttack();
 }
