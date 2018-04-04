@@ -35,6 +35,7 @@ public class GameboardObjects
     public IReadOnlyList<Building> Buildings { get { return _units.OfType<Building>().ToList(); } }
 
     private List<Unit> _units;
+    private List<IStateHandler> _stateHandlers;
 
     private GameboardWorldHelper _worldHelper;
 
@@ -43,6 +44,7 @@ public class GameboardObjects
         _worldHelper = worldHelper;
 
         _units = new List<Unit>();
+        _stateHandlers = new List<IStateHandler>();
 
         world.Units.ToList().ForEach(unit =>
         {
@@ -50,6 +52,10 @@ public class GameboardObjects
             RegisterUnit(unit);
         });
     }
+
+    public void RecordState() => _stateHandlers.ForEach(x => x.Record());
+    public void UndoState() => _stateHandlers.ForEach(x => x.Undo());
+    public void CommitState() => _stateHandlers.ForEach(x => x.Commit());
 
     public void Spawn(Tile targetTile, MechData mechData)
     {
@@ -86,6 +92,15 @@ public class GameboardObjects
         UnitAdded.InvokeSafe(unit);
 
         unit.Removed += OnUnitKilled;
+
+        RegisterStateHandler(unit.Health);
+    }
+
+    private void RegisterStateHandler(IStateHandler stateHandler)
+    {
+        Assert.IsFalse(_stateHandlers.Contains(stateHandler));
+
+        _stateHandlers.Add(stateHandler);
     }
 
     private void OnUnitKilled(Unit unit)

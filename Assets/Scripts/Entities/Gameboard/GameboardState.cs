@@ -78,7 +78,7 @@ public class GameboardState
         gameboard.Input.Select += OnPlayerInputSelect;
 
         Register(new GameboardStateSetupPhase(gameboard.Objects, gameboard.Input));
-        Register(new GameboardStatePlayerMovePhase(this, gameboard.Visualizer, gameboard.Input, gameboard.Helper));
+        Register(new GameboardStatePlayerMovePhase(this, gameboard));
         Register(new GameboardStateGameOver());
 
         foreach (var unit in gameboard.Objects.Units.ToList())
@@ -256,16 +256,12 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
     private Mech _selectedMech;
 
     private GameboardState _state;
-    private GameboardVisualizer _visualizer;
-    private GameboardInput _input;
-    private GameboardWorldHelper _helper;
+    private Gameboard _gameboard;
 
-    public GameboardStatePlayerMovePhase(GameboardState state, GameboardVisualizer visualizer, GameboardInput input, GameboardWorldHelper helper)
+    public GameboardStatePlayerMovePhase(GameboardState state, Gameboard gameboard)
     {
         _state = state;
-        _visualizer = visualizer;
-        _input = input;
-        _helper = helper;
+        _gameboard = gameboard;
 
         _moveUndoRecords = new Stack<MoveUndoRecord>();
     }
@@ -274,12 +270,12 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
     {
         _moveUndoRecords.Clear();
 
-        _input.Undo += OnPlayerInputUndo;
-        _input.Continue += OnPlayerInputContinue;
-        _input.Select += OnPlayerInputSelect;
-        _input.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
-        _input.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
-        _input.CommitCurrentAction += OnPlayerCommitCurrentAction;
+        _gameboard.Input.Undo += OnPlayerInputUndo;
+        _gameboard.Input.Continue += OnPlayerInputContinue;
+        _gameboard.Input.Select += OnPlayerInputSelect;
+        _gameboard.Input.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
+        _gameboard.Input.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
+        _gameboard.Input.CommitCurrentAction += OnPlayerCommitCurrentAction;
 
         Flags.CanControlUnits = true;
     }
@@ -288,7 +284,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
     {
         if (targetTile != _previousSelectedTile)
         {
-            _visualizer.Clear();
+            _gameboard.Visualizer.Clear();
             _currentAction = PlayerAction.Unassigned;
         }
 
@@ -304,7 +300,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
 
         _currentAction = PlayerAction.Move;
 
-        _visualizer.ShowReachablePositions(_selectedMech);
+        _gameboard.Visualizer.ShowReachablePositions(_selectedMech);
     }
 
     private void OnPlayerSetCurrentActionToAttack()
@@ -320,7 +316,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
 
         _currentAction = PlayerAction.PrimaryAttack;
 
-        _visualizer.ShowTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData);
+        _gameboard.Visualizer.ShowTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData);
     }
 
     private void OnPlayerCommitCurrentAction(Tile targetTile)
@@ -336,24 +332,24 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
             case PlayerAction.PrimaryAttack:
                 _selectedMech.PrimaryWeapon?.Use(targetTile);
                 _moveUndoRecords.Clear();
+                _gameboard.Objects.CommitState();
                 break;
             default: break;
         }
 
-        _visualizer.Clear();
-        _moveUndoRecords.Clear();
+        _gameboard.Visualizer.Clear();
 
         UpdateFlags();
     }
 
     private void OnPlayerInputContinue()
     {
-        _input.Undo -= OnPlayerInputUndo;
-        _input.Continue -= OnPlayerInputContinue;
-        _input.Select -= OnPlayerInputSelect;
-        _input.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
-        _input.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
-        _input.CommitCurrentAction -= OnPlayerCommitCurrentAction;
+        _gameboard.Input.Undo -= OnPlayerInputUndo;
+        _gameboard.Input.Continue -= OnPlayerInputContinue;
+        _gameboard.Input.Select -= OnPlayerInputSelect;
+        _gameboard.Input.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
+        _gameboard.Input.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
+        _gameboard.Input.CommitCurrentAction -= OnPlayerCommitCurrentAction;
 
         Assert.IsTrue(_moveUndoRecords.Count == 0, "The move undo stack isn't empty when it should be.");
 
@@ -365,29 +361,27 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         if (_moveUndoRecords.Count == 0)
             return;
 
+        DebugEx.Log<GameboardStatePlayerMovePhase>("Undo");
+
         var moveUndoRecord = _moveUndoRecords.Pop();
         moveUndoRecord.Undo();
 
-        // TODO
-        // - Restore health of units affected by the move.
-        // - Restore any hazards that were destroyed as a result of the mine. (Mines, for example).
+        _gameboard.Objects.UndoState();
 
         UpdateFlags();
     }
 
     private void MoveUnit(Mech mech, Tile targetTile)
     {
-        if (!_helper.CanReachTile(mech.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
+        if (!_gameboard.Helper.CanReachTile(mech.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
             return;
+
+        _gameboard.Objects.RecordState();
 
         var moveRecord = new MoveUndoRecord(mech, _state.CurrentSelection);
         _moveUndoRecords.Push(moveRecord);
 
         mech.MoveTo(targetTile);
-
-        // TODO
-        // - Record any health changes to units affected by the move.
-        // - Record any hazards that were destroyed as a result of the mine. (Mines, for example).
 
         UpdateFlags();
     }
