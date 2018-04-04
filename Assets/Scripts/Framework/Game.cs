@@ -57,7 +57,7 @@ namespace Framework
             var consoleView = FindObjectOfType<ConsoleView>();
             if (consoleView == null)
             {
-                Debug.LogError("Failed to find a ConsoleView! The Console will be unavailable!");
+                Debug.LogWarning("Failed to find a ConsoleView! The Console will be unavailable!");
             }
             else
             {

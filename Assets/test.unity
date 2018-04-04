@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -300,7 +300,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31b1bbc4b0941c846b638c80de0ceed0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _defaultMech: {fileID: 11400000, guid: f0ccddbcfd116b846bf4e7f95897751b, type: 2}
 --- !u!1 &1272696670
 GameObject:
   m_ObjectHideFlags: 0
@@ -386,6 +385,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a6c0d77262350d4d9e40dcf6e2f4b04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _defaultMech: {fileID: 11400000, guid: f0ccddbcfd116b846bf4e7f95897751b, type: 2}
   _tilePrefab: {fileID: 114946297969680578, guid: 8bc73abfd3c455d47961d84af4ab6d40,
     type: 2}
   _buildingPrefab: {fileID: 114232061725705194, guid: 3e20d03739a6fa048b0fd09f6a32bb5d,
