@@ -66,7 +66,7 @@ public class HealthComponent : MonoBehaviour, IStateHandler
     void IStateHandler.Undo()
     {
         Assert.IsFalse(_previousHealthValues.Count == 0);
-        Set(_previousHealthValues.Pop(), true);
+        Set(_previousHealthValues.Pop());
     }
 
     void IStateHandler.Commit()
