@@ -25,11 +25,11 @@ public class HealthComponent : MonoBehaviour, IStateHandler
     public int Max { get; private set; }
     public int Current { get; private set; }
 
-    private Stack<int> _previousHealthValues;
+    private Stack<int> _undoStack;
 
     private void Awake()
     {
-        _previousHealthValues = new Stack<int>();
+        _undoStack = new Stack<int>();
     }
 
     public void Setup(int maxHealth)
@@ -54,23 +54,26 @@ public class HealthComponent : MonoBehaviour, IStateHandler
 
         Changed.InvokeSafe(new HealthChangeEvent(this, previousHealth));
 
-        if (Current == 0)
+        if (Current == 0 && _undoStack.Count == 0)
             Killed.InvokeSafe(this);
     }
 
     void IStateHandler.Record()
     {
-        _previousHealthValues.Push(Current);
+        _undoStack.Push(Current);
     }
 
     void IStateHandler.Undo()
     {
-        Assert.IsFalse(_previousHealthValues.Count == 0);
-        Set(_previousHealthValues.Pop());
+        Assert.IsFalse(_undoStack.Count == 0);
+        Set(_undoStack.Pop());
     }
 
     void IStateHandler.Commit()
     {
-        _previousHealthValues.Clear();
+        _undoStack.Clear();
+
+        if (Current == 0)
+            Killed.InvokeSafe(this);
     }
 }
