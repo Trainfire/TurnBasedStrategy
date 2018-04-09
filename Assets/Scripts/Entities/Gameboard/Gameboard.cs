@@ -9,7 +9,7 @@ public class Gameboard : GameEntity
 
     public GameboardWorldHelper Helper { get; private set; }
     public GameboardObjects Objects { get; private set; }
-    public GameboardInput Input { get; private set; }
+    public IGameboardInputEvents InputEvents { get; private set; }
     public GameboardVisualizer Visualizer { get; private set; }
     public GameboardState State { get; private set; }
 
@@ -32,12 +32,18 @@ public class Gameboard : GameEntity
 
         Helper = new GameboardWorldHelper(world);
         Objects = new GameboardObjects(Helper, world);
-        Input = gameObject.GetOrAddComponent<GameboardInput>();
+
+        var input = gameObject.GetOrAddComponent<GameboardInput>();
+        InputEvents = input;
 
         // TODO: Make this a regular class. Not a MonoBehaviour.
         Visualizer = gameObject.GetComponentAssert<GameboardVisualizer>();
         Visualizer.Initialize(this);
 
         State = new GameboardState(this);
+
+        var uiHud = FindObjectOfType<UIHud>();
+        if (uiHud != null)
+            uiHud.Initialize(Objects, input, State);
     }
 }

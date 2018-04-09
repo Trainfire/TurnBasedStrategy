@@ -2,7 +2,18 @@
 using Framework;
 using System;
 
-public class GameboardInput : MonoBehaviour
+public interface IGameboardInputEvents
+{
+    event Action<Tile> SpawnDefaultUnit;
+    event Action<Tile> Select;
+    event Action<Tile> CommitCurrentAction;
+    event Action SetCurrentActionToMove;
+    event Action SetCurrentActionToAttack;
+    event Action Undo;
+    event Action Continue;
+}
+
+public class GameboardInput : MonoBehaviour, IGameboardInputEvents
 {
     public event Action<Tile> SpawnDefaultUnit;
     public event Action<Tile> Select;
@@ -44,23 +55,13 @@ public class GameboardInput : MonoBehaviour
             Undo.InvokeSafe();
     }
 
-    private void OnGUI()
-    {
-        // Begin temp garbage.
-
-        GUILayout.BeginVertical();
-
-        GUILayout.Label("Move: " + MoveKey.ToString());
-        GUILayout.Label("Attack: " + PrimaryAttackKey.ToString());
-        GUILayout.Label("Continue: " + ContinueKey.ToString());
-        GUILayout.Label("Undo: " + UndoKey.ToString());
-
-        GUILayout.Label("Spawn: " + SpawnDefaultUnitKey.ToString());
-
-        GUILayout.EndHorizontal();
-
-        // End temp garbage.
-    }
+    public void TriggerSpawnDefaultUnit(Tile tile) => SpawnDefaultUnit?.Invoke(tile);
+    public void TriggerSelect(Tile tile) => Select?.Invoke(tile);
+    public void TriggerCommitCurrentAction(Tile tile) => CommitCurrentAction?.Invoke(tile);
+    public void TriggerSetCurrentActionToMove() => SetCurrentActionToMove?.Invoke();
+    public void TriggerSetCurrentActionToAttack() => SetCurrentActionToAttack?.Invoke();
+    public void TriggerUndo() => Undo?.Invoke();
+    public void TriggerContinue() => Continue?.Invoke();
 
     private T GetComponentUnderMouse<T>() where T : MonoBehaviour
     {

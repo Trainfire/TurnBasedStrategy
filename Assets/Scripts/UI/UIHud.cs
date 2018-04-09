@@ -6,55 +6,14 @@ using UnityEngine.Assertions;
 using Framework;
 using Framework.UI;
 
-public class UIHud : GameEntity
+public class UIHud : MonoBehaviour
 {
-    private Gameboard _gameboard;
+    private GameboardInput _gameboardInput;
+    private GameboardObjects _gameboardObjects;
 
-    [SerializeField] private UIHealthbar _healthbarPrototype;
-    private Dictionary<Unit, UIHealthbar> _healthbars;
-
-    private void Awake()
+    public void Initialize(GameboardObjects gameboardObjects, GameboardInput gameboardInput, GameboardState gameboardState)
     {
-        Assert.IsNotNull(_healthbarPrototype);
-        _healthbarPrototype.gameObject.SetActive(false);
-        _healthbars = new Dictionary<Unit, UIHealthbar>();
-    }
-
-    protected override void OnInitialize()
-    {
-        base.OnInitialize();
-
-        _gameboard = FindObjectOfType<Gameboard>();
-
-        Assert.IsNotNull(_gameboard);
-
-        if (_gameboard != null)
-        {
-            _gameboard.Objects.UnitAdded += OnUnitAdded;
-
-            _gameboard.Objects.Units.ToList().ForEach(unit => OnUnitAdded(unit));
-        }
-    }
-
-    private void OnUnitAdded(Unit unit)
-    {
-        Assert.IsNotNull(unit);
-        Assert.IsFalse(_healthbars.ContainsKey(unit));
-
-        unit.Removed += OnUnitRemoved;
-
-        var comp = UIUtility.Add<UIHealthbar>(gameObject.transform, _healthbarPrototype.gameObject);
-        comp.Initialize(unit);
-
-        _healthbars.Add(unit, comp);
-    }
-
-    private void OnUnitRemoved(Unit unit)
-    {
-        Assert.IsTrue(_healthbars.ContainsKey(unit));
-
-        Destroy(_healthbars[unit].gameObject);
-
-        _healthbars.Remove(unit);
+        gameObject.GetComponent<UIHealthBars>((comp) => comp.Initialize(gameboardObjects));
+        gameObject.GetComponent<UIHudActions>((comp) => comp.Initialize(gameboardState, gameboardInput));
     }
 }

@@ -75,9 +75,9 @@ public class GameboardState
 
         _states = new Dictionary<GameboardStateID, GameboardStateBase>();
 
-        gameboard.Input.Select += OnPlayerInputSelect;
+        gameboard.InputEvents.Select += OnPlayerInputSelect;
 
-        Register(new GameboardStateSetupPhase(gameboard.Objects, gameboard.Input));
+        Register(new GameboardStateSetupPhase(gameboard.Objects, gameboard.InputEvents));
         Register(new GameboardStatePlayerMovePhase(this, gameboard));
         Register(new GameboardStateGameOver());
 
@@ -122,9 +122,12 @@ public class GameboardState
 
     private void OnPlayerInputSelect(Tile selection)
     {
+        if (selection == null)
+            return;
+
         CurrentSelection = selection;
 
-        DebugEx.Log<GameboardState>("Selected tile: " + selection != null ? selection.name : "Empty");
+        DebugEx.Log<GameboardState>("Selected tile: " + CurrentSelection.name);
     }
 
     private void OnBuildingHealthChanged(HealthChangeEvent healthChangeEvent)
@@ -172,19 +175,19 @@ public class GameboardStateSetupPhase : GameboardStateBase
     private bool AllMechsSpawned { get { return _gameboardObjects.Mechs.Count == 3; } }
 
     private GameboardObjects _gameboardObjects;
-    private GameboardInput _playerInput;
+    private IGameboardInputEvents _input;
 
-    public GameboardStateSetupPhase(GameboardObjects gameboardObjects, GameboardInput playerInput)
+    public GameboardStateSetupPhase(GameboardObjects gameboardObjects, IGameboardInputEvents input)
     {
         _gameboardObjects = gameboardObjects;
-        _playerInput = playerInput;
+        _input = input;
     }
 
     protected override void OnEnter()
     {
         _gameboardObjects.UnitAdded += OnUnitAdded;
-        _playerInput.SpawnDefaultUnit += OnPlayerInputSpawnDefaultUnit;
-        _playerInput.Continue += OnPlayerInputContinue;
+        _input.SpawnDefaultUnit += OnPlayerInputSpawnDefaultUnit;
+        _input.Continue += OnPlayerInputContinue;
     }
 
     private void OnPlayerInputSpawnDefaultUnit(Tile targetTile)
@@ -214,8 +217,8 @@ public class GameboardStateSetupPhase : GameboardStateBase
         if (Flags.CanContinue)
         {
             _gameboardObjects.UnitAdded -= OnUnitAdded;
-            _playerInput.SpawnDefaultUnit -= OnPlayerInputSpawnDefaultUnit;
-            _playerInput.Continue -= OnPlayerInputContinue;
+            _input.SpawnDefaultUnit -= OnPlayerInputSpawnDefaultUnit;
+            _input.Continue -= OnPlayerInputContinue;
             ExitState();
         }
     }
@@ -270,12 +273,12 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
     {
         _moveUndoRecords.Clear();
 
-        _gameboard.Input.Undo += OnPlayerInputUndo;
-        _gameboard.Input.Continue += OnPlayerInputContinue;
-        _gameboard.Input.Select += OnPlayerInputSelect;
-        _gameboard.Input.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
-        _gameboard.Input.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
-        _gameboard.Input.CommitCurrentAction += OnPlayerCommitCurrentAction;
+        _gameboard.InputEvents.Undo += OnPlayerInputUndo;
+        _gameboard.InputEvents.Continue += OnPlayerInputContinue;
+        _gameboard.InputEvents.Select += OnPlayerInputSelect;
+        _gameboard.InputEvents.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
+        _gameboard.InputEvents.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
+        _gameboard.InputEvents.CommitCurrentAction += OnPlayerCommitCurrentAction;
 
         Flags.CanControlUnits = true;
     }
@@ -344,12 +347,12 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
 
     private void OnPlayerInputContinue()
     {
-        _gameboard.Input.Undo -= OnPlayerInputUndo;
-        _gameboard.Input.Continue -= OnPlayerInputContinue;
-        _gameboard.Input.Select -= OnPlayerInputSelect;
-        _gameboard.Input.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
-        _gameboard.Input.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
-        _gameboard.Input.CommitCurrentAction -= OnPlayerCommitCurrentAction;
+        _gameboard.InputEvents.Undo -= OnPlayerInputUndo;
+        _gameboard.InputEvents.Continue -= OnPlayerInputContinue;
+        _gameboard.InputEvents.Select -= OnPlayerInputSelect;
+        _gameboard.InputEvents.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
+        _gameboard.InputEvents.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
+        _gameboard.InputEvents.CommitCurrentAction -= OnPlayerCommitCurrentAction;
 
         Assert.IsTrue(_moveUndoRecords.Count == 0, "The move undo stack isn't empty when it should be.");
 
