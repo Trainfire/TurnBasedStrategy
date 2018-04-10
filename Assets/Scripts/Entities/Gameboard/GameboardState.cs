@@ -279,6 +279,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         _gameboard.InputEvents.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
         _gameboard.InputEvents.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
         _gameboard.InputEvents.CommitCurrentAction += OnPlayerCommitCurrentAction;
+        _gameboard.InputEvents.PreviewAction += OnPlayerPreviewAction;
 
         Flags.CanControlUnits = true;
     }
@@ -353,6 +354,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         _gameboard.InputEvents.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
         _gameboard.InputEvents.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
         _gameboard.InputEvents.CommitCurrentAction -= OnPlayerCommitCurrentAction;
+        _gameboard.InputEvents.PreviewAction -= OnPlayerPreviewAction;
 
         Assert.IsTrue(_moveUndoRecords.Count == 0, "The move undo stack isn't empty when it should be.");
 
@@ -372,6 +374,44 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         _gameboard.Objects.RestoreStateBeforeMove();
 
         UpdateFlags();
+    }
+
+    /// <summary>
+    /// DEBUG.
+    /// </summary>
+    /// <param name="previewTile"></param>
+    private void OnPlayerPreviewAction(Tile previewTile)
+    {
+        if (_selectedMech == null)
+        {
+            DebugEx.LogWarning<GameboardStatePlayerMovePhase>("No mech selected.");
+            return;
+        }
+
+        if (_currentAction == PlayerAction.Unassigned)
+        {
+            DebugEx.Log<GameboardStatePlayerMovePhase>("Nothing to preview.");
+            return;
+        }
+
+        if (_currentAction == PlayerAction.PrimaryAttack)
+        {
+            var mechTile = _gameboard.Helper.GetTile(_selectedMech);
+
+            if (mechTile == null)
+                return;
+
+            if (_selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
+                return;
+
+            var spawnEffectParameters = new SpawnEffectParameters(mechTile, previewTile);
+            var effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, _gameboard.Helper, spawnEffectParameters);
+
+            foreach (var tileHealthChange in effectPreview.HealthChanges)
+            {
+                DebugEx.Log<GameboardStatePlayerMovePhase>("Health Changes: {0} changes by {1}", tileHealthChange.Key.name, tileHealthChange.Value);
+            }
+        }
     }
 
     private void MoveUnit(Mech mech, Tile targetTile)

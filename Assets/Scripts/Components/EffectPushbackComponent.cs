@@ -3,7 +3,12 @@ using Framework;
 
 public class EffectPushbackComponent : EffectComponent
 {
-    protected override void ApplyEffect(ApplyEffectParameters applyEffectParameters)
+    protected override void OnGetPreview(ApplyEffectParameters applyEffectParameters, EffectPreview effectResult)
+    {
+        // Todo.
+    }
+
+    protected override void OnApply(ApplyEffectParameters applyEffectParameters)
     {
         Assert.IsNotNull(applyEffectParameters.Receiver.Occupant);
 

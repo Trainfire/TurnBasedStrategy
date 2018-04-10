@@ -8,7 +8,7 @@ public enum EffectReceiver
 
 public abstract class EffectComponent : MonoBehaviour
 {
-    public struct ApplyEffectParameters
+    public class ApplyEffectParameters
     {
         public GameboardWorldHelper Helper { get; private set; }
         public Tile Receiver { get; private set; }
@@ -28,17 +28,33 @@ public abstract class EffectComponent : MonoBehaviour
     [SerializeField] private RelativeDirection _effectDirection;
     [SerializeField] private int _relativeOffset;
 
-    public void Apply(GameboardWorldHelper gameboardHelper, SpawnEffectParameters unitAttackEvent)
+    public void GetPreview(EffectPreview effectPreview, GameboardWorldHelper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
+    {
+        var applyEffectParameters = GetApplyEffectParameters(gameboardHelper, spawnEffectParameters);
+
+        if (applyEffectParameters != null)
+            OnGetPreview(applyEffectParameters, effectPreview);
+    }
+
+    public void Apply(GameboardWorldHelper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
+    {
+        var applyEffectParameters = GetApplyEffectParameters(gameboardHelper, spawnEffectParameters);
+
+        if (applyEffectParameters != null)
+            OnApply(applyEffectParameters);
+    }
+
+    private ApplyEffectParameters GetApplyEffectParameters(GameboardWorldHelper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
     {
         Tile receivingTile = null;
 
         switch (_effectReceiver)
         {
-            case EffectReceiver.Source: receivingTile = unitAttackEvent.Source; break;
-            case EffectReceiver.Target: receivingTile = unitAttackEvent.Target; break;
+            case EffectReceiver.Source: receivingTile = spawnEffectParameters.Source; break;
+            case EffectReceiver.Target: receivingTile = spawnEffectParameters.Target; break;
         }
 
-        var directionToTarget = GridHelper.DirectionBetween(unitAttackEvent.Source.transform, unitAttackEvent.Target.transform);
+        var directionToTarget = GridHelper.DirectionBetween(spawnEffectParameters.Source.transform, spawnEffectParameters.Target.transform);
         var direction = Vector2.zero;
 
         switch (_effectDirection)
@@ -52,10 +68,11 @@ public abstract class EffectComponent : MonoBehaviour
         receivingTile = gameboardHelper.GetTile(receivingTile.transform.GetGridPosition() + direction * _relativeOffset);
 
         if (receivingTile == null || OnlyAffectOccupiedTiles && receivingTile.Occupant == null)
-            return;
+            return null;
 
-        ApplyEffect(new ApplyEffectParameters(gameboardHelper, receivingTile, direction));
+        return new ApplyEffectParameters(gameboardHelper, receivingTile, direction);
     }
 
-    protected abstract void ApplyEffect(ApplyEffectParameters applyEffectParameters);
+    protected abstract void OnGetPreview(ApplyEffectParameters applyEffectParameters, EffectPreview effectResult);
+    protected abstract void OnApply(ApplyEffectParameters applyEffectParameters);
 }

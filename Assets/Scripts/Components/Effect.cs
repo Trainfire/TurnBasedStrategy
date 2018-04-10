@@ -16,6 +16,26 @@ public struct SpawnEffectParameters
     }
 }
 
+public class EffectPreview
+{
+    public IReadOnlyDictionary<Tile, int> HealthChanges { get { return _healthChanges; } }
+
+    private Dictionary<Tile, int> _healthChanges;
+
+    public EffectPreview()
+    {
+        _healthChanges = new Dictionary<Tile, int>();
+    }
+
+    public void RegisterHealthChange(Tile tile, int healthChangeDelta)
+    {
+        if (!_healthChanges.ContainsKey(tile))
+            _healthChanges.Add(tile, 0);
+
+        _healthChanges[tile] += healthChangeDelta;
+    }
+}
+
 public class Effect : MonoBehaviour
 {
     private List<EffectComponent> _effects;
@@ -30,6 +50,30 @@ public class Effect : MonoBehaviour
     {
         _effects.ForEach(x => x.Apply(gameboardHelper, spawnEffectParameters));
         Destroy(gameObject);
+    }
+
+    private EffectPreview GetPreview(GameboardWorldHelper helper, SpawnEffectParameters parameters)
+    {
+        var effectResult = new EffectPreview();
+        _effects.ForEach(x => x.GetPreview(effectResult, helper, parameters));
+        return effectResult;
+    }
+
+    public static EffectPreview GetPreview(Effect prototype, GameboardWorldHelper helper, SpawnEffectParameters spawnEffectParameters)
+    {
+        if (prototype == null)
+        {
+            DebugEx.LogWarning<GameboardWorldHelper>("Cannot get effect preview as prototype is null.");
+            return new EffectPreview();
+        }
+
+        if (spawnEffectParameters.Source == null || spawnEffectParameters.Target == null)
+        {
+            DebugEx.LogWarning<GameboardWorldHelper>("Cannot get effect result as source and/or target tile is null.");
+            return new EffectPreview();
+        }
+
+        return Spawn(prototype).GetPreview(helper, spawnEffectParameters);
     }
 
     public static Effect Spawn(Effect prototype)

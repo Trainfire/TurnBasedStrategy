@@ -8,7 +8,12 @@ public class EffectSpawnHazardComponent : EffectComponent
 
     protected override bool OnlyAffectOccupiedTiles { get { return false; } }
 
-    protected override void ApplyEffect(ApplyEffectParameters applyEffectParameters)
+    protected override void OnGetPreview(ApplyEffectParameters applyEffectParameters, EffectPreview effectResult)
+    {
+        // Todo.
+    }
+
+    protected override void OnApply(ApplyEffectParameters applyEffectParameters)
     {
         Assert.IsNotNull(_hazardPrototype);
         applyEffectParameters.Receiver.AddHazard(_hazardPrototype);
