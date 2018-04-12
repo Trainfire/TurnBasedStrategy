@@ -411,6 +411,16 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
             {
                 DebugEx.Log<GameboardStatePlayerMovePhase>("Health Changes: {0} changes by {1}", tileHealthChange.Key.name, tileHealthChange.Value);
             }
+
+            foreach (var tilePush in effectPreview.Pushes)
+            {
+                DebugEx.Log<GameboardStatePlayerMovePhase>("Push on tile {0} in direction {1}", tilePush.Key.name, tilePush.Value);
+            }
+
+            foreach (var tileCollisions in effectPreview.Collisions)
+            {
+                DebugEx.Log<GameboardStatePlayerMovePhase>("Collision on tile {0}", tileCollisions.name);
+            }
         }
     }
 

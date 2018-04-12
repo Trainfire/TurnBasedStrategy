@@ -1,20 +1,33 @@
 ﻿using UnityEngine.Assertions;
-using Framework;
 
 public class EffectPushbackComponent : EffectComponent
 {
-    protected override void OnGetPreview(ApplyEffectParameters applyEffectParameters, EffectPreview effectResult)
+    private const int DamageOnCollide = -1;
+
+    protected override void OnGetPreview(ApplyEffectParameters applyEffectParameters, EffectPreview effectPreview)
     {
-        // Todo.
+        var pushableComponent = applyEffectParameters.GetComponentFromOccupant<UnitPushableComponent>();
+        if (pushableComponent != null)
+        {
+            var vectorToDirection = GridHelper.VectorToDirection(applyEffectParameters.Direction);
+
+            var collisionResults = applyEffectParameters.Helper.GetCollisions(pushableComponent.Unit, vectorToDirection);
+            collisionResults.ForEach(result =>
+            {
+                effectPreview.RegisterHealthChange(result, UnitPushableComponent.DamageOnCollision);
+                effectPreview.RegisterCollision(result);
+            });
+
+            effectPreview.RegisterPush(applyEffectParameters.Receiver, vectorToDirection);
+        }
     }
 
     protected override void OnApply(ApplyEffectParameters applyEffectParameters)
     {
         Assert.IsNotNull(applyEffectParameters.Receiver.Occupant);
 
-        applyEffectParameters.Receiver.Occupant.gameObject.GetComponent<UnitPushableComponent>((pushableComponent) =>
-        {
+        var pushableComponent = applyEffectParameters.GetComponentFromOccupant<UnitPushableComponent>();
+        if (pushableComponent != null)
             pushableComponent.Push(GridHelper.VectorToDirection(applyEffectParameters.Direction));
-        });
     }
 }

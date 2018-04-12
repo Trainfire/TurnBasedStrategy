@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 public enum EffectReceiver
 {
@@ -19,6 +20,13 @@ public abstract class EffectComponent : MonoBehaviour
             Helper = helper;
             Receiver = receiver;
             Direction = direction;
+        }
+
+        public T GetComponentFromOccupant<T>(Action<T> onGet = null) where T : MonoBehaviour
+        {
+            if (Receiver != null && Receiver.Occupant != null)
+                return Receiver.Occupant.gameObject.GetComponent<T>();
+            return null;
         }
     }
 

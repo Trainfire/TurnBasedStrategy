@@ -3,8 +3,8 @@ using Framework;
 
 public class UnitComponent : MonoBehaviour
 {
-    protected Unit ParentUnit { get; private set; }
-    public GameboardWorldHelper Helper { get { return ParentUnit.Helper; } }
+    public Unit Unit { get; private set; }
+    public GameboardWorldHelper Helper { get { return Unit.Helper; } }
 
     private bool _initialized;
 
@@ -18,7 +18,7 @@ public class UnitComponent : MonoBehaviour
 
         _initialized = true;
 
-        ParentUnit = unit;
+        Unit = unit;
         OnInitialize();
     }
 

@@ -17,18 +17,6 @@ public class TileResult
     }
 }
 
-public class PushbackResult
-{
-    public Unit Unit { get; private set; }
-    public int Damage { get; private set; }
-
-    public PushbackResult(Unit unit, int damage)
-    {
-        Unit = unit;
-        Damage = damage;
-    }
-}
-
 public class GameboardWorldHelper
 {
     private static int GridSize { get; set; }
@@ -156,16 +144,15 @@ public class GameboardWorldHelper
         return GetTilesFromAllDirections(GetTile(unit), offset, length);
     }
 
-    public List<PushbackResult> GetPushbackResults(Unit source, WorldDirection direction)
+    public List<Tile> GetCollisions(Unit source, WorldDirection direction)
     {
-        var results = new List<PushbackResult>();
+        var results = new List<Tile>();
 
-        var nextTile = GetTile(source);
+        var nextTile = GetTileInDirection(source, direction);
 
         while (nextTile != null && nextTile.Occupant != null)
         {
-            results.Add(new PushbackResult(nextTile.Occupant, 1));
-
+            results.Add(nextTile);
             nextTile = GetTileInDirection(nextTile, direction);
         }
 
