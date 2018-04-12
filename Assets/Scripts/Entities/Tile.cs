@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Assertions;
 using Framework;
+using System.Linq;
 
 public class Tile : MonoBehaviour, IStateHandler
 {
@@ -14,25 +15,26 @@ public class Tile : MonoBehaviour, IStateHandler
 
     public TileMarker Marker { get; private set; }
     public Unit Occupant { get { return _occupant; } }
-    public List<TileHazard> Hazards { get { return _hazards; } }
+    public TileHazards Hazards { get; private set; }
 
     private string OccupantName { get { return _occupant != null ? _occupant.name : "Nobody"; } }
 
     private GameboardWorldHelper _gameboardHelper;
     private Unit _occupant;
-    private List<TileHazard> _hazards;
     private List<IStateHandler> _stateHandlers;
 
     private void Awake()
     {
         Marker = gameObject.GetOrAddComponent<TileMarker>();
-        _hazards = new List<TileHazard>();
+
         _stateHandlers = new List<IStateHandler>();
     }
 
     public void Initialize(GameboardWorldHelper gameboardHelper)
     {
         _gameboardHelper = gameboardHelper;
+
+        Hazards = new TileHazards(this, _gameboardHelper);
     }
 
     public void SetOccupant(Unit occupant)
@@ -57,30 +59,6 @@ public class Tile : MonoBehaviour, IStateHandler
 
             OccupantEntered.InvokeSafe(this);
         }
-    }
-
-    public void AddHazard<T>(T prototype) where T : TileHazard
-    {
-        DebugEx.Log<Tile>("Added hazard: {0}", typeof(T).Name);
-
-        var hazard = Instantiate(prototype);
-        hazard.Initialize(this, _gameboardHelper);
-        hazard.transform.SetGridPosition(transform.GetGridPosition());
-
-        _hazards.Add(hazard);
-
-        var stateHandler = hazard as IStateHandler;
-        if (stateHandler != null)
-            _stateHandlers.Add(stateHandler);
-    }
-
-    public void RemoveHazard(TileHazard hazard)
-    {
-        Assert.IsTrue(_hazards.Contains(hazard));
-
-        DebugEx.Log<Tile>("Removed hazard: {0}", hazard.name);
-
-        _hazards.Remove(hazard);
     }
 
     public void ApplyHealthChange(int amount)

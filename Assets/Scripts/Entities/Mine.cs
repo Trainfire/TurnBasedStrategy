@@ -5,79 +5,79 @@ using System.Collections.Generic;
 using System.Linq;
 using Framework;
 
-public class Mine : TileHazard, IStateHandler
-{
-    private class StateRecord
-    {
-        public bool Triggered { get; set; }
-    }
+//public class Mine : Hazard, IStateHandler
+//{
+//    private class StateRecord
+//    {
+//        public bool Triggered { get; set; }
+//    }
 
-    [SerializeField] private Effect _triggerEffect;
+//    [SerializeField] private Effect _triggerEffect;
 
-    private Stack<StateRecord> _stateRecords;
-    private bool _triggered;
+//    private Stack<StateRecord> _stateRecords;
+//    private bool _triggered;
 
-    private void Awake()
-    {
-        _stateRecords = new Stack<StateRecord>();
-    }
+//    private void Awake()
+//    {
+//        _stateRecords = new Stack<StateRecord>();
+//    }
 
-    public override void Initialize(Tile tile, GameboardWorldHelper gameboardHelper)
-    {
-        base.Initialize(tile, gameboardHelper);
+//    public override void Initialize(Tile tile, GameboardWorldHelper gameboardHelper)
+//    {
+//        base.Initialize(tile, gameboardHelper);
 
-        Assert.IsNotNull(_triggerEffect, "Trigger effect is missing.");
+//        Assert.IsNotNull(_triggerEffect, "Trigger effect is missing.");
 
-        Tile.OccupantEntered += Trigger;
-        Tile.ReceivedHealthChange += Trigger;
-    }
+//        Tile.OccupantEntered += Trigger;
+//        Tile.ReceivedHealthChange += Trigger;
+//    }
 
-    private void Trigger(Tile tile)
-    {
-        if (_triggered)
-            return;
+//    private void Trigger(Tile tile)
+//    {
+//        if (_triggered)
+//            return;
 
-        _triggered = true;
+//        _triggered = true;
 
-        if (_stateRecords.Count != 0)
-            _stateRecords.Peek().Triggered = true;
+//        if (_stateRecords.Count != 0)
+//            _stateRecords.Peek().Triggered = true;
 
-        Effect.Spawn(_triggerEffect, (effect) =>
-        {
-            effect.Apply(Helper, new SpawnEffectParameters(tile, tile));
-        });
+//        Effect.Spawn(_triggerEffect, (effect) =>
+//        {
+//            effect.Apply(Helper, new SpawnEffectParameters(tile, tile));
+//        });
 
-        if (_stateRecords.Count == 0)
-            Remove();
-    }
+//        if (_stateRecords.Count == 0)
+//            Remove();
+//    }
 
-    private void Remove()
-    {
-        Tile.OccupantEntered -= Trigger;
-        Tile.ReceivedHealthChange -= Trigger;
+//    private void Remove()
+//    {
+//        Tile.OccupantEntered -= Trigger;
+//        Tile.ReceivedHealthChange -= Trigger;
 
-        Tile.RemoveHazard(this);
+//        Tile.RemoveHazard(this);
 
-        Destroy(gameObject);
-    }
+//        Destroy(gameObject);
+//    }
 
-    void IStateHandler.SaveStateBeforeMove()
-    {
-        _stateRecords.Push(new StateRecord());
-    }
+//    void IStateHandler.SaveStateBeforeMove()
+//    {
+//        _stateRecords.Push(new StateRecord());
+//    }
 
-    void IStateHandler.RestoreStateBeforeMove()
-    {
-        Assert.IsTrue(_stateRecords.Count != 0);
-        _stateRecords.Pop();
-        _triggered = false;
-    }
+//    void IStateHandler.RestoreStateBeforeMove()
+//    {
+//        Assert.IsTrue(_stateRecords.Count != 0);
+//        _stateRecords.Pop();
+//        _triggered = false;
+//    }
 
-    void IStateHandler.CommitStateAfterAttack()
-    {
-        if (_stateRecords.Any(record => record.Triggered))
-            Remove();
+//    void IStateHandler.CommitStateAfterAttack()
+//    {
+//        if (_stateRecords.Any(record => record.Triggered))
+//            Remove();
 
-        _stateRecords.Clear();
-    }
-}
+//        _stateRecords.Clear();
+//    }
+//}

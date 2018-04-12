@@ -66,5 +66,4 @@ MonoBehaviour:
   _effectReceiver: 1
   _effectDirection: 0
   _relativeOffset: 0
-  _hazardPrototype: {fileID: 114975527713812332, guid: 700eaf0beb805fe41b236f6433e80ff6,
-    type: 2}
+  _hazardData: {fileID: 11400000, guid: dd0b8598bbf73d84c8469680fec7760f, type: 2}

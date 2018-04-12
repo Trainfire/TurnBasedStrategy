@@ -394,6 +394,8 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
             return;
         }
 
+        var effectPreview = new EffectPreview();
+
         if (_currentAction == PlayerAction.PrimaryAttack)
         {
             var mechTile = _gameboard.Helper.GetTile(_selectedMech);
@@ -405,22 +407,32 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
                 return;
 
             var spawnEffectParameters = new SpawnEffectParameters(mechTile, previewTile);
-            var effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, _gameboard.Helper, spawnEffectParameters);
 
-            foreach (var tileHealthChange in effectPreview.HealthChanges)
-            {
-                DebugEx.Log<GameboardStatePlayerMovePhase>("Health Changes: {0} changes by {1}", tileHealthChange.Key.name, tileHealthChange.Value);
-            }
+            effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, _gameboard.Helper, spawnEffectParameters);
+            
+        }
 
-            foreach (var tilePush in effectPreview.Pushes)
-            {
-                DebugEx.Log<GameboardStatePlayerMovePhase>("Push on tile {0} in direction {1}", tilePush.Key.name, tilePush.Value);
-            }
+        if (_currentAction == PlayerAction.Move)
+            effectPreview = previewTile.Hazards.GetEffectPreview(HazardEffectTrigger.OnEnter);
 
-            foreach (var tileCollisions in effectPreview.Collisions)
-            {
-                DebugEx.Log<GameboardStatePlayerMovePhase>("Collision on tile {0}", tileCollisions.name);
-            }
+        PrintPreview(effectPreview);
+    }
+
+    private void PrintPreview(EffectPreview effectPreview)
+    {
+        foreach (var tileHealthChange in effectPreview.HealthChanges)
+        {
+            DebugEx.Log<GameboardStatePlayerMovePhase>("Health Changes: {0} changes by {1}", tileHealthChange.Key.name, tileHealthChange.Value);
+        }
+
+        foreach (var tilePush in effectPreview.Pushes)
+        {
+            DebugEx.Log<GameboardStatePlayerMovePhase>("Push on tile {0} in direction {1}", tilePush.Key.name, tilePush.Value);
+        }
+
+        foreach (var tileCollisions in effectPreview.Collisions)
+        {
+            DebugEx.Log<GameboardStatePlayerMovePhase>("Collision on tile {0}", tileCollisions.name);
         }
     }
 

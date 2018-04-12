@@ -30,7 +30,7 @@ public abstract class EffectComponent : MonoBehaviour
         }
     }
 
-    protected virtual bool OnlyAffectOccupiedTiles { get { return true; } }
+    protected virtual bool OnlyAffectOccupiedTiles { get { return false; } }
 
     [SerializeField] private EffectReceiver _effectReceiver;
     [SerializeField] private RelativeDirection _effectDirection;

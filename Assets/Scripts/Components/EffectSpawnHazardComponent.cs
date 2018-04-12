@@ -4,7 +4,7 @@ using Framework;
 
 public class EffectSpawnHazardComponent : EffectComponent
 {
-    [SerializeField] private TileHazard _hazardPrototype;
+    [SerializeField] private HazardData _hazardData;
 
     protected override bool OnlyAffectOccupiedTiles { get { return false; } }
 
@@ -15,7 +15,7 @@ public class EffectSpawnHazardComponent : EffectComponent
 
     protected override void OnApply(ApplyEffectParameters applyEffectParameters)
     {
-        Assert.IsNotNull(_hazardPrototype);
-        applyEffectParameters.Receiver.AddHazard(_hazardPrototype);
+        Assert.IsNotNull(_hazardData);
+        applyEffectParameters.Receiver.Hazards.Add(_hazardData);
     }
 }
