@@ -23,6 +23,7 @@ public class Hazard : MonoBehaviour, IStateHandler
     private GameboardWorldHelper _helper;
 
     private HazardHandler _hazardHandler;
+    private Stack<int> _previousTriggerCounts;
 
     public void Initialize(HazardData hazardData, Tile tile, GameboardWorldHelper helper)
     {
@@ -36,6 +37,8 @@ public class Hazard : MonoBehaviour, IStateHandler
 
         _hazardHandler = hazardData.EffectTrigger == HazardEffectTrigger.OnEnter ? new HazardOnEnterHandler(this) : new HazardHandler(this);
         _hazardHandler.Removed += OnHazardHandlerRemoved;
+
+        _previousTriggerCounts = new Stack<int>();
     }
 
     private void OnHazardHandlerRemoved(HazardHandler hazardHandler)
@@ -51,7 +54,26 @@ public class Hazard : MonoBehaviour, IStateHandler
         Triggered?.Invoke(this);
     }
 
-    void IStateHandler.SaveStateBeforeMove() => _hazardHandler.SaveStateBeforeMove();
-    void IStateHandler.RestoreStateBeforeMove() => _hazardHandler.RestoreStateBeforeMove();
-    void IStateHandler.CommitStateAfterAttack() => _hazardHandler.CommitStateAfterAttack();
+    void IStateHandler.SaveStateBeforeMove()
+    {
+        _hazardHandler.SaveStateBeforeMove();
+
+        _previousTriggerCounts.Push(TriggeredCount);
+    }
+    void IStateHandler.RestoreStateBeforeMove()
+    {
+        _hazardHandler.RestoreStateBeforeMove();
+
+        if (_previousTriggerCounts.Count == 0)
+            return;
+
+        TriggeredCount = _previousTriggerCounts.Pop();
+    }
+
+    void IStateHandler.CommitStateAfterAttack()
+    {
+        _previousTriggerCounts.Clear();
+
+        _hazardHandler.CommitStateAfterAttack();
+    }
 }
