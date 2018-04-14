@@ -13,8 +13,8 @@ public class Tile : MonoBehaviour, IStateHandler
 
     public bool Blocked { get { return _occupant != null; } }
 
-    public TileMarker Marker { get; private set; }
     public Unit Occupant { get { return _occupant; } }
+    public TileMarker Marker { get; private set; }
     public TileHazards Hazards { get; private set; }
 
     private string OccupantName { get { return _occupant != null ? _occupant.name : "Nobody"; } }
@@ -34,7 +34,10 @@ public class Tile : MonoBehaviour, IStateHandler
     {
         _gameboardHelper = gameboardHelper;
 
-        Hazards = new TileHazards(this, _gameboardHelper);
+        Hazards = gameObject.AddComponent<TileHazards>();
+        Hazards.Initialize(this, _gameboardHelper);
+
+        _stateHandlers.Add(Hazards);
     }
 
     public void SetOccupant(Unit occupant)

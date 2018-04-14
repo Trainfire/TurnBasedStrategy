@@ -1,15 +1,17 @@
 ﻿using Framework;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.Assertions;
 
-public class TileHazards
+public class TileHazards : MonoBehaviour, IStateHandler
 {
     private Tile _tile;
     private GameboardWorldHelper _helper;
 
     private Dictionary<HazardEffectTrigger, Hazard> _hazards;
 
-    public TileHazards(Tile tile, GameboardWorldHelper helper)
+    public void Initialize(Tile tile, GameboardWorldHelper helper)
     {
         _tile = tile;
         _tile.OccupantEntered += OnOccupantEnteredTile;
@@ -21,11 +23,14 @@ public class TileHazards
 
     public void Add(HazardData hazardData)
     {
-        DebugEx.Log<Tile>("Added hazard: {0}", hazardData.Name);
+        DebugEx.Log<Tile>($"Added hazard: {hazardData.name} to tile {_tile.name}.");
 
         Assert.IsFalse(_hazards.ContainsKey(hazardData.EffectTrigger), "Only one hazard of each trigger type is allowed.");
 
-        var hazard = new Hazard(hazardData, _tile, _helper);
+        var hazard = _tile.gameObject.AddComponent<Hazard>();
+        hazard.Initialize(hazardData, _tile, _helper);
+        hazard.Removed += OnHazardRemoved;
+
         _hazards.Add(hazard.Data.EffectTrigger, hazard);
     }
 
@@ -33,9 +38,11 @@ public class TileHazards
     {
         Assert.IsTrue(_hazards.ContainsValue(hazard));
 
-        DebugEx.Log<Tile>("Removed hazard: {0}", hazard.Data.Name);
+        DebugEx.Log<Tile>($"Removed hazard: {hazard.Data.Name}");
 
         _hazards.Remove(hazard.Data.EffectTrigger);
+
+        GameObject.Destroy(hazard);
     }
 
     public EffectPreview GetEffectPreview(HazardEffectTrigger effectTriggerType)
@@ -58,4 +65,10 @@ public class TileHazards
         if (_hazards.ContainsKey(HazardEffectTrigger.OnEnter))
             _hazards[HazardEffectTrigger.OnEnter].Trigger();
     }
+
+    private void OnHazardRemoved(Hazard hazard) => Remove(hazard);
+
+    void IStateHandler.SaveStateBeforeMove() => _hazards.Values.Cast<IStateHandler>().ToList().ForEach(x => x.SaveStateBeforeMove());
+    void IStateHandler.RestoreStateBeforeMove() => _hazards.Values.Cast<IStateHandler>().ToList().ForEach(x => x.RestoreStateBeforeMove());
+    void IStateHandler.CommitStateAfterAttack() => _hazards.Values.Cast<IStateHandler>().ToList().ForEach(x => x.CommitStateAfterAttack());
 }

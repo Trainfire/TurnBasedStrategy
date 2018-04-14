@@ -17,3 +17,5 @@ MonoBehaviour:
     type: 2}
   _viewPrototype: {fileID: 114921056525800758, guid: 700eaf0beb805fe41b236f6433e80ff6,
     type: 2}
+  _lifetime: -1
+  _maxTriggerCount: 1

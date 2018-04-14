@@ -2,6 +2,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Assertions;
+using System.Collections.Generic;
 
 public enum HazardEffectTrigger
 {
@@ -10,16 +11,20 @@ public enum HazardEffectTrigger
     OnStay,
 }
 
-public class Hazard : IStateHandler
+public class Hazard : MonoBehaviour, IStateHandler
 {
     public event Action<Hazard> Triggered;
+    public event Action<Hazard> Removed;
 
     public HazardData Data { get; private set; }
     public Tile Tile { get; private set; }
+    public int TriggeredCount { get; private set; }
 
     private GameboardWorldHelper _helper;
 
-    public Hazard(HazardData hazardData, Tile tile, GameboardWorldHelper helper)
+    private HazardHandler _hazardHandler;
+
+    public void Initialize(HazardData hazardData, Tile tile, GameboardWorldHelper helper)
     {
         Data = hazardData;
         Tile = tile;
@@ -28,27 +33,25 @@ public class Hazard : IStateHandler
         Assert.IsNotNull(Data.ViewPrototype, "View is missing.");
         var view = GameObject.Instantiate<HazardView>(Data.ViewPrototype);
         view.Initialize(this);
+
+        _hazardHandler = hazardData.EffectTrigger == HazardEffectTrigger.OnEnter ? new HazardOnEnterHandler(this) : new HazardHandler(this);
+        _hazardHandler.Removed += OnHazardHandlerRemoved;
     }
 
-    public void Trigger()
+    private void OnHazardHandlerRemoved(HazardHandler hazardHandler)
+    {
+        hazardHandler.Removed -= OnHazardHandlerRemoved;
+        Removed?.Invoke(this);
+    }
+
+    public virtual void Trigger()
     {
         Effect.Spawn(Data.EffectPrototype, (effect) => effect.Apply(_helper, new SpawnEffectParameters(Tile, Tile)));
-
+        TriggeredCount++;
         Triggered?.Invoke(this);
     }
 
-    void IStateHandler.SaveStateBeforeMove()
-    {
-        // TODO.
-    }
-
-    void IStateHandler.RestoreStateBeforeMove()
-    {
-        // TODO.
-    }
-
-    void IStateHandler.CommitStateAfterAttack()
-    {
-        // TODO.
-    }
+    void IStateHandler.SaveStateBeforeMove() => _hazardHandler.SaveStateBeforeMove();
+    void IStateHandler.RestoreStateBeforeMove() => _hazardHandler.RestoreStateBeforeMove();
+    void IStateHandler.CommitStateAfterAttack() => _hazardHandler.CommitStateAfterAttack();
 }
