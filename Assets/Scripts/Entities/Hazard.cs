@@ -18,12 +18,13 @@ public class Hazard : MonoBehaviour, IStateHandler
 
     public HazardData Data { get; private set; }
     public Tile Tile { get; private set; }
-    public int TriggeredCount { get; private set; }
+    public int TriggeredCount { get { return _triggeredCount.Value; } }
 
     private GameboardWorldHelper _helper;
 
     private HazardHandler _hazardHandler;
-    private Stack<int> _previousTriggerCounts;
+    private StateHandledValue<int> _triggeredCount;
+    private List<IStateHandler> _stateHandlers;
 
     public void Initialize(HazardData hazardData, Tile tile, GameboardWorldHelper helper)
     {
@@ -38,7 +39,11 @@ public class Hazard : MonoBehaviour, IStateHandler
         _hazardHandler = hazardData.EffectTrigger == HazardEffectTrigger.OnEnter ? new HazardOnEnterHandler(this) : new HazardHandler(this);
         _hazardHandler.Removed += OnHazardHandlerRemoved;
 
-        _previousTriggerCounts = new Stack<int>();
+        _triggeredCount = new StateHandledValue<int>();
+
+        _stateHandlers = new List<IStateHandler>();
+        _stateHandlers.Add(_hazardHandler);
+        _stateHandlers.Add(_triggeredCount);
     }
 
     private void OnHazardHandlerRemoved(HazardHandler hazardHandler)
@@ -50,30 +55,11 @@ public class Hazard : MonoBehaviour, IStateHandler
     public virtual void Trigger()
     {
         Effect.Spawn(Data.EffectPrototype, (effect) => effect.Apply(_helper, new SpawnEffectParameters(Tile, Tile)));
-        TriggeredCount++;
+        _triggeredCount.Value++;
         Triggered?.Invoke(this);
     }
 
-    void IStateHandler.SaveStateBeforeMove()
-    {
-        _hazardHandler.SaveStateBeforeMove();
-
-        _previousTriggerCounts.Push(TriggeredCount);
-    }
-    void IStateHandler.RestoreStateBeforeMove()
-    {
-        _hazardHandler.RestoreStateBeforeMove();
-
-        if (_previousTriggerCounts.Count == 0)
-            return;
-
-        TriggeredCount = _previousTriggerCounts.Pop();
-    }
-
-    void IStateHandler.CommitStateAfterAttack()
-    {
-        _previousTriggerCounts.Clear();
-
-        _hazardHandler.CommitStateAfterAttack();
-    }
+    void IStateHandler.SaveStateBeforeMove() => _stateHandlers.ForEach(handler => handler.SaveStateBeforeMove());
+    void IStateHandler.RestoreStateBeforeMove() => _stateHandlers.ForEach(handler => handler.RestoreStateBeforeMove());
+    void IStateHandler.CommitStateAfterAttack() => _stateHandlers.ForEach(handler => handler.CommitStateAfterAttack());
 }
