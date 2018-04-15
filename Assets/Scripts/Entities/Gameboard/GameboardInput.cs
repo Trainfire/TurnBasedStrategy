@@ -12,6 +12,7 @@ public interface IGameboardInputEvents
     event Action Undo;
     event Action Continue;
     event Action<Tile> PreviewAction;
+    event Action<Tile> HoveredTileChanged;
 }
 
 public class GameboardInput : MonoBehaviour, IGameboardInputEvents
@@ -24,6 +25,7 @@ public class GameboardInput : MonoBehaviour, IGameboardInputEvents
     public event Action Undo;
     public event Action Continue;
     public event Action<Tile> PreviewAction;
+    public event Action<Tile> HoveredTileChanged;
 
     private const KeyCode MoveKey = KeyCode.Alpha1;
     private const KeyCode PrimaryAttackKey = KeyCode.Alpha2;
@@ -31,6 +33,8 @@ public class GameboardInput : MonoBehaviour, IGameboardInputEvents
     private const KeyCode ContinueKey = KeyCode.Space;
     private const KeyCode UndoKey = KeyCode.Z;
     private const KeyCode PreviewKey = KeyCode.P; // DEBUG
+
+    private Tile _lastTileUnderMouse;
 
     private void LateUpdate()
     {
@@ -59,6 +63,11 @@ public class GameboardInput : MonoBehaviour, IGameboardInputEvents
 
         if (Input.GetKeyDown(PreviewKey) && tileUnderMouse != null)
             PreviewAction?.Invoke(tileUnderMouse);
+
+        if (tileUnderMouse != _lastTileUnderMouse)
+            HoveredTileChanged?.Invoke(tileUnderMouse);
+
+        _lastTileUnderMouse = tileUnderMouse;
     }
 
     public void TriggerSpawnDefaultUnit(Tile tile) => SpawnDefaultUnit?.Invoke(tile);

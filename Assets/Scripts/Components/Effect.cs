@@ -64,6 +64,27 @@ public class EffectPreview
             _collisions.Add(tile);
         }
     }
+
+    public bool IsUnitHealthAffected(Unit unit)
+    {
+        foreach (var tile in _healthChanges)
+        {
+            if (tile.Key.Occupant == unit)
+                return true;
+        }
+        return false;
+    }
+
+    public int GetUnitHealthChangeDelta(Unit unit)
+    {
+        foreach (var tile in _healthChanges)
+        {
+            if (tile.Key.Occupant == unit)
+                return tile.Value;
+        }
+
+        return 0;
+    }
 }
 
 public class Effect : MonoBehaviour

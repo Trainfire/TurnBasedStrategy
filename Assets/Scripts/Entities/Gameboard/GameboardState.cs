@@ -56,6 +56,10 @@ public class GameboardState
 {
     public const int MaxTurns = 5; // TODO: Define via data.
 
+    public event Action EffectPreviewEntered;
+    public event Action EffectPreviewLeft;
+    public event Action<EffectPreview> EffectPreviewChanged;
+
     public event Action GameWon;
     public event Action GameOver;
 
@@ -99,6 +103,7 @@ public class GameboardState
         _states.Add(gameboardState.StateID, gameboardState);
 
         gameboardState.Exited += MoveNext;
+        gameboardState.EffectPreviewed += OnGameboardStateEffectPreviewed;
     }
 
     private void MoveNext(GameboardStateID previousStateID)
@@ -139,10 +144,13 @@ public class GameboardState
             GameOver.InvokeSafe();
         }
     }
+
+    private void OnGameboardStateEffectPreviewed(EffectPreview effectPreview) => EffectPreviewChanged?.Invoke(effectPreview);
 }
 
 public abstract class GameboardStateBase
 {
+    public event Action<EffectPreview> EffectPreviewed;
     public event Action<GameboardStateID> Exited;
 
     public abstract GameboardStateID StateID { get; }
@@ -166,6 +174,8 @@ public abstract class GameboardStateBase
         Flags.Clear();
         Exited.InvokeSafe(StateID);
     }
+
+    protected void PreviewEffect(EffectPreview effectPreview) => EffectPreviewed?.Invoke(effectPreview);
 }
 
 public class GameboardStateSetupPhase : GameboardStateBase
@@ -254,8 +264,8 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
     }
 
     private Stack<MoveUndoRecord> _moveUndoRecords;
-    private PlayerAction _currentAction;
-    private Tile _previousSelectedTile;
+    private CachedValue<PlayerAction> _playerAction;
+    private CachedValue<Tile> _selectedTile;
     private Mech _selectedMech;
 
     private GameboardState _state;
@@ -267,6 +277,9 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         _gameboard = gameboard;
 
         _moveUndoRecords = new Stack<MoveUndoRecord>();
+
+        _playerAction = new CachedValue<PlayerAction>(PlayerAction.Unassigned);
+        _selectedTile = new CachedValue<Tile>();
     }
 
     protected override void OnEnter()
@@ -279,22 +292,22 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         _gameboard.InputEvents.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
         _gameboard.InputEvents.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
         _gameboard.InputEvents.CommitCurrentAction += OnPlayerCommitCurrentAction;
-        _gameboard.InputEvents.PreviewAction += OnPlayerPreviewAction;
+        _gameboard.InputEvents.HoveredTileChanged += OnPlayerHoveredTileChanged;
 
         Flags.CanControlUnits = true;
     }
 
     private void OnPlayerInputSelect(Tile targetTile)
     {
-        if (targetTile != _previousSelectedTile)
+        if (targetTile != _selectedTile.Previous)
         {
             _gameboard.Visualizer.Clear();
-            _currentAction = PlayerAction.Unassigned;
+            _playerAction.Current = PlayerAction.Unassigned;
         }
 
         _selectedMech = _state?.CurrentSelection?.Occupant as Mech;
 
-        _previousSelectedTile = targetTile;
+        _selectedTile.Current = targetTile;
     }
 
     private void OnPlayerSetCurrentActionToMove()
@@ -302,7 +315,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         if (_selectedMech == null)
             return;
 
-        _currentAction = PlayerAction.Move;
+        _playerAction.Current = PlayerAction.Move;
 
         _gameboard.Visualizer.ShowReachablePositions(_selectedMech);
     }
@@ -318,7 +331,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
             return;
         }
 
-        _currentAction = PlayerAction.PrimaryAttack;
+        _playerAction.Current = PlayerAction.PrimaryAttack;
 
         _gameboard.Visualizer.ShowTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData);
     }
@@ -328,7 +341,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         if (targetTile == null || _selectedMech == null)
             return;
 
-        switch (_currentAction)
+        switch (_playerAction.Current)
         {
             case PlayerAction.Move:
                 MoveUnit(_selectedMech, targetTile);
@@ -354,7 +367,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         _gameboard.InputEvents.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
         _gameboard.InputEvents.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
         _gameboard.InputEvents.CommitCurrentAction -= OnPlayerCommitCurrentAction;
-        _gameboard.InputEvents.PreviewAction -= OnPlayerPreviewAction;
+        _gameboard.InputEvents.HoveredTileChanged -= OnPlayerHoveredTileChanged;
 
         Assert.IsTrue(_moveUndoRecords.Count == 0, "The move undo stack isn't empty when it should be.");
 
@@ -376,64 +389,30 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         UpdateFlags();
     }
 
-    /// <summary>
-    /// DEBUG.
-    /// </summary>
-    /// <param name="previewTile"></param>
-    private void OnPlayerPreviewAction(Tile previewTile)
+    private void OnPlayerHoveredTileChanged(Tile hoveredTile)
     {
-        if (_selectedMech == null)
-        {
-            DebugEx.LogWarning<GameboardStatePlayerMovePhase>("No mech selected.");
-            return;
-        }
-
-        if (_currentAction == PlayerAction.Unassigned)
-        {
-            DebugEx.Log<GameboardStatePlayerMovePhase>("Nothing to preview.");
-            return;
-        }
+        // TOOD: Add OnEnterPreview and OnLeavePreview events.
 
         var effectPreview = new EffectPreview();
 
-        if (_currentAction == PlayerAction.PrimaryAttack)
+        if (hoveredTile != null)
         {
-            var mechTile = _gameboard.Helper.GetTile(_selectedMech);
+            if (_playerAction.Current == PlayerAction.PrimaryAttack)
+            {
+                var mechTile = _gameboard.Helper.GetTile(_selectedMech);
+                if (mechTile == null || _selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
+                    return;
 
-            if (mechTile == null)
-                return;
-
-            if (_selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
-                return;
-
-            var spawnEffectParameters = new SpawnEffectParameters(mechTile, previewTile);
-
-            effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, _gameboard.Helper, spawnEffectParameters);
-            
+                var spawnEffectParameters = new SpawnEffectParameters(mechTile, hoveredTile);
+                effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, _gameboard.Helper, spawnEffectParameters);
+            }
+            else if (_playerAction.Current == PlayerAction.Move)
+            {
+                effectPreview = hoveredTile.Hazards.GetEffectPreviewOnEnter(_selectedMech);
+            }
         }
 
-        if (_currentAction == PlayerAction.Move)
-            effectPreview = previewTile.Hazards.GetEffectPreview(HazardEffectTrigger.OnEnter);
-
-        PrintPreview(effectPreview);
-    }
-
-    private void PrintPreview(EffectPreview effectPreview)
-    {
-        foreach (var tileHealthChange in effectPreview.HealthChanges)
-        {
-            DebugEx.Log<GameboardStatePlayerMovePhase>("Health Changes: {0} changes by {1}", tileHealthChange.Key.name, tileHealthChange.Value);
-        }
-
-        foreach (var tilePush in effectPreview.Pushes)
-        {
-            DebugEx.Log<GameboardStatePlayerMovePhase>("Push on tile {0} in direction {1}", tilePush.Key.name, tilePush.Value);
-        }
-
-        foreach (var tileCollisions in effectPreview.Collisions)
-        {
-            DebugEx.Log<GameboardStatePlayerMovePhase>("Collision on tile {0}", tileCollisions.name);
-        }
+        PreviewEffect(effectPreview);
     }
 
     private void MoveUnit(Mech mech, Tile targetTile)

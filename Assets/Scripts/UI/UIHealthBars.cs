@@ -12,6 +12,7 @@ public class UIHealthBars : MonoBehaviour
     private Dictionary<Unit, UIHealthbar> _healthbars;
 
     private GameboardObjects _gameboardObjects;
+    private GameboardState _gameboardState;
 
     private void Awake()
     {
@@ -20,11 +21,13 @@ public class UIHealthBars : MonoBehaviour
         _healthbars = new Dictionary<Unit, UIHealthbar>();
     }
 
-    public void Initialize(GameboardObjects gameboardObjects)
+    public void Initialize(GameboardObjects gameboardObjects, GameboardState gameboardState)
     {
         _gameboardObjects = gameboardObjects;
         _gameboardObjects.UnitAdded += AddHealthBar;
         _gameboardObjects.UnitRemoved += RemoveHealthBar;
+
+        _gameboardState = gameboardState;
     }
 
     private void AddHealthBar(Unit unit)
@@ -35,7 +38,7 @@ public class UIHealthBars : MonoBehaviour
         unit.Removed += RemoveHealthBar;
 
         var comp = UIUtility.Add<UIHealthbar>(gameObject.transform, _healthbarPrototype.gameObject);
-        comp.Initialize(unit);
+        comp.Initialize(unit, _gameboardState);
 
         _healthbars.Add(unit, comp);
     }

@@ -24,8 +24,6 @@ public class EffectPushbackComponent : EffectComponent
 
     protected override void OnApply(ApplyEffectParameters applyEffectParameters)
     {
-        Assert.IsNotNull(applyEffectParameters.Receiver.Occupant);
-
         var pushableComponent = applyEffectParameters.GetComponentFromOccupant<UnitPushableComponent>();
         if (pushableComponent != null)
             pushableComponent.Push(GridHelper.VectorToDirection(applyEffectParameters.Direction));

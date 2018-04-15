@@ -45,19 +45,44 @@ public class TileHazards : MonoBehaviour, IStateHandler
         GameObject.Destroy(hazard);
     }
 
-    public EffectPreview GetEffectPreview(HazardEffectTrigger effectTriggerType)
+    public EffectPreview GetEffectPreviewOnEnter(Unit movingUnit)
     {
-        if (!_hazards.ContainsKey(effectTriggerType))
+        if (ShouldDefaultEffectPreview(HazardEffectTrigger.OnEnter))
             return new EffectPreview();
 
-        var hazardEffect = _hazards[effectTriggerType].Data.EffectPrototype;
-        if (hazardEffect == null)
+        if (movingUnit == null)
         {
-            DebugEx.LogWarning<Hazard>("Cannot return effect preview as the effect prototype is missing for this hazard.");
+            DebugEx.LogWarning<TileHazards>("Cannot return effect preview as the specified unit is null.");
             return new EffectPreview();
         }
 
-        return Effect.GetPreview(hazardEffect, _helper, new SpawnEffectParameters(_tile, _tile));
+        var movingUnitTile = _helper.GetTile(movingUnit);
+        if (movingUnitTile == null)
+            return new EffectPreview();
+
+        return Effect.GetPreview(_hazards[HazardEffectTrigger.OnEnter].Data.EffectPrototype, _helper, new SpawnEffectParameters(movingUnitTile, _tile));
+    }
+
+    public EffectPreview GetEffectPreview(HazardEffectTrigger effectTriggerType)
+    {
+        if (ShouldDefaultEffectPreview(effectTriggerType))
+            return new EffectPreview();
+
+        return Effect.GetPreview(_hazards[effectTriggerType].Data.EffectPrototype, _helper, new SpawnEffectParameters(_tile, _tile));
+    }
+
+    private bool ShouldDefaultEffectPreview(HazardEffectTrigger effectTriggerType)
+    {
+        if (!_hazards.ContainsKey(effectTriggerType))
+            return true;
+
+        if (_hazards[effectTriggerType].Data.EffectPrototype == null)
+        {
+            DebugEx.LogWarning<Hazard>("Cannot return effect preview as the effect prototype is missing for this hazard.");
+            return true;
+        }
+
+        return false;
     }
 
     private void OnOccupantEnteredTile(Tile tile)
