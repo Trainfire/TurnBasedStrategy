@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2846a405da147ab428822d217ca12fbb, type: 3}
+  m_Name: GameboardSettings
+  m_EditorClassIdentifier: 
+  _gridSize: 8
+  _maxTurns: 5
+  _prefabs:
+    _defaultMech: {fileID: 11400000, guid: f0ccddbcfd116b846bf4e7f95897751b, type: 2}
+    _defaultBuilding: {fileID: 114232061725705194, guid: 3e20d03739a6fa048b0fd09f6a32bb5d,
+      type: 2}
+    _tile: {fileID: 114946297969680578, guid: 8bc73abfd3c455d47961d84af4ab6d40, type: 2}

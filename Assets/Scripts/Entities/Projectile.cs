@@ -29,7 +29,7 @@ public class Projectile : MonoBehaviour
 
     private void Update()
     {
-        if (GameboardWorldHelper.OutOfBounds(transform.GetGridPosition()))
+        if (Helper.OutOfBounds(transform.GetGridPosition()))
         {
             Destroy(gameObject);
             return;

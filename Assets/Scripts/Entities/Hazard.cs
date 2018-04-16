@@ -20,13 +20,13 @@ public class Hazard : MonoBehaviour, IStateHandler
     public Tile Tile { get; private set; }
     public int TriggeredCount { get { return _triggeredCount.Value; } }
 
-    private GameboardWorldHelper _helper;
+    private Helper _helper;
 
     private HazardHandler _hazardHandler;
     private StateHandledValue<int> _triggeredCount;
     private List<IStateHandler> _stateHandlers;
 
-    public void Initialize(HazardData hazardData, Tile tile, GameboardWorldHelper helper)
+    public void Initialize(HazardData hazardData, Tile tile, Helper helper)
     {
         Data = hazardData;
         Tile = tile;

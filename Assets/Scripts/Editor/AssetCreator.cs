@@ -12,4 +12,7 @@ public class AssetCreator
 
     [MenuItem("Assets/Create/GameData/HazardData")]
     public static void CreateHazardData() => ScriptableObjectUtility.CreateAsset<HazardData>();
+
+    [MenuItem("Assets/Create/GameData/GameboardData")]
+    public static void CreateGameboardData() => ScriptableObjectUtility.CreateAsset<GameboardData>();
 }

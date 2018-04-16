@@ -3,13 +3,13 @@ using UnityEngine.Assertions;
 using System.Collections.Generic;
 using Framework;
 
-public class GameboardWorld
+public class World
 {
     public IReadOnlyDictionary<Vector2, Tile> Tiles { get; private set; }
     public IReadOnlyList<Unit> Units { get; private set; }
     public int GridSize { get; private set; }
 
-    public GameboardWorld(Dictionary<Vector2, Tile> tiles, List<Unit> units, int gridSize)
+    public World(Dictionary<Vector2, Tile> tiles, List<Unit> units, int gridSize)
     {
         Tiles = tiles;
         Units = units;
@@ -17,13 +17,13 @@ public class GameboardWorld
     }
 }
 
-public class GameboardWorldParameters
+public class WorldParameters
 {
     public Transform Root { get; private set; }
     public Tile TilePrototype { get; private set; }
     public List<Building> BuildingPrototypes { get; private set; }
 
-    public GameboardWorldParameters(Transform root, Tile tilePrototype)
+    public WorldParameters(Transform root, Tile tilePrototype)
     {
         Root = root;
         TilePrototype = tilePrototype;
@@ -36,16 +36,16 @@ public class GameboardWorldParameters
     }
 }
 
-public class GameboardWorldGenerator
+public class WorldGenerator
 {
-    private GameboardWorldParameters _gameboardWorldParameters;
+    private WorldParameters _gameboardWorldParameters;
 
-    public GameboardWorldGenerator(GameboardWorldParameters gameboardWorldParameters)
+    public WorldGenerator(WorldParameters gameboardWorldParameters)
     {
         _gameboardWorldParameters = gameboardWorldParameters;
     }
 
-    public GameboardWorld Generate(int gridSize)
+    public World Generate(int gridSize)
     {
         Assert.IsNotNull(_gameboardWorldParameters.Root);
         Assert.IsNotNull(_gameboardWorldParameters.TilePrototype);
@@ -78,6 +78,6 @@ public class GameboardWorldGenerator
             }
         }
 
-        return new GameboardWorld(tileMap, units, gridSize);
+        return new World(tileMap, units, gridSize);
     }
 }

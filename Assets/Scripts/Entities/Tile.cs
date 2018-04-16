@@ -19,7 +19,7 @@ public class Tile : MonoBehaviour, IStateHandler
 
     private string OccupantName { get { return _occupant != null ? _occupant.name : "Nobody"; } }
 
-    private GameboardWorldHelper _gameboardHelper;
+    private Helper _gameboardHelper;
     private Unit _occupant;
     private List<IStateHandler> _stateHandlers;
 
@@ -30,7 +30,7 @@ public class Tile : MonoBehaviour, IStateHandler
         _stateHandlers = new List<IStateHandler>();
     }
 
-    public void Initialize(GameboardWorldHelper gameboardHelper)
+    public void Initialize(Helper gameboardHelper)
     {
         _gameboardHelper = gameboardHelper;
 

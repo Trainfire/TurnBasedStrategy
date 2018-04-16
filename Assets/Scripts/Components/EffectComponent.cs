@@ -11,11 +11,11 @@ public abstract class EffectComponent : MonoBehaviour
 {
     public class ApplyEffectParameters
     {
-        public GameboardWorldHelper Helper { get; private set; }
+        public Helper Helper { get; private set; }
         public Tile Receiver { get; private set; }
         public Vector2 Direction { get; private set; }
 
-        public ApplyEffectParameters(GameboardWorldHelper helper, Tile receiver, Vector2 direction)
+        public ApplyEffectParameters(Helper helper, Tile receiver, Vector2 direction)
         {
             Helper = helper;
             Receiver = receiver;
@@ -36,7 +36,7 @@ public abstract class EffectComponent : MonoBehaviour
     [SerializeField] private RelativeDirection _effectDirection;
     [SerializeField] private int _relativeOffset;
 
-    public void GetPreview(EffectPreview effectPreview, GameboardWorldHelper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
+    public void GetPreview(EffectPreview effectPreview, Helper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
     {
         var applyEffectParameters = GetApplyEffectParameters(gameboardHelper, spawnEffectParameters);
 
@@ -44,7 +44,7 @@ public abstract class EffectComponent : MonoBehaviour
             OnGetPreview(applyEffectParameters, effectPreview);
     }
 
-    public void Apply(GameboardWorldHelper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
+    public void Apply(Helper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
     {
         var applyEffectParameters = GetApplyEffectParameters(gameboardHelper, spawnEffectParameters);
 
@@ -52,7 +52,7 @@ public abstract class EffectComponent : MonoBehaviour
             OnApply(applyEffectParameters);
     }
 
-    private ApplyEffectParameters GetApplyEffectParameters(GameboardWorldHelper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
+    private ApplyEffectParameters GetApplyEffectParameters(Helper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
     {
         Tile receivingTile = null;
 

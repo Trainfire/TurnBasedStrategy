@@ -4,7 +4,7 @@ using Framework;
 public class UnitComponent : MonoBehaviour
 {
     public Unit Unit { get; private set; }
-    public GameboardWorldHelper Helper { get { return Unit.Helper; } }
+    public Helper Helper { get { return Unit.Helper; } }
 
     private bool _initialized;
 

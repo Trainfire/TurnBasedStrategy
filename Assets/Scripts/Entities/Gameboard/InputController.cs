@@ -2,7 +2,7 @@
 using Framework;
 using System;
 
-public interface IGameboardInputEvents
+public interface IInputEvents
 {
     event Action<Tile> SpawnDefaultUnit;
     event Action<Tile> Select;
@@ -15,7 +15,7 @@ public interface IGameboardInputEvents
     event Action<Tile> HoveredTileChanged;
 }
 
-public class GameboardInput : MonoBehaviour, IGameboardInputEvents
+public class InputController : MonoBehaviour, IInputEvents
 {
     public event Action<Tile> SpawnDefaultUnit;
     public event Action<Tile> Select;

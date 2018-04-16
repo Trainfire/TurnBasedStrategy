@@ -7,7 +7,7 @@ public class Building : Unit
 {
     [SerializeField] private int _health;
 
-    public override void Initialize(GameboardWorldHelper gameboardHelper)
+    public override void Initialize(Helper gameboardHelper)
     {
         base.Initialize(gameboardHelper);
         Health.Setup(_health);

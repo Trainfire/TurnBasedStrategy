@@ -7,11 +7,11 @@ using UnityEngine.Assertions;
 public class TileHazards : MonoBehaviour, IStateHandler
 {
     private Tile _tile;
-    private GameboardWorldHelper _helper;
+    private Helper _helper;
 
     private Dictionary<HazardEffectTrigger, Hazard> _hazards;
 
-    public void Initialize(Tile tile, GameboardWorldHelper helper)
+    public void Initialize(Tile tile, Helper helper)
     {
         _tile = tile;
         _tile.OccupantEntered += OnOccupantEnteredTile;

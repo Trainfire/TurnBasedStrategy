@@ -25,7 +25,7 @@ public class SpawnMechAction : SpawnUnitAction
     }
 }
 
-public class GameboardObjects
+public class Entities
 {
     public event Action<Unit> UnitAdded;
     public event Action<Unit> UnitRemoved;
@@ -37,9 +37,9 @@ public class GameboardObjects
     private List<Unit> _units;
     private List<IStateHandler> _stateHandlers;
 
-    private GameboardWorldHelper _worldHelper;
+    private Helper _worldHelper;
 
-    public GameboardObjects(GameboardWorldHelper worldHelper, GameboardWorld world)
+    public Entities(Helper worldHelper, World world)
     {
         _worldHelper = worldHelper;
 

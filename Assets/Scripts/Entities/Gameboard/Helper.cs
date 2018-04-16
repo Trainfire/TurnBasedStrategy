@@ -17,13 +17,13 @@ public class TileResult
     }
 }
 
-public class GameboardWorldHelper
+public class Helper
 {
     private static int GridSize { get; set; }
 
-    private GameboardWorld _world;
+    private World _world;
 
-    public GameboardWorldHelper(GameboardWorld world)
+    public Helper(World world)
     {
         GridSize = world.GridSize;
 

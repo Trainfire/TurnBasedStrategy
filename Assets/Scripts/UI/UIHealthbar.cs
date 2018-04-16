@@ -11,7 +11,7 @@ public class UIHealthbar : MonoBehaviour
     [SerializeField] private float _offset;
 
     private Unit _unit;
-    private GameboardState _gameboardState;
+    private IStateEvents _stateEvents;
 
     private List<UIFillSegment> _fillSegmentInstances;
 
@@ -23,14 +23,14 @@ public class UIHealthbar : MonoBehaviour
         _fillSegmentInstances = new List<UIFillSegment>();
     }
 
-    public void Initialize(Unit unit, GameboardState gameboardState)
+    public void Initialize(Unit unit, IStateEvents stateEvents)
     {
         Assert.IsNotNull(unit);
 
         _unit = unit;
 
-        _gameboardState = gameboardState;
-        _gameboardState.EffectPreviewChanged += OnGameboardStateEffectPreviewChanged;
+        _stateEvents = stateEvents;
+        _stateEvents.EffectPreviewShow += OnGameboardStateEffectPreviewChanged;
 
         Assert.IsNotNull(_unit.Health);
 

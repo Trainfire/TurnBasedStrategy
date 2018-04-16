@@ -97,32 +97,32 @@ public class Effect : MonoBehaviour
         GetComponents(_effects);
     }
 
-    public void Apply(GameboardWorldHelper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
+    public void Apply(Helper gameboardHelper, SpawnEffectParameters spawnEffectParameters)
     {
         _effects.ForEach(x => x.Apply(gameboardHelper, spawnEffectParameters));
         Destroy(gameObject);
     }
 
-    private EffectPreview GetPreview(GameboardWorldHelper helper, SpawnEffectParameters parameters)
+    private EffectPreview GetPreview(Helper helper, SpawnEffectParameters parameters)
     {
         var effectResult = new EffectPreview();
         _effects.ForEach(x => x.GetPreview(effectResult, helper, parameters));
         return effectResult;
     }
 
-    public static EffectPreview GetPreview(Effect prototype, GameboardWorldHelper helper, SpawnEffectParameters spawnEffectParameters)
+    public static EffectPreview GetPreview(Effect prototype, Helper helper, SpawnEffectParameters spawnEffectParameters)
     {
         var effectPreview = new EffectPreview();
 
         if (prototype == null)
         {
-            DebugEx.LogWarning<GameboardWorldHelper>("Cannot get effect preview as prototype is null.");
+            DebugEx.LogWarning<Helper>("Cannot get effect preview as prototype is null.");
             return effectPreview;
         }
 
         if (spawnEffectParameters.Source == null || spawnEffectParameters.Target == null)
         {
-            DebugEx.LogWarning<GameboardWorldHelper>("Cannot get effect result as source and/or target tile is null.");
+            DebugEx.LogWarning<Helper>("Cannot get effect result as source and/or target tile is null.");
             return effectPreview;
         }
 

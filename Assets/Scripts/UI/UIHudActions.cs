@@ -12,8 +12,9 @@ public class UIHudActions : MonoBehaviour
     [SerializeField] private Button _prototype;
     private List<Button> _instances;
 
-    private GameboardState _gameboardState;
-    private GameboardInput _gameboardInput;
+    private State _state;
+    private InputController _inputController;
+
     private Button _buttonContinue;
     private Button _buttonUndo;
     private Button _buttonMove;
@@ -27,15 +28,15 @@ public class UIHudActions : MonoBehaviour
         _instances = new List<Button>();
     }
 
-    public void Initialize(GameboardState gameboardState, GameboardInput gameboardInput)
+    public void Initialize(Gameboard gameboard, InputController inputController)
     {
-        _gameboardState = gameboardState;
-        _gameboardInput = gameboardInput;
+        _state = gameboard.State;
+        _inputController = inputController;
 
-        _buttonContinue = AddButton("Continue", () => gameboardInput.TriggerContinue());
-        _buttonUndo = AddButton("Undo", () => gameboardInput.TriggerUndo());
-        _buttonMove = AddButton("Move", () => gameboardInput.TriggerSetCurrentActionToMove());
-        _buttonAttack = AddButton("Attack", () => gameboardInput.TriggerSetCurrentActionToAttack());
+        _buttonContinue = AddButton("Continue", () => inputController.TriggerContinue());
+        _buttonUndo = AddButton("Undo", () => inputController.TriggerUndo());
+        _buttonMove = AddButton("Move", () => inputController.TriggerSetCurrentActionToMove());
+        _buttonAttack = AddButton("Attack", () => inputController.TriggerSetCurrentActionToAttack());
     }
 
     private Button AddButton(string label, Action onClick)
@@ -56,12 +57,12 @@ public class UIHudActions : MonoBehaviour
 
     private void Update()
     {
-        if (_gameboardState == null)
+        if (_state == null)
             return;
 
-        _buttonContinue.interactable = _gameboardState.Flags.CanContinue;
-        _buttonUndo.gameObject.SetActive(_gameboardState.Flags.CanUndo);
-        _buttonMove.gameObject.SetActive(_gameboardState.Flags.CanControlUnits);
-        _buttonAttack.gameObject.SetActive(_gameboardState.Flags.CanControlUnits);
+        _buttonContinue.interactable = _state.Flags.CanContinue;
+        _buttonUndo.gameObject.SetActive(_state.Flags.CanUndo);
+        _buttonMove.gameObject.SetActive(_state.Flags.CanControlUnits);
+        _buttonAttack.gameObject.SetActive(_state.Flags.CanControlUnits);
     }
 }

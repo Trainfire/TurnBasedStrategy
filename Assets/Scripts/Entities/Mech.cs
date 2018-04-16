@@ -12,7 +12,7 @@ public class Mech : Unit
     public UnitWeaponComponent PrimaryWeapon { get; private set; }
     public UnitWeaponComponent SecondaryWeapon { get; private set; }
 
-    public void Initialize(MechData mechData, GameboardWorldHelper helper)
+    public void Initialize(MechData mechData, Helper helper)
     {
         base.Initialize(helper);
 

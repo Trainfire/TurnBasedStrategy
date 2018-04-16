@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using Framework;
 
-public class GameboardStatePlayerMovePhase : GameboardStateBase
+public class StatePlayerMovePhase : StateBase
 {
-    public override GameboardStateID StateID { get { return GameboardStateID.PlayerMove; } }
+    public override StateID StateID { get { return StateID.PlayerMove; } }
 
     private struct MoveUndoRecord
     {
@@ -36,14 +36,8 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
     private CachedValue<Tile> _selectedTile;
     private Mech _selectedMech;
 
-    private GameboardState _state;
-    private Gameboard _gameboard;
-
-    public GameboardStatePlayerMovePhase(GameboardState state, Gameboard gameboard)
+    public StatePlayerMovePhase(Gameboard gameboard, StateEventsController gameboardEvents) : base(gameboard, gameboardEvents)
     {
-        _state = state;
-        _gameboard = gameboard;
-
         _moveUndoRecords = new Stack<MoveUndoRecord>();
 
         _playerAction = new CachedValue<PlayerAction>(PlayerAction.Unassigned);
@@ -54,13 +48,13 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
     {
         _moveUndoRecords.Clear();
 
-        _gameboard.InputEvents.Undo += OnPlayerInputUndo;
-        _gameboard.InputEvents.Continue += OnPlayerInputContinue;
-        _gameboard.InputEvents.Select += OnPlayerInputSelect;
-        _gameboard.InputEvents.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
-        _gameboard.InputEvents.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
-        _gameboard.InputEvents.CommitCurrentAction += OnPlayerCommitCurrentAction;
-        _gameboard.InputEvents.HoveredTileChanged += OnPlayerHoveredTileChanged;
+        Gameboard.InputEvents.Undo += OnPlayerInputUndo;
+        Gameboard.InputEvents.Continue += OnPlayerInputContinue;
+        Gameboard.InputEvents.Select += OnPlayerInputSelect;
+        Gameboard.InputEvents.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
+        Gameboard.InputEvents.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
+        Gameboard.InputEvents.CommitCurrentAction += OnPlayerCommitCurrentAction;
+        Gameboard.InputEvents.HoveredTileChanged += OnPlayerHoveredTileChanged;
 
         Flags.CanControlUnits = true;
     }
@@ -69,11 +63,12 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
     {
         if (targetTile != _selectedTile.Previous)
         {
-            _gameboard.Visualizer.Clear();
+            Events.ClearTilesPreview();
             _playerAction.Current = PlayerAction.Unassigned;
         }
 
-        _selectedMech = _state?.CurrentSelection?.Occupant as Mech;
+        if (targetTile.Occupant != null && (targetTile.Occupant as Mech) != null)
+            _selectedMech = targetTile.Occupant as Mech;
 
         _selectedTile.Current = targetTile;
     }
@@ -85,7 +80,7 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
 
         _playerAction.Current = PlayerAction.Move;
 
-        _gameboard.Visualizer.ShowReachablePositions(_selectedMech);
+        Events.ShowTilesPreview(Gameboard.Helper.GetReachableTiles(_selectedMech.transform.GetGridPosition(), _selectedMech.MovementRange));
     }
 
     private void OnPlayerSetCurrentActionToAttack()
@@ -95,13 +90,13 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
 
         if (_selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
         {
-            DebugEx.LogWarning<GameboardStatePlayerMovePhase>("Cannot attack using the primary weapon as the selected mech has no valid primary weapon and/or missing data.");
+            DebugEx.LogWarning<StatePlayerMovePhase>("Cannot attack using the primary weapon as the selected mech has no valid primary weapon and/or missing data.");
             return;
         }
 
         _playerAction.Current = PlayerAction.PrimaryAttack;
 
-        _gameboard.Visualizer.ShowTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData);
+        Events.ShowTilesPreview(Gameboard.Helper.GetTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData));
     }
 
     private void OnPlayerCommitCurrentAction(Tile targetTile)
@@ -117,25 +112,24 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
             case PlayerAction.PrimaryAttack:
                 _selectedMech.PrimaryWeapon?.Use(targetTile);
                 _moveUndoRecords.Clear();
-                _gameboard.Objects.CommitStateAfterAttack();
+                Gameboard.Entities.CommitStateAfterAttack();
                 break;
             default: break;
         }
 
-        _gameboard.Visualizer.Clear();
-
+        Events.ClearTilesPreview();
         UpdateFlags();
     }
 
     private void OnPlayerInputContinue()
     {
-        _gameboard.InputEvents.Undo -= OnPlayerInputUndo;
-        _gameboard.InputEvents.Continue -= OnPlayerInputContinue;
-        _gameboard.InputEvents.Select -= OnPlayerInputSelect;
-        _gameboard.InputEvents.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
-        _gameboard.InputEvents.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
-        _gameboard.InputEvents.CommitCurrentAction -= OnPlayerCommitCurrentAction;
-        _gameboard.InputEvents.HoveredTileChanged -= OnPlayerHoveredTileChanged;
+        Gameboard.InputEvents.Undo -= OnPlayerInputUndo;
+        Gameboard.InputEvents.Continue -= OnPlayerInputContinue;
+        Gameboard.InputEvents.Select -= OnPlayerInputSelect;
+        Gameboard.InputEvents.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
+        Gameboard.InputEvents.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
+        Gameboard.InputEvents.CommitCurrentAction -= OnPlayerCommitCurrentAction;
+        Gameboard.InputEvents.HoveredTileChanged -= OnPlayerHoveredTileChanged;
 
         Assert.IsTrue(_moveUndoRecords.Count == 0, "The move undo stack isn't empty when it should be.");
 
@@ -147,12 +141,12 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         if (_moveUndoRecords.Count == 0)
             return;
 
-        DebugEx.Log<GameboardStatePlayerMovePhase>("Undo");
+        DebugEx.Log<StatePlayerMovePhase>("Undo");
 
         var moveUndoRecord = _moveUndoRecords.Pop();
         moveUndoRecord.Undo();
 
-        _gameboard.Objects.RestoreStateBeforeMove();
+        Gameboard.Entities.RestoreStateBeforeMove();
 
         UpdateFlags();
     }
@@ -167,12 +161,12 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
         {
             if (_playerAction.Current == PlayerAction.PrimaryAttack)
             {
-                var mechTile = _gameboard.Helper.GetTile(_selectedMech);
+                var mechTile = Gameboard.Helper.GetTile(_selectedMech);
                 if (mechTile == null || _selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
                     return;
 
                 var spawnEffectParameters = new SpawnEffectParameters(mechTile, hoveredTile);
-                effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, _gameboard.Helper, spawnEffectParameters);
+                effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, Gameboard.Helper, spawnEffectParameters);
             }
             else if (_playerAction.Current == PlayerAction.Move)
             {
@@ -180,17 +174,17 @@ public class GameboardStatePlayerMovePhase : GameboardStateBase
             }
         }
 
-        PreviewEffect(effectPreview);
+        Events.ShowEffectPreview(effectPreview);
     }
 
     private void MoveUnit(Mech mech, Tile targetTile)
     {
-        if (!_gameboard.Helper.CanReachTile(mech.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
+        if (!Gameboard.Helper.CanReachTile(mech.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
             return;
 
-        _gameboard.Objects.SaveStateBeforeMove();
+        Gameboard.Entities.SaveStateBeforeMove();
 
-        var moveRecord = new MoveUndoRecord(mech, _state.CurrentSelection);
+        var moveRecord = new MoveUndoRecord(mech, Gameboard.Helper.GetTile(_selectedMech));
         _moveUndoRecords.Push(moveRecord);
 
         mech.MoveTo(targetTile);

@@ -1,49 +1,41 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
+using UnityEngine.Assertions;
 using Framework;
 
 public class Gameboard : GameEntity
 {
-    public static int GridSize { get; private set; }
-    public static MechData DefaultMech { get; private set; }
+    public GameboardData Data { get { return _data; } }
+    public Helper Helper { get; private set; }
+    public Entities Entities { get; private set; }
+    public IInputEvents InputEvents { get; private set; }
+    public State State { get; private set; }
 
-    public GameboardWorldHelper Helper { get; private set; }
-    public GameboardObjects Objects { get; private set; }
-    public IGameboardInputEvents InputEvents { get; private set; }
-    public GameboardVisualizer Visualizer { get; private set; }
-    public GameboardState State { get; private set; }
-
-    [SerializeField] private MechData _defaultMech;
-    [SerializeField] private Tile _tilePrefab;
-    [SerializeField] private Building _buildingPrefab;
-    [SerializeField] private int _gridSize;
+    [SerializeField] private GameboardData _data;
 
     private void Awake()
     {
-        GridSize = _gridSize;
-        DefaultMech = _defaultMech;
+        Assert.IsNotNull(Data, "Data is missing.");
+        Assert.IsTrue(Data.MaxTurns != 0, "Max Turns is 0!");
 
         // Temp: Just generate a random world.
-        var worldParameters = new GameboardWorldParameters(transform, _tilePrefab);
-        worldParameters.Add(_buildingPrefab);
+        var worldParameters = new WorldParameters(transform, Data.Prefabs.Tile);
+        worldParameters.Add(Data.Prefabs.DefaultBuilding);
 
-        var worldGenerator = new GameboardWorldGenerator(worldParameters);
-        var world = worldGenerator.Generate(_gridSize);
+        var worldGenerator = new WorldGenerator(worldParameters);
+        var world = worldGenerator.Generate(Data.GridSize);
 
-        Helper = new GameboardWorldHelper(world);
-        Objects = new GameboardObjects(Helper, world);
+        Helper = new Helper(world);
+        Entities = new Entities(Helper, world);
 
-        var input = gameObject.GetOrAddComponent<GameboardInput>();
-        InputEvents = input;
+        var inputController = gameObject.GetOrAddComponent<InputController>();
+        InputEvents = inputController;
 
-        // TODO: Make this a regular class. Not a MonoBehaviour.
-        Visualizer = gameObject.GetComponentAssert<GameboardVisualizer>();
-        Visualizer.Initialize(this);
+        State = gameObject.GetOrAddComponent<State>();
+        State.Initialize(this);
 
-        State = new GameboardState(this);
+        var visualizer = gameObject.GetComponentAssert<Visualizer>();
+        visualizer.Initialize(State);
 
-        var uiHud = FindObjectOfType<UIHud>();
-        if (uiHud != null)
-            uiHud.Initialize(Objects, input, State);
+        FindObjectOfType<UIHud>()?.Initialize(this, inputController);
     }
 }

@@ -8,12 +8,9 @@ using Framework.UI;
 
 public class UIHud : MonoBehaviour
 {
-    private GameboardObjects _gameboardObjects;
-    private GameboardInput _gameboardInput;
-
-    public void Initialize(GameboardObjects gameboardObjects, GameboardInput gameboardInput, GameboardState gameboardState)
+    public void Initialize(Gameboard gameboard, InputController inputController)
     {
-        gameObject.GetComponent<UIHealthBars>((comp) => comp.Initialize(gameboardObjects, gameboardState));
-        gameObject.GetComponent<UIHudActions>((comp) => comp.Initialize(gameboardState, gameboardInput));
+        gameObject.GetComponent<UIHealthBars>((comp) => comp.Initialize(gameboard));
+        gameObject.GetComponent<UIHudActions>((comp) => comp.Initialize(gameboard, inputController));
     }
 }
