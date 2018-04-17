@@ -186,12 +186,12 @@ public class StatePlayerMovePhase : StateBase
 
     private void MoveUnit(Mech mech, Tile targetTile)
     {
-        if (!Gameboard.Helper.CanReachTile(mech.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
+        if (!Gameboard.Helper.CanReachTile(_selectedTile.Current.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
             return;
 
         Gameboard.Entities.SaveStateBeforeMove();
 
-        var moveRecord = new MoveUndoRecord(mech, Gameboard.Helper.GetTile(_selectedMech));
+        var moveRecord = new MoveUndoRecord(mech, _selectedTile.Current);
         _moveUndoRecords.Push(moveRecord);
 
         mech.MoveTo(targetTile);
