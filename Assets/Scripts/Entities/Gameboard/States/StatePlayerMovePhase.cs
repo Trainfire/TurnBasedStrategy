@@ -63,8 +63,9 @@ public class StatePlayerMovePhase : StateBase
     {
         if (targetTile != _selectedTile.Previous)
         {
-            Events.ClearTilesPreview();
             _playerAction.Current = PlayerAction.Unassigned;
+            Events.ClearPreview();
+            Events.SetActionCancelled(new StateActionCancelledEventArgs());
         }
 
         if (targetTile.Occupant != null && (targetTile.Occupant as Mech) != null)
@@ -80,7 +81,11 @@ public class StatePlayerMovePhase : StateBase
 
         _playerAction.Current = PlayerAction.Move;
 
-        Events.ShowTilesPreview(Gameboard.Helper.GetReachableTiles(_selectedMech.transform.GetGridPosition(), _selectedMech.MovementRange));
+        var reachableTiles = Gameboard.Helper.GetReachableTiles(_selectedMech.transform.GetGridPosition(), _selectedMech.MovementRange);
+
+        Events.ClearPreview();
+        Events.SetActionToMove(new StateActionSetToMoveEventArgs(_selectedMech, reachableTiles));
+        Events.ShowPreview(reachableTiles);
     }
 
     private void OnPlayerSetCurrentActionToAttack()
@@ -96,7 +101,9 @@ public class StatePlayerMovePhase : StateBase
 
         _playerAction.Current = PlayerAction.PrimaryAttack;
 
-        Events.ShowTilesPreview(Gameboard.Helper.GetTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData));
+        Events.ClearPreview();
+        Events.SetActionToAttack(_selectedMech);
+        Events.ShowPreview(Gameboard.Helper.GetTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData));
     }
 
     private void OnPlayerCommitCurrentAction(Tile targetTile)
@@ -117,7 +124,8 @@ public class StatePlayerMovePhase : StateBase
             default: break;
         }
 
-        Events.ClearTilesPreview();
+        Events.SetActionCommitted(new StateActionCommittedEventArgs());
+        Events.ClearPreview();
         UpdateFlags();
     }
 
@@ -153,8 +161,6 @@ public class StatePlayerMovePhase : StateBase
 
     private void OnPlayerHoveredTileChanged(Tile hoveredTile)
     {
-        // TOOD: Add OnEnterPreview and OnLeavePreview events.
-
         var effectPreview = new EffectPreview();
 
         if (hoveredTile != null)
@@ -174,6 +180,7 @@ public class StatePlayerMovePhase : StateBase
             }
         }
 
+        Events.SetHoveredTile(hoveredTile);
         Events.ShowEffectPreview(effectPreview);
     }
 

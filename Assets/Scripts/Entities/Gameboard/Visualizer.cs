@@ -4,6 +4,7 @@ using UnityEngine;
 public class Visualizer : MonoBehaviour
 {
     private State _state;
+    private VisualizerMovePreviewer _movePreviewer;
     private List<TileResult> _tileResults;
 
     private void Awake()
@@ -14,8 +15,10 @@ public class Visualizer : MonoBehaviour
     public void Initialize(State state)
     {
         _state = state;
-        _state.Events.TilesPreviewShowed += OnPreviewShowed;
-        _state.Events.TilesPreviewCleared += OnPreviewCleared;
+        _state.Events.PreviewEnabled += OnPreviewShowed;
+        _state.Events.PreviewDisabled += OnPreviewCleared;
+
+        _movePreviewer = new VisualizerMovePreviewer(state.Events);
     }
 
     private void OnPreviewShowed(List<TileResult> tileResults) => _tileResults = tileResults;
