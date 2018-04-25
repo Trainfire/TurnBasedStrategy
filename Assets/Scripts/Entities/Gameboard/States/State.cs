@@ -23,6 +23,7 @@ public class State : MonoBehaviour
     public ReadOnlyStateFlags Flags { get { return _states[Current].Flags.AsReadOnly(); } }
     public int TurnCount { get; private set; }
 
+    private List<IStateHandler> _stateHandlers;
     private Dictionary<StateID, StateBase> _states;
     private StateEventsController _eventsController;
 
@@ -39,11 +40,11 @@ public class State : MonoBehaviour
         Register(new StatePlayerMovePhase(_gameboard, _eventsController));
         Register(new StateGameOver(_gameboard, _eventsController));
 
-        foreach (var unit in _gameboard.Entities.Units.ToList())
-        {
-            if (unit.GetType() == typeof(Building))
-                unit.Health.Changed += OnBuildingHealthChanged;
-        }
+        _stateHandlers = new List<IStateHandler>();
+
+        _gameboard.World.UnitAdded += RegisterUnit;
+        _gameboard.World.Units.ToList().ForEach(x => RegisterUnit(x));
+        _gameboard.World.Tiles.ToList().ForEach(stateHandler => _stateHandlers.Add(stateHandler.Value));
 
         Current = StateID.Setup;
 
@@ -59,8 +60,15 @@ public class State : MonoBehaviour
 
         _states.Add(gameboardState.StateID, gameboardState);
 
+        gameboardState.StateRestored += OnRestoreState;
+        gameboardState.StateSaved += OnSaveState;
+        gameboardState.StateCommitted += OnCommitState;
         gameboardState.Exited += MoveNext;
     }
+
+    private void OnRestoreState() => _stateHandlers.ForEach(x => x.RestoreStateBeforeMove());
+    private void OnSaveState() => _stateHandlers.ForEach(x => x.SaveStateBeforeMove());
+    private void OnCommitState() => _stateHandlers.ForEach(x => x.CommitStateAfterAttack());
 
     private void MoveNext(StateID previousStateID)
     {
@@ -93,11 +101,19 @@ public class State : MonoBehaviour
 
     private void OnBuildingHealthChanged(HealthChangeEvent healthChangeEvent)
     {
-        if (_gameboard.Entities.Buildings.All(x => x.Health.Current == 0))
+        if (_gameboard.World.Buildings.All(x => x.Health.Current == 0))
         {
             Current = StateID.GameOver;
             _states[Current].Enter();
             _eventsController.EndGame(new GameEndedResult(GameEndedResultState.Loss));
         }
+    }
+
+    private void RegisterUnit(Unit unit)
+    {
+        _stateHandlers.Add(unit);
+
+        if (unit.GetType() == typeof(Building))
+            unit.Health.Changed += OnBuildingHealthChanged;
     }
 }

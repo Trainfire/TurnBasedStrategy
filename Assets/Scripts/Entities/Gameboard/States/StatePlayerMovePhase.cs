@@ -81,7 +81,7 @@ public class StatePlayerMovePhase : StateBase
 
         _playerAction.Current = PlayerAction.Move;
 
-        var reachableTiles = Gameboard.Helper.GetReachableTiles(_selectedMech.transform.GetGridPosition(), _selectedMech.MovementRange);
+        var reachableTiles = Gameboard.World.Helper.GetReachableTiles(_selectedMech.transform.GetGridPosition(), _selectedMech.MovementRange);
 
         Events.ClearPreview();
         Events.SetActionToMove(new StateActionSetToMoveEventArgs(_selectedMech, reachableTiles));
@@ -103,7 +103,7 @@ public class StatePlayerMovePhase : StateBase
 
         Events.ClearPreview();
         Events.SetActionToAttack(_selectedMech);
-        Events.ShowPreview(Gameboard.Helper.GetTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData));
+        Events.ShowPreview(Gameboard.World.Helper.GetTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData));
     }
 
     private void OnPlayerCommitCurrentAction(Tile targetTile)
@@ -119,7 +119,7 @@ public class StatePlayerMovePhase : StateBase
             case PlayerAction.PrimaryAttack:
                 _selectedMech.PrimaryWeapon?.Use(targetTile);
                 _moveUndoRecords.Clear();
-                Gameboard.Entities.CommitStateAfterAttack();
+                CommitState();
                 break;
             default: break;
         }
@@ -154,7 +154,7 @@ public class StatePlayerMovePhase : StateBase
         var moveUndoRecord = _moveUndoRecords.Pop();
         moveUndoRecord.Undo();
 
-        Gameboard.Entities.RestoreStateBeforeMove();
+        RestoreState();
 
         UpdateFlags();
     }
@@ -167,12 +167,12 @@ public class StatePlayerMovePhase : StateBase
         {
             if (_playerAction.Current == PlayerAction.PrimaryAttack)
             {
-                var mechTile = Gameboard.Helper.GetTile(_selectedMech);
+                var mechTile = Gameboard.World.Helper.GetTile(_selectedMech);
                 if (mechTile == null || _selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
                     return;
 
                 var spawnEffectParameters = new SpawnEffectParameters(mechTile, hoveredTile);
-                effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, Gameboard.Helper, spawnEffectParameters);
+                effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, Gameboard.World.Helper, spawnEffectParameters);
             }
             else if (_playerAction.Current == PlayerAction.Move)
             {
@@ -186,10 +186,10 @@ public class StatePlayerMovePhase : StateBase
 
     private void MoveUnit(Mech mech, Tile targetTile)
     {
-        if (!Gameboard.Helper.CanReachTile(_selectedTile.Current.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
+        if (!Gameboard.World.Helper.CanReachTile(_selectedTile.Current.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
             return;
 
-        Gameboard.Entities.SaveStateBeforeMove();
+        SaveState();
 
         var moveRecord = new MoveUndoRecord(mech, _selectedTile.Current);
         _moveUndoRecords.Push(moveRecord);

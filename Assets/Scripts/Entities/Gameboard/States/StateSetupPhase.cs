@@ -5,13 +5,13 @@ public class StateSetupPhase : StateBase
 {
     public override StateID StateID { get { return StateID.Setup; } }
 
-    private bool AllMechsSpawned { get { return Gameboard.Entities.Mechs.Count == 3; } }
+    private bool AllMechsSpawned { get { return Gameboard.World.Mechs.Count == 1; } }
 
     public StateSetupPhase(Gameboard gameboard, StateEventsController stateEventsController) : base(gameboard, stateEventsController) { }
 
     protected override void OnEnter()
     {
-        Gameboard.Entities.UnitAdded += OnUnitAdded;
+        Gameboard.World.UnitAdded += OnUnitAdded;
         Gameboard.InputEvents.SpawnDefaultUnit += OnPlayerInputSpawnDefaultUnit;
         Gameboard.InputEvents.Continue += OnPlayerInputContinue;
     }
@@ -26,7 +26,7 @@ public class StateSetupPhase : StateBase
             return;
         }
 
-        Gameboard.Entities.Spawn(targetTile, Gameboard.Data.Prefabs.DefaultMech);
+        Gameboard.World.SpawnUnit(targetTile, Gameboard.Data.Prefabs.DefaultMech);
     }
 
     private void OnUnitAdded(Unit unit)
@@ -42,7 +42,7 @@ public class StateSetupPhase : StateBase
     {
         if (Flags.CanContinue)
         {
-            Gameboard.Entities.UnitAdded -= OnUnitAdded;
+            Gameboard.World.UnitAdded -= OnUnitAdded;
             Gameboard.InputEvents.SpawnDefaultUnit -= OnPlayerInputSpawnDefaultUnit;
             Gameboard.InputEvents.Continue -= OnPlayerInputContinue;
             ExitState();

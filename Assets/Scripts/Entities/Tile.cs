@@ -11,16 +11,15 @@ public class Tile : MonoBehaviour, IStateHandler
     public event Action<Tile> OccupantEntered;
     public event Action<Tile> ReceivedHealthChange;
 
-    public bool Blocked { get { return _occupant != null; } }
+    public bool Blocked { get { return Occupant != null; } }
 
-    public Unit Occupant { get { return _occupant; } }
+    public Unit Occupant { get { return _gameboardHelper.GetUnit(this); } }
     public TileMarker Marker { get; private set; }
     public TileHazards Hazards { get; private set; }
 
-    private string OccupantName { get { return _occupant != null ? _occupant.name : "Nobody"; } }
+    private string OccupantName { get { return Occupant != null ? Occupant.name : "Nobody"; } }
 
     private Helper _gameboardHelper;
-    private Unit _occupant;
     private List<IStateHandler> _stateHandlers;
 
     private void Awake()
@@ -40,29 +39,41 @@ public class Tile : MonoBehaviour, IStateHandler
         _stateHandlers.Add(Hazards);
     }
 
-    public void SetOccupant(Unit occupant)
+    public void Enter(Unit unit)
     {
-        if (_occupant != null)
-        {
-            _occupant.Removed -= OnOccupantDeath;
-            _occupant.Moved -= OnOccupantMoved;
-
-            OccupantLeft.InvokeSafe(this);
-        }
-
-        _occupant = occupant;
-
-        Debug.LogFormat("{0} is now occupied by {1}", name, OccupantName);
-
-        if (_occupant != null)
-        {
-            _occupant.Removed += OnOccupantDeath;
-            _occupant.Moved += OnOccupantMoved;
-            _occupant.transform.SetGridPosition(transform.GetGridPosition());
-
-            OccupantEntered.InvokeSafe(this);
-        }
+        OccupantEntered.InvokeSafe(this);
     }
+
+    public void Leave(Unit unit)
+    {
+        OccupantLeft.InvokeSafe(this);
+    }
+
+    //public void SetOccupant(Unit newOccupant)
+    //{
+    //    if (_occupant.Previous != null)
+    //    {
+    //        //Occupant.Removed -= OnOccupantDeath;
+    //        //Occupant.Moved -= OnOccupantMoved;
+
+    //        OccupantLeft.InvokeSafe(this);
+    //    }
+
+    //    _occupant.Current = newOccupant;
+
+    //    //OccupantChanged?.Invoke(this, newOccupant);
+
+    //    Debug.LogFormat("{0} is now occupied by {1}", name, OccupantName);
+
+    //    if (_occupant.Current != null)
+    //    {
+    //        //Occupant.Removed += OnOccupantDeath;
+    //        //Occupant.Moved += OnOccupantMoved;
+    //        _occupant.Current.transform.SetGridPosition(transform.GetGridPosition());
+
+    //        OccupantEntered.InvokeSafe(this);
+    //    }
+    //}
 
     public void ApplyHealthChange(int amount)
     {
@@ -72,16 +83,21 @@ public class Tile : MonoBehaviour, IStateHandler
         ReceivedHealthChange.InvokeSafe(this);
     }
 
-    private void OnOccupantDeath(Unit unit)
-    {
-        SetOccupant(null);
-    }
+    //private void RemoveOccupant()
+    //{
+    //    OccupantLeft.InvokeSafe(this);
+    //}
 
-    private void OnOccupantMoved(UnitMoveEvent unitMoveEvent)
-    {
-        Debug.LogFormat("Occupant {0} vacated from {1} ", OccupantName, name);
-        SetOccupant(null);
-    }
+    //private void OnOccupantDeath(Unit unit)
+    //{
+    //    RemoveOccupant();
+    //}
+
+    //private void OnOccupantMoved(UnitMoveEvent unitMoveEvent)
+    //{
+    //    Debug.LogFormat("Occupant {0} vacated from {1} ", OccupantName, name);
+    //    RemoveOccupant();
+    //}
 
     void IStateHandler.SaveStateBeforeMove() => _stateHandlers.ForEach(handler => handler.SaveStateBeforeMove());
     void IStateHandler.RestoreStateBeforeMove() => _stateHandlers.ForEach(handler => handler.RestoreStateBeforeMove());

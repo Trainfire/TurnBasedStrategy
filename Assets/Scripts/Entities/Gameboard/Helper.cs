@@ -19,20 +19,13 @@ public class TileResult
 
 public class Helper
 {
-    private static int GridSize { get; set; }
+    public int GridSize { get { return _world.Parameters.Data.GridSize; } }
 
     private World _world;
 
     public Helper(World world)
     {
-        GridSize = world.GridSize;
-
         _world = world;
-
-        foreach (var tile in _world.Tiles)
-        {
-            tile.Value.Initialize(this);
-        }
     }
 
     public List<TileResult> GetTiles(Tile origin, WorldDirection direction, int offset, int length, bool filterOccupiedTiles = false)
@@ -198,11 +191,18 @@ public class Helper
 
     public Tile GetTile(Unit unit)
     {
-        return GetTile(unit.transform.GetGridPosition());
+        return _world.UnitsToTiles.Contains(unit) ? _world.UnitsToTiles[unit] : null;
+    }
+
+    public Unit GetUnit(Tile tile)
+    {
+        return _world.UnitsToTiles.Contains(tile) ? _world.UnitsToTiles[tile] : null;
     }
 
     public static bool OutOfBounds(Vector2 position)
     {
-        return position.x < 0f || position.x > GridSize || position.y < 0f || position.y > GridSize;
+        // TODO.
+        return false;
+        //return position.x < 0f || position.x > GridSize || position.y < 0f || position.y > GridSize;
     }
 }

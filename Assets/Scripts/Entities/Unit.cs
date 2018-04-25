@@ -15,7 +15,7 @@ public struct UnitMoveEvent
     }
 }
 
-public class Unit : MonoBehaviour
+public class Unit : MonoBehaviour, IStateHandler
 {
     public event Action<UnitMoveEvent> Moved;
     public event Action<Unit> Removed;
@@ -55,7 +55,7 @@ public class Unit : MonoBehaviour
         if (!targetTile.Blocked)
         {
             Moved.InvokeSafe(new UnitMoveEvent(this, targetTile));
-            targetTile.SetOccupant(this);
+            //targetTile.SetOccupant(this);
             return true;
         }
 
@@ -82,5 +82,20 @@ public class Unit : MonoBehaviour
     protected virtual void OnKill(HealthComponent healthComponent)
     {
         Remove();
+    }
+
+    public void SaveStateBeforeMove()
+    {
+        ((IStateHandler)Health).SaveStateBeforeMove();
+    }
+
+    public void RestoreStateBeforeMove()
+    {
+        ((IStateHandler)Health).RestoreStateBeforeMove();
+    }
+
+    public void CommitStateAfterAttack()
+    {
+        ((IStateHandler)Health).CommitStateAfterAttack();
     }
 }

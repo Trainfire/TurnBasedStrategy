@@ -30,6 +30,6 @@ public class Mech : Unit
         SecondaryWeapon.WeaponData = MechData.DefaultSecondaryWeapon;
 
         Assert.IsNotNull(MechData.View, "Missing view.");
-        Instantiate(MechData.View).transform.SetParent(transform);
+        Instantiate(MechData.View).transform.SetParent(transform, false);
     }
 }

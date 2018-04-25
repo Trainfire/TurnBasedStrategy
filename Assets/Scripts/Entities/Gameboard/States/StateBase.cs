@@ -3,6 +3,10 @@ using System;
 
 public abstract class StateBase
 {
+    public event Action StateRestored;
+    public event Action StateSaved;
+    public event Action StateCommitted;
+
     public event Action<StateID> Exited;
 
     public abstract StateID StateID { get; }
@@ -28,6 +32,10 @@ public abstract class StateBase
     }
 
     protected virtual void OnEnter() { }
+
+    protected void RestoreState() => StateRestored?.Invoke();
+    protected void SaveState() => StateSaved?.Invoke();
+    protected void CommitState() => StateCommitted?.Invoke();
 
     protected void ExitState()
     {

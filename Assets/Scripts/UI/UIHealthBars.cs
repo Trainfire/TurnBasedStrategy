@@ -11,8 +11,7 @@ public class UIHealthBars : MonoBehaviour
     [SerializeField] private UIHealthbar _healthbarPrototype;
     private Dictionary<Unit, UIHealthbar> _healthbars;
 
-    private Entities _gameboardObjects;
-    private IStateEvents _stateEvents;
+    private Events _events;
 
     private void Awake()
     {
@@ -23,11 +22,9 @@ public class UIHealthBars : MonoBehaviour
 
     public void Initialize(Gameboard gameboard)
     {
-        _gameboardObjects = gameboard.Entities;
-        _gameboardObjects.UnitAdded += AddHealthBar;
-        _gameboardObjects.UnitRemoved += RemoveHealthBar;
-
-        _stateEvents = gameboard.State.Events;
+        _events = gameboard.Events;
+        _events.World.UnitAdded += AddHealthBar;
+        _events.World.UnitRemoved -= RemoveHealthBar;
     }
 
     private void AddHealthBar(Unit unit)
@@ -38,7 +35,7 @@ public class UIHealthBars : MonoBehaviour
         unit.Removed += RemoveHealthBar;
 
         var comp = UIUtility.Add<UIHealthbar>(gameObject.transform, _healthbarPrototype.gameObject);
-        comp.Initialize(unit, _stateEvents);
+        comp.Initialize(unit, _events.State);
 
         _healthbars.Add(unit, comp);
     }
