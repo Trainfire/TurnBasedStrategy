@@ -55,6 +55,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcd22fbb80575a44594406b126a36fa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _ignoreUserTile: 1
   _effectReceiver: 0
   _effectDirection: 0
   _relativeOffset: 1
@@ -80,6 +81,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcd22fbb80575a44594406b126a36fa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _ignoreUserTile: 0
   _effectReceiver: 0
   _effectDirection: 2
   _relativeOffset: 1
@@ -94,6 +96,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcd22fbb80575a44594406b126a36fa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _ignoreUserTile: 0
   _effectReceiver: 0
   _effectDirection: 3
   _relativeOffset: 1
@@ -108,6 +111,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcd22fbb80575a44594406b126a36fa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _ignoreUserTile: 1
   _effectReceiver: 0
   _effectDirection: 1
   _relativeOffset: 1

@@ -61,14 +61,15 @@ public class StatePlayerMovePhase : StateBase
 
     private void OnPlayerInputSelect(Tile targetTile)
     {
-        if (targetTile != _selectedTile.Previous)
+        if (_playerAction.Current != PlayerAction.Unassigned)
         {
             _playerAction.Current = PlayerAction.Unassigned;
             Events.ClearPreview();
             Events.SetActionCancelled(new StateActionCancelledEventArgs());
         }
 
-        if (targetTile.Occupant != null && (targetTile.Occupant as Mech) != null)
+        var mech = targetTile?.Occupant as Mech;
+        if (mech != null)
             _selectedMech = targetTile.Occupant as Mech;
 
         _selectedTile.Current = targetTile;
@@ -124,8 +125,11 @@ public class StatePlayerMovePhase : StateBase
             default: break;
         }
 
-        Events.SetActionCommitted(new StateActionCommittedEventArgs());
         Events.ClearPreview();
+        Events.SetActionCommitted(new StateActionCommittedEventArgs());
+
+        _playerAction.Current = PlayerAction.Unassigned;
+
         UpdateFlags();
     }
 
@@ -161,6 +165,9 @@ public class StatePlayerMovePhase : StateBase
 
     private void OnPlayerHoveredTileChanged(Tile hoveredTile)
     {
+        if (_playerAction.Current == PlayerAction.Unassigned)
+            return;
+
         var effectPreview = new EffectPreview();
 
         if (hoveredTile != null)

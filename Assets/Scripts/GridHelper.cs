@@ -69,4 +69,17 @@ public static class GridHelper
 
         return WorldDirection.West;
     }
+
+    public static Quaternion DirectionToQuaternion(WorldDirection worldDirection)
+    {
+        switch (worldDirection)
+        {
+            case WorldDirection.North: return Quaternion.AngleAxis(0f, Vector3.up);
+            case WorldDirection.East: return Quaternion.AngleAxis(90f, Vector3.up);
+            case WorldDirection.South: return Quaternion.AngleAxis(180f, Vector3.up);
+            case WorldDirection.West: return Quaternion.AngleAxis(270f, Vector3.up);
+        }
+
+        return Quaternion.identity;
+    }
 }

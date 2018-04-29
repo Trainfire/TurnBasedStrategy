@@ -5,7 +5,7 @@ public class StateSetupPhase : StateBase
 {
     public override StateID StateID { get { return StateID.Setup; } }
 
-    private bool AllMechsSpawned { get { return Gameboard.World.Mechs.Count == 1; } }
+    private bool AllMechsSpawned { get { return Gameboard.World.Mechs.Count == 3; } }
 
     public StateSetupPhase(Gameboard gameboard, StateEventsController stateEventsController) : base(gameboard, stateEventsController) { }
 

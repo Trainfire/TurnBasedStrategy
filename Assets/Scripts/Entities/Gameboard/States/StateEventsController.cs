@@ -78,6 +78,7 @@ public class StateEventsController : MonoBehaviour, IStateEvents
     public void SetHoveredTile(Tile tile) => HoveredTileSet?.Invoke(tile);
 
     public void ShowPreview(List<TileResult> tileResults) => PreviewEnabled?.Invoke(tileResults);
+
     public void ClearPreview() => PreviewDisabled?.Invoke();
 
     public void ShowEffectPreview(EffectPreview effectPreview) => EffectPreviewShow?.Invoke(effectPreview);

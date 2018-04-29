@@ -32,6 +32,7 @@ public abstract class EffectComponent : MonoBehaviour
 
     protected virtual bool OnlyAffectOccupiedTiles { get { return false; } }
 
+    [SerializeField] private bool _affectUserTile;
     [SerializeField] private EffectReceiver _effectReceiver;
     [SerializeField] private RelativeDirection _effectDirection;
     [SerializeField] private int _relativeOffset;
@@ -75,7 +76,7 @@ public abstract class EffectComponent : MonoBehaviour
 
         receivingTile = gameboardHelper.GetTile(receivingTile.transform.GetGridPosition() + direction * _relativeOffset);
 
-        if (receivingTile == null || OnlyAffectOccupiedTiles && receivingTile.Occupant == null)
+        if (receivingTile == null || OnlyAffectOccupiedTiles && receivingTile.Occupant == null || receivingTile == spawnEffectParameters.Source && !_affectUserTile)
             return null;
 
         return new ApplyEffectParameters(gameboardHelper, receivingTile, direction);

@@ -64,6 +64,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b622a30ef0f7a54aa0d3abb46204903, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _ignoreUserTile: 0
   _effectReceiver: 1
   _effectDirection: 0
   _relativeOffset: 0
@@ -79,6 +80,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcd22fbb80575a44594406b126a36fa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _ignoreUserTile: 0
   _effectReceiver: 1
   _effectDirection: 0
   _relativeOffset: 0
