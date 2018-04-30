@@ -20,10 +20,11 @@ public class Unit : MonoBehaviour, IStateHandler
     public event Action<UnitMoveEvent> Moved;
     public event Action<Unit> Removed;
 
+    public Tile Tile { get { return _helper.GetTile(this); } }
     public HealthComponent Health { get; private set; }
-    public Helper Helper { get { return _gameboardHelper; } }
+    public Helper Helper { get { return _helper; } }
 
-    private Helper _gameboardHelper;
+    private Helper _helper;
 
     private void Awake()
     {
@@ -31,9 +32,9 @@ public class Unit : MonoBehaviour, IStateHandler
         Health.Killed += OnKill;
     }
 
-    public virtual void Initialize(Helper gameboardHelper)
+    public virtual void Initialize(Helper helper)
     {
-        _gameboardHelper = gameboardHelper;
+        _helper = helper;
         name = "Unnamed Unit";
     }
 
@@ -64,7 +65,7 @@ public class Unit : MonoBehaviour, IStateHandler
 
     public bool MoveInDirection(WorldDirection worldDirection)
     {
-        return MoveTo(_gameboardHelper.GetTileInDirection(this, worldDirection));
+        return MoveTo(_helper.GetTileInDirection(this, worldDirection));
     }
 
     public void Remove()

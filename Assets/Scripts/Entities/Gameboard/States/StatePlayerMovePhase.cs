@@ -31,18 +31,11 @@ public class StatePlayerMovePhase : StateBase
         SecondaryAttack,
     }
 
-    private Stack<MoveUndoRecord> _moveUndoRecords;
-    private CachedValue<PlayerAction> _playerAction;
-    private CachedValue<Tile> _selectedTile;
+    private Stack<MoveUndoRecord> _moveUndoRecords = new Stack<MoveUndoRecord>();
+    private CachedValue<PlayerAction> _playerAction = new CachedValue<PlayerAction>();
     private Mech _selectedMech;
 
-    public StatePlayerMovePhase(Gameboard gameboard, StateEventsController gameboardEvents) : base(gameboard, gameboardEvents)
-    {
-        _moveUndoRecords = new Stack<MoveUndoRecord>();
-
-        _playerAction = new CachedValue<PlayerAction>(PlayerAction.Unassigned);
-        _selectedTile = new CachedValue<Tile>();
-    }
+    public StatePlayerMovePhase(Gameboard gameboard, StateEventsController gameboardEvents) : base(gameboard, gameboardEvents) { }
 
     protected override void OnEnter()
     {
@@ -68,11 +61,11 @@ public class StatePlayerMovePhase : StateBase
             Events.SetActionCancelled(new StateActionCancelledEventArgs());
         }
 
-        var mech = targetTile?.Occupant as Mech;
-        if (mech != null)
-            _selectedMech = targetTile.Occupant as Mech;
+        //var mech = targetTile?.Occupant as Mech;
+        //if (mech != null)
+        _selectedMech = targetTile?.Occupant as Mech;
 
-        _selectedTile.Current = targetTile;
+        //_selectedTile.Current = targetTile;
     }
 
     private void OnPlayerSetCurrentActionToMove()
@@ -193,12 +186,12 @@ public class StatePlayerMovePhase : StateBase
 
     private void MoveUnit(Mech mech, Tile targetTile)
     {
-        if (!Gameboard.World.Helper.CanReachTile(_selectedTile.Current.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
+        if (!Gameboard.World.Helper.CanReachTile(_selectedMech.Tile.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
             return;
 
         SaveState();
 
-        var moveRecord = new MoveUndoRecord(mech, _selectedTile.Current);
+        var moveRecord = new MoveUndoRecord(mech, _selectedMech.Tile);
         _moveUndoRecords.Push(moveRecord);
 
         mech.MoveTo(targetTile);
