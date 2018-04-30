@@ -6,23 +6,6 @@ public class StatePlayerMovePhase : StateBase
 {
     public override StateID StateID { get { return StateID.PlayerMove; } }
 
-    private struct MoveUndoRecord
-    {
-        public Unit Unit { get; private set; }
-        public Tile PreviousTile { get; private set; }
-
-        public MoveUndoRecord(Unit unit, Tile previousTile)
-        {
-            Unit = unit;
-            PreviousTile = previousTile;
-        }
-
-        public void Undo()
-        {
-            Unit.MoveTo(PreviousTile);
-        }
-    }
-
     private enum PlayerAction
     {
         Unassigned,
@@ -31,7 +14,7 @@ public class StatePlayerMovePhase : StateBase
         SecondaryAttack,
     }
 
-    private Stack<MoveUndoRecord> _moveUndoRecords = new Stack<MoveUndoRecord>();
+    private StateUndoManager _undoManager = new StateUndoManager();
     private CachedValue<PlayerAction> _playerAction = new CachedValue<PlayerAction>();
     private Mech _selectedMech;
 
@@ -39,7 +22,7 @@ public class StatePlayerMovePhase : StateBase
 
     protected override void OnEnter()
     {
-        _moveUndoRecords.Clear();
+        _undoManager.Clear();
 
         Gameboard.InputEvents.Undo += OnPlayerInputUndo;
         Gameboard.InputEvents.Continue += OnPlayerInputContinue;
@@ -61,11 +44,7 @@ public class StatePlayerMovePhase : StateBase
             Events.SetActionCancelled(new StateActionCancelledEventArgs());
         }
 
-        //var mech = targetTile?.Occupant as Mech;
-        //if (mech != null)
         _selectedMech = targetTile?.Occupant as Mech;
-
-        //_selectedTile.Current = targetTile;
     }
 
     private void OnPlayerSetCurrentActionToMove()
@@ -112,7 +91,7 @@ public class StatePlayerMovePhase : StateBase
                 break;
             case PlayerAction.PrimaryAttack:
                 _selectedMech.PrimaryWeapon?.Use(targetTile);
-                _moveUndoRecords.Clear();
+                _undoManager.Clear();
                 CommitState();
                 break;
             default: break;
@@ -136,20 +115,17 @@ public class StatePlayerMovePhase : StateBase
         Gameboard.InputEvents.CommitCurrentAction -= OnPlayerCommitCurrentAction;
         Gameboard.InputEvents.HoveredTileChanged -= OnPlayerHoveredTileChanged;
 
-        Assert.IsTrue(_moveUndoRecords.Count == 0, "The move undo stack isn't empty when it should be.");
-
         ExitState();
     }
 
     private void OnPlayerInputUndo()
     {
-        if (_moveUndoRecords.Count == 0)
+        if (!_undoManager.CanUndo)
             return;
 
         DebugEx.Log<StatePlayerMovePhase>("Undo");
 
-        var moveUndoRecord = _moveUndoRecords.Pop();
-        moveUndoRecord.Undo();
+        _undoManager.UndoLastMove();
 
         RestoreState();
 
@@ -191,8 +167,7 @@ public class StatePlayerMovePhase : StateBase
 
         SaveState();
 
-        var moveRecord = new MoveUndoRecord(mech, _selectedMech.Tile);
-        _moveUndoRecords.Push(moveRecord);
+        _undoManager.SavePosition(_selectedMech);
 
         mech.MoveTo(targetTile);
 
@@ -201,6 +176,6 @@ public class StatePlayerMovePhase : StateBase
 
     private void UpdateFlags()
     {
-        Flags.CanUndo = _moveUndoRecords.Count != 0;
+        Flags.CanUndo = _undoManager.CanUndo;
     }
 }
