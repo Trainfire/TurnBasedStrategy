@@ -1,8 +1,15 @@
 ﻿using System;
 
-public class CachedValue<T>
+public interface IReadOnlyCachedValue<T>
 {
-    public event Action<CachedValue<T>> Changed;
+    event Action<IReadOnlyCachedValue<T>> Changed;
+    T Current { get; }
+    T Previous { get; }
+}
+
+public class CachedValue<T> : IReadOnlyCachedValue<T>
+{
+    public event Action<IReadOnlyCachedValue<T>> Changed;
 
     public T Current
     {
