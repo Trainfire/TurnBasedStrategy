@@ -15,13 +15,13 @@ public class UnitActionExecutionCompletedResult
 
 public interface IUnitAction
 {
-    void Execute(Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete);
+    void Execute(Helper helper, Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete);
     bool IsValid(Helper helper, Unit unit, Tile target);
 }
 
 public class UnitUnassignedAction : IUnitAction
 {
-    void IUnitAction.Execute(Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete)
+    void IUnitAction.Execute(Helper helper, Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete)
     {
         onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(UnitAction.Unassigned));
     }
@@ -35,10 +35,10 @@ public class UnitUnassignedAction : IUnitAction
 // TODO: Make a MonoBehaviour so we can animate movement.
 public class UnitMoveAction : IUnitAction
 {
-    public void Execute(Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete)
+    public void Execute(Helper helper, Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete)
     {
         var animator = new GameObject().AddComponent<UnitMoveAnimator>();
-        animator.Animate(unit, target, () =>
+        animator.Animate(helper, unit, target, () =>
         {
             unit.MoveTo(target);
             onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(UnitAction.Move));
@@ -54,7 +54,7 @@ public class UnitMoveAction : IUnitAction
 
 public class UnitPrimaryAttackAction : IUnitAction
 {
-    public void Execute(Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete)
+    public void Execute(Helper helper, Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete)
     {
         var weapon = unit.GetComponent<UnitWeaponComponent>();
         Assert.IsNotNull(weapon, "Cannot execute primary attack on a unit that doesn't have a primary weapon.");

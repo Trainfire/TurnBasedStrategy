@@ -14,6 +14,7 @@ public class VisualizerMovePreviewer
         _stateEvents.ActionSetToMove += OnActionSetToMove;
         _stateEvents.ActionCommitted += OnActionCommitted;
         _stateEvents.HoveredTileSet += OnHoveredTileSet;
+        _stateEvents.PreviewDisabled += OnPreviewDisabled;
     }
 
     private void OnActionCancelled(StateActionCancelledEventArgs obj)
@@ -45,5 +46,11 @@ public class VisualizerMovePreviewer
         var position = isTargetTileValid ? targetTile.transform.GetGridPosition() : _moveEventArgs.StartPosition;
 
         _moveEventArgs.Mech.transform.SetGridPosition(position);
+    }
+
+    private void OnPreviewDisabled()
+    {
+        if (_moveEventArgs != null)
+            _moveEventArgs.Mech.transform.SetGridPosition(_moveEventArgs.StartPosition);
     }
 }

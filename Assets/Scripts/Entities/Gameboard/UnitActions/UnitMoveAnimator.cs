@@ -1,30 +1,73 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
+using System.Linq;
 
 public class UnitMoveAnimator : MonoBehaviour
 {
-    private Action _onAnimationComplete;
-    private Unit _actor;
-    private Tile _targetTile;
+    private const float DelayBetweenMoves = 0.1f;
 
-    public void Animate(Unit actor, Tile targetTile, Action onAnimationComplete)
+    private enum Axis
     {
-        _actor = actor;
-        _targetTile = targetTile;
-        _onAnimationComplete = onAnimationComplete;
-
-        StartCoroutine(ExecuteAnimation());
+        Y,
+        X,
     }
 
-    private IEnumerator ExecuteAnimation()
+    public void Animate(Helper helper, Unit actor, Tile targetTile, Action onAnimationComplete)
     {
-        yield return new WaitForSeconds(1f);
+        var tilesToTraverse = new List<Tile>();
 
-        _onAnimationComplete.Invoke();
+        var yTiles = GetTilesInDirection(helper, actor.Tile, targetTile, Axis.Y);
 
-        _actor = null;
-        _targetTile = null;
-        _onAnimationComplete = null;
+        var xStartTile = yTiles.Count == 0 ? actor.Tile : yTiles.Last();
+        var xTiles = GetTilesInDirection(helper, xStartTile, targetTile, Axis.X);
+
+        tilesToTraverse.AddRange(yTiles);
+        tilesToTraverse.AddRange(xTiles);
+
+        StartCoroutine(ExecuteAnimation(actor, tilesToTraverse, onAnimationComplete));
+    }
+
+    private List<Tile> GetTilesInDirection(Helper helper, Tile startTile, Tile targetTile, Axis axis)
+    {
+        var results = new List<Tile>();
+
+        var direction = Vector2.zero;
+        var distance = 0f;
+
+        switch (axis)
+        {
+            case Axis.Y:
+                direction = new Vector2(0f, targetTile.transform.GetGridPosition().y - startTile.transform.GetGridPosition().y).normalized;
+                distance = targetTile.transform.GetGridPosition().y - startTile.transform.GetGridPosition().y;
+                break;
+            case Axis.X:
+                direction = new Vector2(targetTile.transform.GetGridPosition().x - startTile.transform.GetGridPosition().x, 0f).normalized;
+                distance = targetTile.transform.GetGridPosition().x - startTile.transform.GetGridPosition().x;
+                break;
+        }
+
+        // Start one tile in the direction.
+        var lastPosition = startTile.transform.GetGridPosition() + direction;
+
+        for (int i = 0; i < (int)Mathf.Abs(distance); i++)
+        {
+            var tile = helper.GetTile(lastPosition + (direction * i));
+            results.Add(tile);
+        }
+
+        return results;
+    }
+
+    private IEnumerator ExecuteAnimation(Unit actor, List<Tile> tiles, Action onAnimationComplete)
+    {
+        foreach (var tile in tiles)
+        {
+            yield return new WaitForSeconds(DelayBetweenMoves);
+            actor.transform.SetGridPosition(tile.transform.GetGridPosition());
+        }
+
+        onAnimationComplete.Invoke();
     }
 }
