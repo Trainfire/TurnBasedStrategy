@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System;
 
-public abstract class StateBase
+public abstract class StateBase : MonoBehaviour
 {
     public event Action StateRestored;
     public event Action StateSaved;
@@ -10,18 +10,22 @@ public abstract class StateBase
     public event Action<StateID> Exited;
 
     public abstract StateID StateID { get; }
-
-    public virtual bool CanExitState { get { return true; } }
     public virtual StateFlags Flags { get; private set; }
 
     protected Gameboard Gameboard { get; private set; }
     protected StateEventsController Events { get; private set; }
 
-    public StateBase(Gameboard gameboard, StateEventsController gameboardEvents)
+    public void Initialize(Gameboard gameboard, StateEventsController gameboardEvents)
     {
+        name = StateID.ToString();
+
         Gameboard = gameboard;
         Events = gameboardEvents;
+
+        OnInitialize(gameboard, gameboardEvents);
     }
+
+    protected virtual void OnInitialize(Gameboard gameboard, StateEventsController gameboardEvents) { }
 
     public void Enter()
     {
@@ -32,6 +36,7 @@ public abstract class StateBase
     }
 
     protected virtual void OnEnter() { }
+    protected virtual void OnExit() { }
 
     protected void RestoreState() => StateRestored?.Invoke();
     protected void SaveState() => StateSaved?.Invoke();
@@ -41,6 +46,7 @@ public abstract class StateBase
     {
         Debug.LogFormat("Exit state: [{0}]", StateID);
         Flags.Clear();
+        OnExit();
         Exited?.Invoke(StateID);
     }
 }

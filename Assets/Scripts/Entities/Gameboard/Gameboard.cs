@@ -40,7 +40,7 @@ public class Gameboard : GameEntity
         var inputController = gameObject.GetOrAddComponent<InputController>();
         InputEvents = inputController;
 
-        State = gameObject.GetOrAddComponent<State>();
+        State = GameObject.Instantiate(new GameObject("State"), transform).AddComponent<State>();
         State.Initialize(this);
 
         var visualizer = gameObject.GetComponentAssert<Visualizer>();

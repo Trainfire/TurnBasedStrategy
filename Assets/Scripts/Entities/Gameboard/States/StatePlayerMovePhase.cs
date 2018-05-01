@@ -10,9 +10,10 @@ public class StatePlayerMovePhase : StateBase
     private UnitActionHandler _unitActionHandler;
     private Mech _selectedMech;
 
-    public StatePlayerMovePhase(Gameboard gameboard, StateEventsController gameboardEvents) : base(gameboard, gameboardEvents)
+    protected override void OnInitialize(Gameboard gameboard, StateEventsController gameboardEvents)
     {
-        _unitActionHandler = new UnitActionHandler(Events);
+        _unitActionHandler = gameObject.AddComponent<UnitActionHandler>();
+        _unitActionHandler.Initialize(gameboardEvents);
     }
 
     protected override void OnEnter()
@@ -29,6 +30,17 @@ public class StatePlayerMovePhase : StateBase
 
         Flags.CanContinue = true;
         Flags.CanControlUnits = true;
+    }
+
+    protected override void OnExit()
+    {
+        Gameboard.InputEvents.Undo -= OnPlayerInputUndo;
+        Gameboard.InputEvents.Continue -= OnPlayerInputContinue;
+        Gameboard.InputEvents.Select -= OnPlayerInputSelect;
+        Gameboard.InputEvents.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
+        Gameboard.InputEvents.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
+        Gameboard.InputEvents.CommitCurrentAction -= OnPlayerCommitCurrentAction;
+        Gameboard.InputEvents.HoveredTileChanged -= OnPlayerHoveredTileChanged;
     }
 
     private void OnPlayerInputSelect(Tile targetTile)
@@ -106,15 +118,8 @@ public class StatePlayerMovePhase : StateBase
 
     private void OnPlayerInputContinue()
     {
-        Gameboard.InputEvents.Undo -= OnPlayerInputUndo;
-        Gameboard.InputEvents.Continue -= OnPlayerInputContinue;
-        Gameboard.InputEvents.Select -= OnPlayerInputSelect;
-        Gameboard.InputEvents.SetCurrentActionToAttack -= OnPlayerSetCurrentActionToAttack;
-        Gameboard.InputEvents.SetCurrentActionToMove -= OnPlayerSetCurrentActionToMove;
-        Gameboard.InputEvents.CommitCurrentAction -= OnPlayerCommitCurrentAction;
-        Gameboard.InputEvents.HoveredTileChanged -= OnPlayerHoveredTileChanged;
-
-        ExitState();
+        if (Flags.CanContinue)
+            ExitState();
     }
 
     private void OnPlayerInputUndo()

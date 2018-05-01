@@ -4,11 +4,6 @@ public class StateGameOver : StateBase
 {
     public override StateID StateID { get { return StateID.GameOver; } }
 
-    public StateGameOver(Gameboard gameboard, StateEventsController gameboardEvents) : base (gameboard, gameboardEvents)
-    {
-
-    }
-
     protected override void OnEnter()
     {
         base.OnEnter();

@@ -7,8 +7,6 @@ public class StateSetupPhase : StateBase
 
     private bool AllMechsSpawned { get { return Gameboard.World.Mechs.Count == 3; } }
 
-    public StateSetupPhase(Gameboard gameboard, StateEventsController stateEventsController) : base(gameboard, stateEventsController) { }
-
     protected override void OnEnter()
     {
         Gameboard.World.UnitAdded += OnUnitAdded;

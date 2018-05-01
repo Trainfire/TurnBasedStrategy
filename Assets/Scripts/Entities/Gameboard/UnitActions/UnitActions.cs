@@ -1,69 +1,7 @@
 ﻿using System;
+using System.Collections;
+using UnityEngine;
 using UnityEngine.Assertions;
-
-public enum UnitAction
-{
-    Unassigned,
-    Move,
-    PrimaryAttack,
-    SecondaryAttack,
-}
-
-public class UnitActionHandler
-{
-    private UnitAction _action;
-    public UnitAction Action
-    {
-        get { return _action; }
-        private set
-        {
-            _action = value;
-
-            switch (_action)
-            {
-                case UnitAction.Move: _handler = new UnitMoveAction(); break;
-                case UnitAction.PrimaryAttack: _handler = new UnitPrimaryAttackAction(); break;
-                default: _handler = new UnitUnassignedAction(); break;
-            }
-        }
-    }
-
-    private IUnitAction _handler;
-    public IUnitAction Handler { get { return _handler; } }
-
-    private IStateEvents _stateEvents;
-
-    public UnitActionHandler(IStateEvents stateEvents)
-    {
-        Action = UnitAction.Unassigned;
-
-        _stateEvents = stateEvents;
-        _stateEvents.ActionSetToAttack += StateEvents_ActionSetToAttack;
-        _stateEvents.ActionCancelled += _stateEvents_ActionCancelled;
-        _stateEvents.ActionSetToMove += _stateEvents_ActionSetToMove;
-        _stateEvents.ActionCommitted += _stateEvents_ActionCommitted;
-    }
-
-    private void _stateEvents_ActionCommitted(StateActionCommittedEventArgs obj)
-    {
-        Action = UnitAction.Unassigned;
-    }
-
-    private void _stateEvents_ActionSetToMove(StateActionSetToMoveEventArgs obj)
-    {
-        Action = UnitAction.Move;
-    }
-
-    private void _stateEvents_ActionCancelled(StateActionCancelledEventArgs obj)
-    {
-        Action = UnitAction.Unassigned;
-    }
-
-    private void StateEvents_ActionSetToAttack(Mech obj)
-    {
-        Action = UnitAction.PrimaryAttack;
-    }
-}
 
 public class UnitActionExecutionCompletedResult
 {
@@ -99,8 +37,12 @@ public class UnitMoveAction : IUnitAction
 {
     public void Execute(Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete)
     {
-        unit.MoveTo(target);
-        onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(UnitAction.Move));
+        var animator = new GameObject().AddComponent<UnitMoveAnimator>();
+        animator.Animate(unit, target, () =>
+        {
+            unit.MoveTo(target);
+            onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(UnitAction.Move));
+        });
     }
 
     bool IUnitAction.IsValid(Helper helper, Unit unit, Tile target)

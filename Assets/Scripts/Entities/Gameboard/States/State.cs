@@ -36,9 +36,9 @@ public class State : MonoBehaviour
 
         _eventsController = gameObject.AddComponent<StateEventsController>();
 
-        Register(new StateSetupPhase(_gameboard, _eventsController));
-        Register(new StatePlayerMovePhase(_gameboard, _eventsController));
-        Register(new StateGameOver(_gameboard, _eventsController));
+        Register<StateSetupPhase>((state) => state.Initialize(_gameboard, _eventsController));
+        Register<StatePlayerMovePhase>((state) => state.Initialize(_gameboard, _eventsController));
+        Register<StateGameOver>((state) => state.Initialize(_gameboard, _eventsController));
 
         _stateHandlers = new List<IStateHandler>();
 
@@ -51,19 +51,24 @@ public class State : MonoBehaviour
         _states[Current].Enter();
     }
 
-    private void Register(StateBase gameboardState)
+    private void Register<TState>(Action<TState> postRegister) where TState : StateBase
     {
         if (_states == null)
             _states = new Dictionary<StateID, StateBase>();
 
-        Assert.IsFalse(_states.ContainsKey(gameboardState.StateID));
+        var instance = new GameObject().AddComponent<TState>();
+        instance.transform.SetParent(transform);
 
-        _states.Add(gameboardState.StateID, gameboardState);
+        postRegister(instance);
 
-        gameboardState.StateRestored += OnRestoreState;
-        gameboardState.StateSaved += OnSaveState;
-        gameboardState.StateCommitted += OnCommitState;
-        gameboardState.Exited += MoveNext;
+        Assert.IsFalse(_states.ContainsKey(instance.StateID));
+
+        _states.Add(instance.StateID, instance);
+
+        instance.StateRestored += OnRestoreState;
+        instance.StateSaved += OnSaveState;
+        instance.StateCommitted += OnCommitState;
+        instance.Exited += MoveNext;
     }
 
     private void OnRestoreState() => _stateHandlers.ForEach(x => x.RestoreStateBeforeMove());
@@ -115,5 +120,18 @@ public class State : MonoBehaviour
 
         if (unit.GetType() == typeof(Building))
             unit.Health.Changed += OnBuildingHealthChanged;
+    }
+
+    private void OnDestroy()
+    {
+        foreach (var state in _states.Values)
+        {
+            state.StateRestored -= OnRestoreState;
+            state.StateSaved -= OnSaveState;
+            state.StateCommitted -= OnCommitState;
+            state.Exited -= MoveNext;
+        }
+
+        _stateHandlers.Clear();
     }
 }
