@@ -97,9 +97,10 @@ public class StatePlayerMovePhase : StateBase
         Flags.CanContinue = false;
         Flags.CanUndo = false;
 
-        Events.ClearPreview();
-
         _unitActionHandler.Handler.Execute(Gameboard.World.Helper, _selectedMech, targetTile, OnActionExecutionComplete);
+
+        Events.ClearPreview();
+        Events.SetActionCommitted(new StateActionCommittedEventArgs());
     }
 
     private void OnActionExecutionComplete(UnitActionExecutionCompletedResult unitActionExecutionResult)
@@ -109,8 +110,6 @@ public class StatePlayerMovePhase : StateBase
             _undoManager.Clear();
             CommitState();
         }
-
-        Events.SetActionCommitted(new StateActionCommittedEventArgs());
 
         Flags.CanControlUnits = true;
         Flags.CanContinue = true;
