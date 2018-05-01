@@ -6,19 +6,14 @@ public class StatePlayerMovePhase : StateBase
 {
     public override StateID StateID { get { return StateID.PlayerMove; } }
 
-    private enum PlayerAction
-    {
-        Unassigned,
-        Move,
-        PrimaryAttack,
-        SecondaryAttack,
-    }
-
     private StateUndoManager _undoManager = new StateUndoManager();
-    private CachedValue<PlayerAction> _playerAction = new CachedValue<PlayerAction>();
+    private UnitActionHandler _unitActionHandler;
     private Mech _selectedMech;
 
-    public StatePlayerMovePhase(Gameboard gameboard, StateEventsController gameboardEvents) : base(gameboard, gameboardEvents) { }
+    public StatePlayerMovePhase(Gameboard gameboard, StateEventsController gameboardEvents) : base(gameboard, gameboardEvents)
+    {
+        _unitActionHandler = new UnitActionHandler(Events);
+    }
 
     protected override void OnEnter()
     {
@@ -32,14 +27,14 @@ public class StatePlayerMovePhase : StateBase
         Gameboard.InputEvents.CommitCurrentAction += OnPlayerCommitCurrentAction;
         Gameboard.InputEvents.HoveredTileChanged += OnPlayerHoveredTileChanged;
 
+        Flags.CanContinue = true;
         Flags.CanControlUnits = true;
     }
 
     private void OnPlayerInputSelect(Tile targetTile)
     {
-        if (_playerAction.Current != PlayerAction.Unassigned)
+        if (_unitActionHandler.Action != UnitAction.Unassigned)
         {
-            _playerAction.Current = PlayerAction.Unassigned;
             Events.ClearPreview();
             Events.SetActionCancelled(new StateActionCancelledEventArgs());
         }
@@ -51,8 +46,6 @@ public class StatePlayerMovePhase : StateBase
     {
         if (_selectedMech == null)
             return;
-
-        _playerAction.Current = PlayerAction.Move;
 
         var reachableTiles = Gameboard.World.Helper.GetReachableTiles(_selectedMech.transform.GetGridPosition(), _selectedMech.MovementRange);
 
@@ -72,8 +65,6 @@ public class StatePlayerMovePhase : StateBase
             return;
         }
 
-        _playerAction.Current = PlayerAction.PrimaryAttack;
-
         Events.ClearPreview();
         Events.SetActionToAttack(_selectedMech);
         Events.ShowPreview(Gameboard.World.Helper.GetTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData));
@@ -81,28 +72,36 @@ public class StatePlayerMovePhase : StateBase
 
     private void OnPlayerCommitCurrentAction(Tile targetTile)
     {
-        if (targetTile == null || _selectedMech == null)
+        if (targetTile == null || _selectedMech == null || !_unitActionHandler.Handler.IsValid(Gameboard.World.Helper, _selectedMech, targetTile))
             return;
 
-        switch (_playerAction.Current)
+        if (_unitActionHandler.Action == UnitAction.Move)
         {
-            case PlayerAction.Move:
-                MoveUnit(_selectedMech, targetTile);
-                break;
-            case PlayerAction.PrimaryAttack:
-                _selectedMech.PrimaryWeapon?.Use(targetTile);
-                _undoManager.Clear();
-                CommitState();
-                break;
-            default: break;
+            _undoManager.SavePosition(_selectedMech);
+            SaveState();
+        }
+
+        Flags.CanControlUnits = false;
+        Flags.CanContinue = false;
+        Flags.CanUndo = false;
+
+        _unitActionHandler.Handler.Execute(_selectedMech, targetTile, OnActionExecutionComplete);
+    }
+
+    private void OnActionExecutionComplete(UnitActionExecutionCompletedResult unitActionExecutionResult)
+    {
+        if (unitActionExecutionResult.Action == UnitAction.PrimaryAttack || unitActionExecutionResult.Action == UnitAction.SecondaryAttack)
+        {
+            _undoManager.Clear();
+            CommitState();
         }
 
         Events.ClearPreview();
         Events.SetActionCommitted(new StateActionCommittedEventArgs());
 
-        _playerAction.Current = PlayerAction.Unassigned;
-
-        UpdateFlags();
+        Flags.CanControlUnits = true;
+        Flags.CanContinue = true;
+        Flags.CanUndo = _undoManager.CanUndo;
     }
 
     private void OnPlayerInputContinue()
@@ -123,25 +122,22 @@ public class StatePlayerMovePhase : StateBase
         if (!_undoManager.CanUndo)
             return;
 
-        DebugEx.Log<StatePlayerMovePhase>("Undo");
-
         _undoManager.UndoLastMove();
-
         RestoreState();
 
-        UpdateFlags();
+        Flags.CanUndo = _undoManager.CanUndo;
     }
 
     private void OnPlayerHoveredTileChanged(Tile hoveredTile)
     {
-        if (_playerAction.Current == PlayerAction.Unassigned)
+        if (_unitActionHandler.Action == UnitAction.Unassigned)
             return;
 
         var effectPreview = new EffectPreview();
 
         if (hoveredTile != null)
         {
-            if (_playerAction.Current == PlayerAction.PrimaryAttack)
+            if (_unitActionHandler.Action == UnitAction.PrimaryAttack)
             {
                 var mechTile = Gameboard.World.Helper.GetTile(_selectedMech);
                 if (mechTile == null || _selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
@@ -150,7 +146,7 @@ public class StatePlayerMovePhase : StateBase
                 var spawnEffectParameters = new SpawnEffectParameters(mechTile, hoveredTile);
                 effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, Gameboard.World.Helper, spawnEffectParameters);
             }
-            else if (_playerAction.Current == PlayerAction.Move)
+            else if (_unitActionHandler.Action == UnitAction.Move)
             {
                 effectPreview = hoveredTile.Hazards.GetEffectPreviewOnEnter(_selectedMech);
             }
@@ -158,24 +154,5 @@ public class StatePlayerMovePhase : StateBase
 
         Events.SetHoveredTile(hoveredTile);
         Events.ShowEffectPreview(effectPreview);
-    }
-
-    private void MoveUnit(Mech mech, Tile targetTile)
-    {
-        if (!Gameboard.World.Helper.CanReachTile(_selectedMech.Tile.transform.GetGridPosition(), targetTile.transform.GetGridPosition(), mech.MovementRange))
-            return;
-
-        SaveState();
-
-        _undoManager.SavePosition(_selectedMech);
-
-        mech.MoveTo(targetTile);
-
-        UpdateFlags();
-    }
-
-    private void UpdateFlags()
-    {
-        Flags.CanUndo = _undoManager.CanUndo;
     }
 }
