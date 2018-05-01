@@ -20,7 +20,7 @@ public class State : MonoBehaviour
 
     public StateID Current { get; private set; }
     public IStateEvents Events { get { return _eventsController; } }
-    public ReadOnlyStateFlags Flags { get { return _states[Current].Flags.AsReadOnly(); } }
+    public IReadOnlyStateFlags Flags { get { return _states[Current].Flags; } }
     public int TurnCount { get; private set; }
 
     private List<IStateHandler> _stateHandlers;

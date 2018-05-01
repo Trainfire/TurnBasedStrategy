@@ -1,4 +1,4 @@
-﻿public class StateFlags
+﻿public class StateFlags : IReadOnlyStateFlags
 {
     public bool CanContinue { get; set; }
     public bool CanControlUnits { get; set; }
@@ -12,25 +12,12 @@
         CanSpawnUnits = false;
         CanUndo = false;
     }
-
-    public ReadOnlyStateFlags AsReadOnly()
-    {
-        return new ReadOnlyStateFlags(this);
-    }
 }
 
-public struct ReadOnlyStateFlags
+public interface IReadOnlyStateFlags
 {
-    public readonly bool CanContinue;
-    public readonly bool CanControlUnits;
-    public readonly bool CanSpawnUnits;
-    public readonly bool CanUndo;
-
-    public ReadOnlyStateFlags(StateFlags validPlayerActions)
-    {
-        CanContinue = validPlayerActions.CanContinue;
-        CanControlUnits = validPlayerActions.CanControlUnits;
-        CanSpawnUnits = validPlayerActions.CanSpawnUnits;
-        CanUndo = validPlayerActions.CanUndo;
-    }
+    bool CanContinue { get; }
+    bool CanControlUnits { get; }
+    bool CanSpawnUnits { get; }
+    bool CanUndo { get; }
 }
