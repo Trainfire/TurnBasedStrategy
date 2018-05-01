@@ -46,23 +46,26 @@ public class InputController : MonoBehaviour, IInputEvents
         if (Input.GetKeyDown(PrimaryAttackKey))
             SetCurrentActionToAttack.InvokeSafe();
 
-        if (Input.GetKeyDown(SpawnDefaultUnitKey))
-            SpawnDefaultUnit.InvokeSafe(tileUnderMouse);
-
         if (Input.GetKeyDown(ContinueKey))
             Continue.InvokeSafe();
 
-        if (Input.GetMouseButtonDown(0))
-            Select.InvokeSafe(tileUnderMouse);
-
-        if (Input.GetMouseButtonDown(1))
-            CommitCurrentAction.InvokeSafe(tileUnderMouse);
-
         if (Input.GetKeyDown(UndoKey))
-            Undo.InvokeSafe();
+            Undo.InvokeSafe();        
 
-        if (Input.GetKeyDown(PreviewKey) && tileUnderMouse != null)
-            PreviewAction?.Invoke(tileUnderMouse);
+        if (tileUnderMouse != null)
+        {
+            if (Input.GetKeyDown(SpawnDefaultUnitKey))
+                SpawnDefaultUnit.InvokeSafe(tileUnderMouse);
+
+            if (Input.GetKeyDown(PreviewKey))
+                PreviewAction?.Invoke(tileUnderMouse);
+
+            if (Input.GetMouseButtonDown(0))
+                Select.InvokeSafe(tileUnderMouse);
+
+            if (Input.GetMouseButtonDown(1))
+                CommitCurrentAction.InvokeSafe(tileUnderMouse);
+        }
 
         if (tileUnderMouse != _lastTileUnderMouse)
             HoveredTileChanged?.Invoke(tileUnderMouse);
