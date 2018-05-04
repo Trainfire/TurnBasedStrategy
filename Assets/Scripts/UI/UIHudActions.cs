@@ -62,7 +62,7 @@ public class UIHudActions : MonoBehaviour
 
         _buttonContinue.interactable = _state.Flags.CanContinue;
         _buttonUndo.gameObject.SetActive(_state.Flags.CanUndo);
-        _buttonMove.gameObject.SetActive(_state.Flags.CanControlUnits);
-        _buttonAttack.gameObject.SetActive(_state.Flags.CanControlUnits);
+        _buttonMove.gameObject.SetActive(_state.Flags.CanSelectedUnitMove);
+        _buttonAttack.gameObject.SetActive(_state.Flags.CanSelectedUnitAttack);
     }
 }

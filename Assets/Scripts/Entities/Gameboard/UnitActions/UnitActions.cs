@@ -5,10 +5,12 @@ using UnityEngine.Assertions;
 
 public class UnitActionExecutionCompletedResult
 {
+    public Unit Actor { get; private set; }
     public UnitAction Action { get; private set; }
 
-    public UnitActionExecutionCompletedResult(UnitAction action)
+    public UnitActionExecutionCompletedResult(Unit actor, UnitAction action)
     {
+        Actor = actor;
         Action = action;
     }
 }
@@ -23,7 +25,7 @@ public class UnitUnassignedAction : IUnitAction
 {
     void IUnitAction.Execute(Helper helper, Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete)
     {
-        onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(UnitAction.Unassigned));
+        onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(unit, UnitAction.Unassigned));
     }
 
     bool IUnitAction.IsValid(Helper helper, Unit unit, Tile target)
@@ -41,7 +43,7 @@ public class UnitMoveAction : IUnitAction
         animator.Animate(helper, unit, target, () =>
         {
             unit.MoveTo(target);
-            onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(UnitAction.Move));
+            onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(unit, UnitAction.Move));
         });
     }
 
@@ -61,7 +63,7 @@ public class UnitPrimaryAttackAction : IUnitAction
 
         weapon.Use(target);
 
-        onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(UnitAction.PrimaryAttack));
+        onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(unit, UnitAction.PrimaryAttack));
     }
 
     bool IUnitAction.IsValid(Helper helper, Unit unit, Tile target)

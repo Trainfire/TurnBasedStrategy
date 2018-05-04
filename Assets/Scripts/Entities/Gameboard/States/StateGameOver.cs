@@ -9,7 +9,7 @@ public class StateGameOver : StateBase
         base.OnEnter();
 
         Flags.CanContinue = false;
-        Flags.CanControlUnits = false;
+        Flags.CanSelectedUnitAttack = false;
 
         DebugEx.Log<StateGameOver>("Game over, man.");
     }

@@ -1,14 +1,57 @@
 ﻿using UnityEngine.Assertions;
 using System.Collections.Generic;
 using Framework;
+using System.Linq;
 
 public class StatePlayerMovePhase : StateBase
 {
+    private class UnitFlags
+    {
+        public bool CanAttack { get; private set; } = true;
+        public bool CanMove { get; private set; } = true;
+
+        private Unit _unit;
+        private IStateEvents _stateEvents;
+
+        public UnitFlags(Unit unit, IStateEvents stateEvents)
+        {
+            _unit = unit;
+            _stateEvents = stateEvents;
+            _stateEvents.ActionCommitted += OnActionCommitted;
+            _stateEvents.Undo += OnUndo;
+        }
+
+        private void OnUndo(StateUndoEventArgs args)
+        {
+            if (args.Unit != _unit)
+                return;
+
+            CanMove = true;
+        }
+
+        private void OnActionCommitted(StateActionCommittedEventArgs args)
+        {
+            if (args.Unit != _unit)
+                return;
+
+            if (args.Action == UnitAction.PrimaryAttack || args.Action == UnitAction.SecondaryAttack)
+            {
+                CanAttack = false;
+                CanMove = false;
+            }
+            else if (args.Action == UnitAction.Move)
+            {
+                CanMove = false;
+            }
+        }
+    }
+
     public override StateID StateID { get { return StateID.PlayerMove; } }
 
     private StateUndoManager _undoManager = new StateUndoManager();
     private UnitActionHandler _unitActionHandler;
     private Mech _selectedMech;
+    private Dictionary<Unit, UnitFlags> _unitFlags = new Dictionary<Unit, UnitFlags>();
 
     protected override void OnInitialize(Gameboard gameboard, StateEventsController gameboardEvents)
     {
@@ -19,6 +62,7 @@ public class StatePlayerMovePhase : StateBase
     protected override void OnEnter()
     {
         _undoManager.Clear();
+        _unitFlags.Clear();
 
         Gameboard.InputEvents.Undo += OnPlayerInputUndo;
         Gameboard.InputEvents.Continue += OnPlayerInputContinue;
@@ -28,8 +72,8 @@ public class StatePlayerMovePhase : StateBase
         Gameboard.InputEvents.CommitCurrentAction += OnPlayerCommitCurrentAction;
         Gameboard.InputEvents.HoveredTileChanged += OnPlayerHoveredTileChanged;
 
+        Gameboard.World.Mechs.ToList().ForEach(mech => _unitFlags.Add(mech, new UnitFlags(mech, Events)));
         Flags.CanContinue = true;
-        Flags.CanControlUnits = true;
     }
 
     protected override void OnExit()
@@ -52,11 +96,13 @@ public class StatePlayerMovePhase : StateBase
         }
 
         _selectedMech = targetTile?.Occupant as Mech;
+
+        UpdateFlags();
     }
 
     private void OnPlayerSetCurrentActionToMove()
     {
-        if (_selectedMech == null)
+        if (_selectedMech == null || !_unitFlags[_selectedMech].CanMove)
             return;
 
         var reachableTiles = Gameboard.World.Helper.GetReachableTiles(_selectedMech.transform.GetGridPosition(), _selectedMech.MovementRange);
@@ -68,7 +114,7 @@ public class StatePlayerMovePhase : StateBase
 
     private void OnPlayerSetCurrentActionToAttack()
     {
-        if (_selectedMech == null)
+        if (_selectedMech == null || !_unitFlags[_selectedMech].CanAttack)
             return;
 
         if (_selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
@@ -93,14 +139,14 @@ public class StatePlayerMovePhase : StateBase
             SaveState();
         }
 
-        Flags.CanControlUnits = false;
-        Flags.CanContinue = false;
-        Flags.CanUndo = false;
-
         _unitActionHandler.Handler.Execute(Gameboard.World.Helper, _selectedMech, targetTile, OnActionExecutionComplete);
 
         Events.ClearPreview();
-        Events.SetActionCommitted(new StateActionCommittedEventArgs());
+        Events.SetActionCommitted(new StateActionCommittedEventArgs(_selectedMech, _unitActionHandler.Action));
+
+        Flags.CanContinue = false;
+        Flags.CanUndo = false;
+        UpdateFlags();
     }
 
     private void OnActionExecutionComplete(UnitActionExecutionCompletedResult unitActionExecutionResult)
@@ -111,9 +157,9 @@ public class StatePlayerMovePhase : StateBase
             CommitState();
         }
 
-        Flags.CanControlUnits = true;
         Flags.CanContinue = true;
-        Flags.CanUndo = _undoManager.CanUndo;
+
+        UpdateFlags();
     }
 
     private void OnPlayerInputContinue()
@@ -127,10 +173,11 @@ public class StatePlayerMovePhase : StateBase
         if (!_undoManager.CanUndo)
             return;
 
-        _undoManager.UndoLastMove();
-        RestoreState();
+        var undoEventArgs = _undoManager.UndoLastMove();
+        Events.TriggerUndo(undoEventArgs);
 
-        Flags.CanUndo = _undoManager.CanUndo;
+        RestoreState();
+        UpdateFlags();
     }
 
     private void OnPlayerHoveredTileChanged(Tile hoveredTile)
@@ -159,5 +206,12 @@ public class StatePlayerMovePhase : StateBase
 
         Events.SetHoveredTile(hoveredTile);
         Events.ShowEffectPreview(effectPreview);
+    }
+
+    private void UpdateFlags()
+    {
+        Flags.CanUndo = _undoManager.CanUndo;
+        Flags.CanSelectedUnitAttack = _selectedMech != null ? _unitFlags[_selectedMech].CanAttack : false;
+        Flags.CanSelectedUnitMove = _selectedMech != null ? _unitFlags[_selectedMech].CanMove : false;
     }
 }
