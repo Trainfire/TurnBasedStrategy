@@ -19,6 +19,7 @@ public class World : IWorldEvents
     public IReadOnlyList<Unit> Units { get { return _units; } }
     public IReadOnlyList<Building> Buildings { get { return Units.Where(x => x.GetType() == typeof(Building)).Cast<Building>().ToList(); } }
     public IReadOnlyList<Mech> Mechs { get { return Units.Where(x => x.GetType() == typeof(Mech)).Cast<Mech>().ToList(); } }
+    public IReadOnlyList<Enemy> Enemies { get { return Units.Where(x => x.GetType() == typeof(Enemy)).Cast<Enemy>().ToList(); } }
 
     private Dictionary<Vector2, Tile> _tiles;
     private List<Unit> _units;
@@ -46,9 +47,16 @@ public class World : IWorldEvents
         SpawnUnit<Building>(tile, prototype, (building) => building.Initialize(Helper));
     }
 
+    public void SpawnUnit(Tile tile, EnemyData enemyData)
+    {
+        Assert.IsNotNull(enemyData, "Cannot spawn an enemy with null data.");
+        SpawnUnit<Enemy>(tile, new GameObject().AddComponent<Enemy>(), (enemy) => enemy.Initialize(enemyData, Helper));
+    }
+
     private T SpawnUnit<T>(Tile tile, T prototype, Action<T> onSpawn) where T : Unit
     {
         var unit = GameObject.Instantiate<T>(prototype);
+        unit.Removed += OnUnitRemoved;
 
         _units.Add(unit);
 
@@ -70,13 +78,20 @@ public class World : IWorldEvents
         instance.transform.SetGridPosition(position);
 
         instance.Initialize(Helper);
-        //instance.OccupantChanged += AssignUnitToTile;
-        //instance.OccupantLeft += RemoveUnitFromTile;
 
         _tiles.Add(position, instance);
 
         TileAdded?.Invoke(instance);
 
         return instance;
+    }
+
+    private void OnUnitRemoved(Unit unit)
+    {
+        UnitRemoved?.Invoke(unit);
+
+        unit.Removed -= OnUnitRemoved;
+
+        _units.Remove(unit);
     }
 }

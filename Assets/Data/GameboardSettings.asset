@@ -17,4 +17,5 @@ MonoBehaviour:
     _defaultMech: {fileID: 11400000, guid: f0ccddbcfd116b846bf4e7f95897751b, type: 2}
     _defaultBuilding: {fileID: 114232061725705194, guid: 3e20d03739a6fa048b0fd09f6a32bb5d,
       type: 2}
+    _defaultEnemy: {fileID: 11400000, guid: 195f59788c07d724f899ac57ea336768, type: 2}
     _tile: {fileID: 114946297969680578, guid: 8bc73abfd3c455d47961d84af4ab6d40, type: 2}

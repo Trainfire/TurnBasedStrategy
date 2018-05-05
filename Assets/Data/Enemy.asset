@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Name: Enemy
   m_EditorClassIdentifier: 
   _name: Badman
-  _maxHealth: 3
+  _maxHealth: 1
   _view: {fileID: 1343557365762394, guid: e3d5666427f8e424da0ccb83c087245a, type: 2}
   _weapon: {fileID: 0}

@@ -19,7 +19,6 @@ public class Events
 public class Gameboard : GameEntity
 {
     public GameboardData Data { get { return _data; } }
-    //public Helper Helper { get; private set; }
     public World World { get; private set; }
     public Events Events { get; private set; }
     public IInputEvents InputEvents { get; private set; }
@@ -34,9 +33,6 @@ public class Gameboard : GameEntity
 
         World = new World(new WorldParameters(transform, Data));
 
-        //Helper = new Helper(world);
-        //Entities = new Entities(Helper, world);
-
         var inputController = gameObject.GetOrAddComponent<InputController>();
         InputEvents = inputController;
 
@@ -49,5 +45,12 @@ public class Gameboard : GameEntity
         Events = new Events(InputEvents, State.Events, World);
 
         FindObjectOfType<UIHud>()?.Initialize(this, inputController);
+
+        InputEvents.Kill += InputEvents_Kill;
+    }
+
+    private void InputEvents_Kill(Tile obj)
+    {
+        obj.ApplyHealthChange(-5);
     }
 }

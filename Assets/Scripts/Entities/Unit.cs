@@ -29,7 +29,6 @@ public class Unit : MonoBehaviour, IStateHandler
     private void Awake()
     {
         Health = gameObject.AddComponent<HealthComponent>();
-        Health.Killed += OnKill;
     }
 
     public virtual void Initialize(Helper helper)
@@ -68,7 +67,7 @@ public class Unit : MonoBehaviour, IStateHandler
         return MoveTo(_helper.GetTileInDirection(this, worldDirection));
     }
 
-    public void Remove()
+    protected void RemoveSelf()
     {
         Removed.InvokeSafe(this);
         Destroy(gameObject);
@@ -78,11 +77,6 @@ public class Unit : MonoBehaviour, IStateHandler
     {
         if (name != null && name != string.Empty)
             this.name = name;
-    }
-
-    protected virtual void OnKill(HealthComponent healthComponent)
-    {
-        Remove();
     }
 
     public void SaveStateBeforeMove()

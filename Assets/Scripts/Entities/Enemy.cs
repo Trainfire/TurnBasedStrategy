@@ -14,6 +14,7 @@ public class Enemy : Unit
         SetName(Data.Name);
 
         Health.Setup(Data.MaxHealth);
+        Health.Killed += OnHealthKilled;
 
         Pushable = AddUnitComponent<UnitPushableComponent>();
 
@@ -22,5 +23,10 @@ public class Enemy : Unit
 
         Assert.IsNotNull(Data.View, "Missing view.");
         Instantiate(Data.View).transform.SetParent(transform, false);
+    }
+
+    private void OnHealthKilled(HealthComponent healthComponent)
+    {
+        RemoveSelf();
     }
 }

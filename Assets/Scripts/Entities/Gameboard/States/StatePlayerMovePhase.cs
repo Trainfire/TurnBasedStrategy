@@ -16,17 +16,27 @@ public class StatePlayerMovePhase : StateBase
         public UnitFlags(Unit unit, IStateEvents stateEvents)
         {
             _unit = unit;
+            _unit.Health.Changed += OnHealthChanged;
+            _unit.Removed += OnUnitRemoved;
+
             _stateEvents = stateEvents;
             _stateEvents.ActionCommitted += OnActionCommitted;
             _stateEvents.Undo += OnUndo;
         }
 
-        private void OnUndo(StateUndoEventArgs args)
+        private void OnHealthChanged(HealthChangeEvent args)
         {
-            if (args.Unit != _unit)
-                return;
+            if (args.Health.Current == 0)
+            {
+                CanAttack = CanAttack ? false : CanAttack;
+                CanMove = CanMove ? false : CanMove;
+            }
+        }
 
-            CanMove = true;
+        private void OnUnitRemoved(Unit unit)
+        {
+            unit.Removed -= OnUnitRemoved;
+            unit.Health.Changed -= OnHealthChanged;
         }
 
         private void OnActionCommitted(StateActionCommittedEventArgs args)
@@ -43,6 +53,14 @@ public class StatePlayerMovePhase : StateBase
             {
                 CanMove = false;
             }
+        }
+
+        private void OnUndo(StateUndoEventArgs args)
+        {
+            if (args.Unit != _unit)
+                return;
+
+            CanMove = true;
         }
     }
 

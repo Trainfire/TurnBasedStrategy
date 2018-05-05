@@ -9,6 +9,7 @@ public enum StateID
 {
     Invalid,
     Setup,
+    EnemySpawn,
     PlayerMove,
     EnemyMove,
     GameOver,
@@ -36,9 +37,11 @@ public class State : MonoBehaviour
 
         _eventsController = gameObject.AddComponent<StateEventsController>();
 
-        Register<StateSetupPhase>((state) => state.Initialize(_gameboard, _eventsController));
-        Register<StatePlayerMovePhase>((state) => state.Initialize(_gameboard, _eventsController));
-        Register<StateGameOver>((state) => state.Initialize(_gameboard, _eventsController));
+        Register<StateSetupPhase>();
+        Register<StateEnemySpawnPhase>();
+        Register<StatePlayerMovePhase>();
+        Register<StateEnemyMovePhase>();
+        Register<StateGameOver>();
 
         _stateHandlers = new List<IStateHandler>();
 
@@ -51,15 +54,13 @@ public class State : MonoBehaviour
         _states[Current].Enter();
     }
 
-    private void Register<TState>(Action<TState> postRegister) where TState : StateBase
+    private void Register<TState>() where TState : StateBase
     {
         if (_states == null)
             _states = new Dictionary<StateID, StateBase>();
 
         var instance = new GameObject().AddComponent<TState>();
         instance.transform.SetParent(transform);
-
-        postRegister(instance);
 
         Assert.IsFalse(_states.ContainsKey(instance.StateID));
 
@@ -69,6 +70,8 @@ public class State : MonoBehaviour
         instance.StateSaved += OnSaveState;
         instance.StateCommitted += OnCommitState;
         instance.Exited += MoveNext;
+
+        instance.Initialize(_gameboard, _eventsController);
     }
 
     private void OnRestoreState() => _stateHandlers.ForEach(x => x.RestoreStateBeforeMove());
@@ -83,9 +86,27 @@ public class State : MonoBehaviour
             return;
         }
 
-        // TODO: Add logic for moving to other states.
+        // TODO: Make this not terrible.
         if (previousStateID == StateID.Setup)
+        {
+            Current = StateID.EnemySpawn;
+        }
+        else if (previousStateID == StateID.EnemySpawn)
+        {
             Current = StateID.PlayerMove;
+        }
+        else if (previousStateID == StateID.PlayerMove)
+        {
+            Current = StateID.EnemyMove;
+        }
+        else if (previousStateID == StateID.EnemyMove)
+        {
+            Current = StateID.PlayerMove;
+        }
+        else if (previousStateID == StateID.PlayerMove)
+        {
+            Current = StateID.EnemySpawn;
+        }
 
         TurnCount++;
 

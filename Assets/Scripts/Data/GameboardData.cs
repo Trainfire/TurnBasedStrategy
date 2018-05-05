@@ -18,9 +18,11 @@ public class GameboardDataPrefabs
 {
     public MechData DefaultMech { get { return _defaultMech; } }
     public Building DefaultBuilding { get { return _defaultBuilding; } }
+    public EnemyData DefaultEnemy { get { return _defaultEnemy; } }
     public Tile Tile { get { return _tile; } }
 
     [SerializeField] private MechData _defaultMech;
     [SerializeField] private Building _defaultBuilding;
+    [SerializeField] private EnemyData _defaultEnemy;
     [SerializeField] private Tile _tile;
 }

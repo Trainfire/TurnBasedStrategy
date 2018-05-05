@@ -13,6 +13,7 @@ public interface IInputEvents
     event Action Continue;
     event Action<Tile> PreviewAction;
     event Action<Tile> HoveredTileChanged;
+    event Action<Tile> Kill;
 }
 
 public class InputController : MonoBehaviour, IInputEvents
@@ -26,6 +27,7 @@ public class InputController : MonoBehaviour, IInputEvents
     public event Action Continue;
     public event Action<Tile> PreviewAction;
     public event Action<Tile> HoveredTileChanged;
+    public event Action<Tile> Kill;
 
     private const KeyCode MoveKey = KeyCode.Alpha1;
     private const KeyCode PrimaryAttackKey = KeyCode.Alpha2;
@@ -65,6 +67,9 @@ public class InputController : MonoBehaviour, IInputEvents
 
             if (Input.GetMouseButtonDown(1))
                 CommitCurrentAction.InvokeSafe(tileUnderMouse);
+
+            if (Input.GetKeyDown(KeyCode.K))
+                Kill?.Invoke(tileUnderMouse);
         }
 
         if (tileUnderMouse != _lastTileUnderMouse)
