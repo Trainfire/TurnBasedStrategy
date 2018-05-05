@@ -12,8 +12,10 @@ public class StateEnemySpawnPhase : StateBase
         DebugEx.Log<StateEnemyMovePhase>("Start enemy spawn.");
 
         const int maxEnemyCount = 3;
+
         int spawnCount = Mathf.Max(0, maxEnemyCount - Gameboard.World.Enemies.Count);
         int spawned = 0;
+
         while (spawned != spawnCount)
         {
             var randomX = Random.Range(0, Gameboard.World.Helper.GridSize);
@@ -23,7 +25,13 @@ public class StateEnemySpawnPhase : StateBase
 
             if (tile != null && !tile.Blocked)
             {
-                Gameboard.World.SpawnUnit(tile, Gameboard.Data.Prefabs.DefaultEnemy);
+                var spawnPoint = Gameboard.World.AddSpawnPoint(tile);
+                spawnPoint.Spawned += (args) =>
+                {
+                    if (!args.Tile.Blocked)
+                        Gameboard.World.SpawnUnit(args.Tile, Gameboard.Data.Prefabs.DefaultEnemy);
+                };
+
                 spawned++;
             }
         }

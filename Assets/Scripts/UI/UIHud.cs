@@ -13,5 +13,6 @@ public class UIHud : MonoBehaviour
         gameObject.GetComponent<UIHealthBars>((comp) => comp.Initialize(gameboard));
         gameObject.GetComponent<UIHudActions>((comp) => comp.Initialize(gameboard, inputController));
         gameObject.GetComponent<UIPreviewMarkers>((comp) => comp.Initialize(gameboard.Events.State));
+        gameObject.GetComponent<UISpawnPointMarkers>((comp) => comp.Initialize(gameboard.Events.World));
     }
 }

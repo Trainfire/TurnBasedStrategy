@@ -428,6 +428,7 @@ GameObject:
   - component: {fileID: 951008050}
   - component: {fileID: 951008052}
   - component: {fileID: 951008053}
+  - component: {fileID: 951008054}
   m_Layer: 5
   m_Name: UI
   m_TagString: Untagged
@@ -553,6 +554,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _pushMarkerPrototype: {fileID: 1984203174504412, guid: 090e797b875d03e4a84fcc46039f5e1c,
+    type: 2}
+--- !u!114 &951008054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 951008045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40c425061aebcbb43b54e03891402927, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _spawnpointMarkerPrototype: {fileID: 1220380114990756, guid: f51253aa02c19804183c5790b158fa81,
     type: 2}
 --- !u!1001 &1324438326
 Prefab:

@@ -10,6 +10,7 @@ public class World : IWorldEvents
     public event Action<Unit> UnitAdded;
     public event Action<Unit> UnitRemoved;
     public event Action<Tile> TileAdded;
+    public event Action<SpawnPoint> SpawnPointAdded;
 
     public WorldParameters Parameters { get; private set; }
     public Helper Helper { get; private set; }
@@ -20,15 +21,15 @@ public class World : IWorldEvents
     public IReadOnlyList<Building> Buildings { get { return Units.Where(x => x.GetType() == typeof(Building)).Cast<Building>().ToList(); } }
     public IReadOnlyList<Mech> Mechs { get { return Units.Where(x => x.GetType() == typeof(Mech)).Cast<Mech>().ToList(); } }
     public IReadOnlyList<Enemy> Enemies { get { return Units.Where(x => x.GetType() == typeof(Enemy)).Cast<Enemy>().ToList(); } }
+    public IReadOnlyList<SpawnPoint> SpawnPoints { get { return _spawnPoints; } }
 
-    private Dictionary<Vector2, Tile> _tiles;
-    private List<Unit> _units;
+    private Dictionary<Vector2, Tile> _tiles = new Dictionary<Vector2, Tile>();
+    private List<Unit> _units = new List<Unit>();
+    private List<SpawnPoint> _spawnPoints = new List<SpawnPoint>();
     private WorldUnitHandler _unitHandler;
 
     public World(WorldParameters parameters)
     {
-        _tiles = new Dictionary<Vector2, Tile>();
-        _units = new List<Unit>();
         _unitHandler = new WorldUnitHandler(this);
 
         Parameters = parameters;
@@ -53,9 +54,31 @@ public class World : IWorldEvents
         SpawnUnit<Enemy>(tile, new GameObject().AddComponent<Enemy>(), (enemy) => enemy.Initialize(enemyData, Helper));
     }
 
+    public SpawnPoint AddSpawnPoint(Tile tile)
+    {
+        var spawnPoint = new GameObject("Spawn Point").AddComponent<SpawnPoint>();
+        spawnPoint.Initialize(tile);
+
+        _spawnPoints.Add(spawnPoint);
+
+        SpawnPointAdded?.Invoke(spawnPoint);
+
+        return spawnPoint;
+    }
+
+    public void SpawnPendingUnits()
+    {
+        foreach (var spawnPoint in _spawnPoints)
+        {
+            spawnPoint.Spawn();
+        }
+
+        _spawnPoints.Clear();
+    }
+
     private T SpawnUnit<T>(Tile tile, T prototype, Action<T> onSpawn) where T : Unit
     {
-        var unit = GameObject.Instantiate<T>(prototype);
+        var unit = prototype == null ? new GameObject().AddComponent<T>() : GameObject.Instantiate<T>(prototype);
         unit.Removed += OnUnitRemoved;
 
         _units.Add(unit);

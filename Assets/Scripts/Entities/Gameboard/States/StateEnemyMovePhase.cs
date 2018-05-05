@@ -10,6 +10,8 @@ public class StateEnemyMovePhase : StateBase
 
         DebugEx.Log<StateEnemyMovePhase>("Start enemy phase.");
 
+        Gameboard.World.SpawnPendingUnits();
+
         ExitState();
     }
 }
