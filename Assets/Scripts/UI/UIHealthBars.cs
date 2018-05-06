@@ -24,7 +24,6 @@ public class UIHealthBars : MonoBehaviour
     {
         _events = gameboard.Events;
         _events.World.UnitAdded += AddHealthBar;
-        _events.World.UnitRemoved -= RemoveHealthBar;
     }
 
     private void AddHealthBar(Unit unit)
@@ -44,8 +43,16 @@ public class UIHealthBars : MonoBehaviour
     {
         Assert.IsTrue(_healthbars.ContainsKey(unit));
 
+        unit.Removed -= RemoveHealthBar;
+
         Destroy(_healthbars[unit].gameObject);
 
         _healthbars.Remove(unit);
+    }
+
+    private void OnDestroy()
+    {
+        _healthbars.Keys.ToList().ForEach(x => x.Removed -= RemoveHealthBar);
+        _healthbars.Clear();
     }
 }

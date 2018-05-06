@@ -27,6 +27,7 @@ public class Enemy : Unit
 
     private void OnHealthKilled(HealthComponent healthComponent)
     {
+        healthComponent.Killed -= OnHealthKilled;
         RemoveSelf();
     }
 }
