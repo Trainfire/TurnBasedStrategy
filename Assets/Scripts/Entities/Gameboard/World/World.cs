@@ -3,7 +3,7 @@ using UnityEngine.Assertions;
 using System.Collections.Generic;
 using System;
 using System.Linq;
-using Framework;
+using Random = UnityEngine.Random;
 
 public class World : IWorldEvents
 {
@@ -38,6 +38,39 @@ public class World : IWorldEvents
         new WorldGenerator().Generate(this);
     }
 
+    public void Populate()
+    {
+        Debug.Log("Populating...");
+
+        const int maxEnemyCount = 1;
+
+        int spawnCount = Mathf.Max(0, maxEnemyCount - Enemies.Count);
+        int spawned = 0;
+
+        while (spawned != spawnCount)
+        {
+            var randomX = Random.Range(0, Helper.GridSize);
+            var randomY = Random.Range(0, Helper.GridSize);
+
+            var tile = Helper.GetTile(new Vector2(randomX, randomY));
+
+            if (tile != null && !tile.Blocked)
+            {
+                var spawnPoint = AddSpawnPoint(tile);
+
+                spawnPoint.Spawned += (args) =>
+                {
+                    if (!args.Tile.Blocked)
+                        SpawnUnit(args.Tile, Parameters.Data.Prefabs.DefaultEnemy);
+
+                    _spawnPoints.Remove(args);
+                };
+
+                spawned++;
+            }
+        }
+    }
+
     public void SpawnUnit(Tile tile, MechData mechData)
     {
         SpawnUnit<Mech>(tile, new GameObject().AddComponent<Mech>(), (mech) => mech.Initialize(mechData, Helper));
@@ -54,7 +87,7 @@ public class World : IWorldEvents
         SpawnUnit<Enemy>(tile, new GameObject().AddComponent<Enemy>(), (enemy) => enemy.Initialize(enemyData, Helper));
     }
 
-    public SpawnPoint AddSpawnPoint(Tile tile)
+    private SpawnPoint AddSpawnPoint(Tile tile)
     {
         var spawnPoint = new GameObject("Spawn Point").AddComponent<SpawnPoint>();
         spawnPoint.Initialize(tile);
@@ -64,16 +97,6 @@ public class World : IWorldEvents
         SpawnPointAdded?.Invoke(spawnPoint);
 
         return spawnPoint;
-    }
-
-    public void SpawnPendingUnits()
-    {
-        foreach (var spawnPoint in _spawnPoints)
-        {
-            spawnPoint.Spawn();
-        }
-
-        _spawnPoints.Clear();
     }
 
     private T SpawnUnit<T>(Tile tile, T prototype, Action<T> onSpawn) where T : Unit

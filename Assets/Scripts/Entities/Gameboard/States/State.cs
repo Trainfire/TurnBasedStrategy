@@ -1,47 +1,25 @@
-﻿using UnityEngine;
-using UnityEngine.Assertions;
-using System;
+﻿using Framework;
 using System.Collections.Generic;
 using System.Linq;
-using Framework;
-
-public enum StateID
-{
-    Invalid,
-    Setup,
-    EnemySpawn,
-    PlayerMove,
-    EnemyMove,
-    GameOver,
-}
+using UnityEngine;
 
 public class State : MonoBehaviour
 {
-    public Tile CurrentSelection { get; private set; }
-
-    public StateID Current { get; private set; }
-    public IStateEvents Events { get { return _eventsController; } }
-    public IReadOnlyStateFlags Flags { get { return _states[Current].Flags; } }
     public int TurnCount { get; private set; }
+    public IStateEvents Events { get { return _eventsController; } }
+    public IReadOnlyStateFlags Flags { get { return _sequencer.Current.Flags; } }
 
     private List<IStateHandler> _stateHandlers;
-    private Dictionary<StateID, StateBase> _states;
     private StateEventsController _eventsController;
+    private StateSequencer _sequencer;
 
     private Gameboard _gameboard;
 
     public void Initialize(Gameboard gameboard)
     {
         _gameboard = gameboard;
-        _gameboard.InputEvents.Select += OnPlayerInputSelect;
 
         _eventsController = gameObject.AddComponent<StateEventsController>();
-
-        Register<StateSetupPhase>();
-        Register<StateEnemySpawnPhase>();
-        Register<StatePlayerMovePhase>();
-        Register<StateEnemyMovePhase>();
-        Register<StateGameOver>();
 
         _stateHandlers = new List<IStateHandler>();
 
@@ -49,88 +27,28 @@ public class State : MonoBehaviour
         _gameboard.World.Units.ToList().ForEach(x => RegisterUnit(x));
         _gameboard.World.Tiles.ToList().ForEach(stateHandler => _stateHandlers.Add(stateHandler.Value));
 
-        Current = StateID.Setup;
+        _sequencer = GameObject.Instantiate(new GameObject("Sequencer"), transform).AddComponent<StateSequencer>();
+        _sequencer.Initialize(_gameboard, _eventsController);
 
-        _states[Current].Enter();
-    }
+        _sequencer.States.Values.ToList().ForEach(state =>
+        {
+            state.StateRestored += OnRestoreState;
+            state.StateSaved += OnSaveState;
+            state.StateCommitted += OnCommitState;
+        });
 
-    private void Register<TState>() where TState : StateBase
-    {
-        if (_states == null)
-            _states = new Dictionary<StateID, StateBase>();
-
-        var instance = new GameObject().AddComponent<TState>();
-        instance.transform.SetParent(transform);
-
-        Assert.IsFalse(_states.ContainsKey(instance.StateID));
-
-        _states.Add(instance.StateID, instance);
-
-        instance.StateRestored += OnRestoreState;
-        instance.StateSaved += OnSaveState;
-        instance.StateCommitted += OnCommitState;
-        instance.Exited += MoveNext;
-
-        instance.Initialize(_gameboard, _eventsController);
+        _sequencer.Begin();
     }
 
     private void OnRestoreState() => _stateHandlers.ForEach(x => x.RestoreStateBeforeMove());
     private void OnSaveState() => _stateHandlers.ForEach(x => x.SaveStateBeforeMove());
     private void OnCommitState() => _stateHandlers.ForEach(x => x.CommitStateAfterAttack());
 
-    private void MoveNext(StateID previousStateID)
-    {
-        if (TurnCount == _gameboard.Data.MaxTurns)
-        {
-            _eventsController.EndGame(new GameEndedResult(GameEndedResultState.Win));
-            return;
-        }
-
-        // TODO: Make this not terrible.
-        if (previousStateID == StateID.Setup)
-        {
-            Current = StateID.EnemySpawn;
-        }
-        else if (previousStateID == StateID.EnemySpawn)
-        {
-            Current = StateID.PlayerMove;
-        }
-        else if (previousStateID == StateID.PlayerMove)
-        {
-            Current = StateID.EnemyMove;
-        }
-        else if (previousStateID == StateID.EnemyMove)
-        {
-            Current = StateID.PlayerMove;
-        }
-        else if (previousStateID == StateID.PlayerMove)
-        {
-            Current = StateID.EnemySpawn;
-        }
-
-        TurnCount++;
-
-        Assert.IsTrue(_states.ContainsKey(Current), "No handler found for state.");
-
-        _states[Current].Enter();
-    }
-
-    private void OnPlayerInputSelect(Tile selection)
-    {
-        if (selection == null)
-            return;
-
-        CurrentSelection = selection;
-
-        DebugEx.Log<State>("Selected tile: " + CurrentSelection.name);
-    }
-
     private void OnBuildingHealthChanged(HealthChangeEvent healthChangeEvent)
     {
         if (_gameboard.World.Buildings.All(x => x.Health.Current == 0))
         {
-            Current = StateID.GameOver;
-            _states[Current].Enter();
+            _sequencer.SetToEndGame();
             _eventsController.EndGame(new GameEndedResult(GameEndedResultState.Loss));
         }
     }
@@ -145,12 +63,11 @@ public class State : MonoBehaviour
 
     private void OnDestroy()
     {
-        foreach (var state in _states.Values)
+        foreach (var state in _sequencer.States.Values)
         {
             state.StateRestored -= OnRestoreState;
             state.StateSaved -= OnSaveState;
             state.StateCommitted -= OnCommitState;
-            state.Exited -= MoveNext;
         }
 
         _stateHandlers.Clear();

@@ -1,6 +1,18 @@
 ﻿using UnityEngine;
 using System;
 
+public enum StateID
+{
+    Invalid,
+    Setup,
+    BeginTurn,
+    PlayerMove,
+    TriggerSpawnPoints,
+    EnemyThink,
+    EnemyMove,
+    GameOver,
+}
+
 public abstract class StateBase : MonoBehaviour
 {
     public event Action StateRestored;
