@@ -9,6 +9,9 @@ public class GameboardData : ScriptableObject
     public int MaxTurns { get { return _maxTurns; } }
     [SerializeField] private int _maxTurns;
 
+    public int MaxLiveEnemies { get { return _maxLiveEnemies; } }
+    [SerializeField] private int _maxLiveEnemies;
+
     public GameboardDataPrefabs Prefabs { get { return _prefabs; } }
     [SerializeField] private GameboardDataPrefabs _prefabs;
 }

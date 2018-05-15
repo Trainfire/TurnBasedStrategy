@@ -13,6 +13,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _gridSize: 8
   _maxTurns: 5
+  _maxLiveEnemies: 3
   _prefabs:
     _defaultMech: {fileID: 11400000, guid: f0ccddbcfd116b846bf4e7f95897751b, type: 2}
     _defaultBuilding: {fileID: 114232061725705194, guid: 3e20d03739a6fa048b0fd09f6a32bb5d,

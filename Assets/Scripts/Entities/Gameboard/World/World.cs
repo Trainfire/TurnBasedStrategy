@@ -42,9 +42,7 @@ public class World : IWorldEvents
     {
         Debug.Log("Populating...");
 
-        const int maxEnemyCount = 1;
-
-        int spawnCount = Mathf.Max(0, maxEnemyCount - Enemies.Count);
+        int spawnCount = Mathf.Max(0, Parameters.Data.MaxLiveEnemies - Enemies.Count);
         int spawned = 0;
 
         while (spawned != spawnCount)
