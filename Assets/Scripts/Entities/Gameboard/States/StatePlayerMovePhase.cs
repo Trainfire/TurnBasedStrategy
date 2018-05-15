@@ -157,14 +157,14 @@ public class StatePlayerMovePhase : StateBase
             SaveState();
         }
 
-        _unitActionHandler.Handler.Execute(Gameboard.World.Helper, _selectedMech, targetTile, OnActionExecutionComplete);
+        Flags.CanContinue = false;
+        Flags.CanUndo = false;
+        UpdateFlags();
 
         Events.ClearPreview();
         Events.SetActionCommitted(new StateActionCommittedEventArgs(_selectedMech, _unitActionHandler.Action));
 
-        Flags.CanContinue = false;
-        Flags.CanUndo = false;
-        UpdateFlags();
+        _unitActionHandler.Handler.Execute(Gameboard.World.Helper, _selectedMech, targetTile, OnActionExecutionComplete);
     }
 
     private void OnActionExecutionComplete(UnitActionExecutionCompletedResult unitActionExecutionResult)
@@ -174,6 +174,8 @@ public class StatePlayerMovePhase : StateBase
             _undoManager.Clear();
             CommitState();
         }
+
+        Events.SetPostActionCommitted(new StateActionCommittedEventArgs(_selectedMech, _unitActionHandler.Action));
 
         Flags.CanContinue = true;
 

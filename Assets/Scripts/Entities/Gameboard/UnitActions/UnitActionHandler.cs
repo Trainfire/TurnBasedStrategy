@@ -41,19 +41,19 @@ public class UnitActionHandler : MonoBehaviour
         _stateEvents.ActionSetToAttack += OnActionSetToAttack;
         _stateEvents.ActionCancelled += OnActionCancelled;
         _stateEvents.ActionSetToMove += OnActionSetToMove;
-        _stateEvents.ActionCommitted += OnActionCommitted;
+        _stateEvents.PostActionCommitted += OnPostActionCommitted;
     }
 
     private void OnActionSetToAttack(Mech obj) => Action = UnitAction.PrimaryAttack;
     private void OnActionSetToMove(StateActionSetToMoveEventArgs obj) => Action = UnitAction.Move;
     private void OnActionCancelled(StateActionCancelledEventArgs obj) => Action = UnitAction.Unassigned;
-    private void OnActionCommitted(StateActionCommittedEventArgs obj) => Action = UnitAction.Unassigned;
+    private void OnPostActionCommitted(StateActionCommittedEventArgs obj) => Action = UnitAction.Unassigned;
 
     private void OnDestroy()
     {
         _stateEvents.ActionSetToAttack -= OnActionSetToAttack;
         _stateEvents.ActionCancelled -= OnActionCancelled;
         _stateEvents.ActionSetToMove -= OnActionSetToMove;
-        _stateEvents.ActionCommitted -= OnActionCommitted;
+        _stateEvents.ActionCommitted -= OnPostActionCommitted;
     }
 }

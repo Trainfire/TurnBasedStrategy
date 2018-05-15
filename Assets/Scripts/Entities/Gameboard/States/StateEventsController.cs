@@ -26,6 +26,7 @@ public interface IStateEvents
     event Action<StateActionSetToMoveEventArgs> ActionSetToMove;
     event Action<Mech> ActionSetToAttack;
     event Action<StateActionCommittedEventArgs> ActionCommitted;
+    event Action<StateActionCommittedEventArgs> PostActionCommitted;
     event Action<Tile> HoveredTileSet;
     event Action<List<TileResult>> PreviewEnabled;
     event Action PreviewDisabled;
@@ -71,6 +72,7 @@ public class StateEventsController : MonoBehaviour, IStateEvents
     public event Action<StateActionSetToMoveEventArgs> ActionSetToMove;
     public event Action<Mech> ActionSetToAttack;
     public event Action<StateActionCommittedEventArgs> ActionCommitted;
+    public event Action<StateActionCommittedEventArgs> PostActionCommitted;
     public event Action<Tile> HoveredTileSet;
     public event Action<List<TileResult>> PreviewEnabled;
     public event Action PreviewDisabled;
@@ -82,6 +84,7 @@ public class StateEventsController : MonoBehaviour, IStateEvents
     public void SetActionToMove(StateActionSetToMoveEventArgs args) => ActionSetToMove?.Invoke(args);
     public void SetActionToAttack(Mech mech) => ActionSetToAttack?.Invoke(mech);
     public void SetActionCommitted(StateActionCommittedEventArgs args) => ActionCommitted?.Invoke(args);
+    public void SetPostActionCommitted(StateActionCommittedEventArgs args) => PostActionCommitted?.Invoke(args);
     public void SetHoveredTile(Tile tile) => HoveredTileSet?.Invoke(tile);
     public void ShowPreview(List<TileResult> tileResults) => PreviewEnabled?.Invoke(tileResults);
     public void ClearPreview() => PreviewDisabled?.Invoke();
