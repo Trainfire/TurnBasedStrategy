@@ -19,6 +19,15 @@ public class TileResult
 
 public class Helper
 {
+    public enum TileFilterMode
+    {
+        None,
+        /// <summary>Get all tiles until hitting a blocked tile.</summary>
+        ContigiousTiles,
+        /// <summary>Get all tiles until hitting a blocked tile. Includes the blocked tile.</summary>
+        ContiguousTilesInclusive,
+    }
+
     public int GridSize { get { return _world.Parameters.Data.GridSize; } }
 
     private World _world;
@@ -28,7 +37,7 @@ public class Helper
         _world = world;
     }
 
-    public List<TileResult> GetTiles(Tile origin, WorldDirection direction, int offset, int length, bool filterOccupiedTiles = false)
+    public List<TileResult> GetTiles(Tile origin, WorldDirection direction, int offset, int length, TileFilterMode filterMode = TileFilterMode.None)
     {
         Assert.IsNotNull(origin, "Origin tile is null.");
 
@@ -44,15 +53,22 @@ public class Helper
             var nextTile = GetTile(origin.transform.GetGridPosition() + vectorFromDirection * i);
             if (nextTile)
             {
-                if (filterOccupiedTiles && !nextTile.Blocked || !filterOccupiedTiles)
-                    hitTiles.Add(new TileResult(nextTile, i));
+                if (filterMode != TileFilterMode.None && nextTile.Blocked)
+                {
+                    if (filterMode == TileFilterMode.ContiguousTilesInclusive)
+                        hitTiles.Add(new TileResult(nextTile, i));
+
+                    break;
+                }
+
+                hitTiles.Add(new TileResult(nextTile, i));
             }
         }
 
         return hitTiles;
     }
 
-    public List<TileResult> GetTilesFromAllDirections(Tile origin, int offset, int length, bool filterOccupiedTiles = false)
+    public List<TileResult> GetTilesFromAllDirections(Tile origin, int offset, int length, TileFilterMode filterMode = TileFilterMode.None)
     {
         Assert.IsNotNull(origin);
 
@@ -62,7 +78,7 @@ public class Helper
         {
             var offsetTile = GetTile(origin.transform.GetGridPosition() + GridHelper.DirectionToVector(direction) * offset);
             if (offsetTile != null)
-                hitTiles.AddRange(GetTiles(offsetTile, direction, 0, length, filterOccupiedTiles));
+                hitTiles.AddRange(GetTiles(offsetTile, direction, 0, length, filterMode));
         }
 
         return hitTiles;
@@ -132,9 +148,15 @@ public class Helper
 
     public List<TileResult> GetTargetableTiles(Unit unit, WeaponData weaponData)
     {
+        return GetTargetableTiles(GetTile(unit), weaponData);
+    }
+
+    public List<TileResult> GetTargetableTiles(Tile source, WeaponData weaponData)
+    {
         var offset = Mathf.Max(weaponData.MinRange, 0);
         var length = weaponData.MaxRange == -1 ? GridSize : weaponData.MaxRange;
-        return GetTilesFromAllDirections(GetTile(unit), offset, length);
+        var filterMode = weaponData.WeaponType == WeaponType.Projectile ? TileFilterMode.ContiguousTilesInclusive : TileFilterMode.None;
+        return GetTilesFromAllDirections(source, offset, length, filterMode);
     }
 
     public List<Tile> GetCollisions(Unit source, WorldDirection direction)
