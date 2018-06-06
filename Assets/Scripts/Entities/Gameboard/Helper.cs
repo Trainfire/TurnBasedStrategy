@@ -146,6 +146,92 @@ public class Helper
         return results;
     }
 
+    public List<TileResult> GetPath(Tile start, Tile end)
+    {
+        if (start == end)
+            return new List<TileResult>();
+
+        var visitedTiles = new Dictionary<Tile, int>();
+        visitedTiles.Add(start, 0);
+
+        var queue = new Queue<TileResult>();
+        queue.Enqueue(new TileResult(start, 0));
+
+        // Explore map recursively and track how far the tiles are from the start.
+        while (queue.Count != 0)
+        {
+            var current = queue.Dequeue();
+
+            for (int i = 0; i < GridHelper.AllDirections.Count(); i++)
+            {
+                var candidateTile = GetTileInDirection(current.Tile, GridHelper.AllDirections.ToArray()[i]);
+
+                if (candidateTile != null && !candidateTile.Blocked)
+                {
+                    var tileResult = new TileResult(candidateTile, current.Distance + 1);
+
+                    if (visitedTiles.ContainsKey(candidateTile))
+                    {
+                        if (visitedTiles[candidateTile] > tileResult.Distance)
+                            visitedTiles[candidateTile] = tileResult.Distance;
+                    }
+                    else
+                    {
+                        visitedTiles.Add(tileResult.Tile, tileResult.Distance);
+
+                        if (candidateTile == end)
+                            break;
+
+                        queue.Enqueue(tileResult);
+                    }
+                }
+            }
+        }
+
+        if (!visitedTiles.ContainsKey(end))
+            return new List<TileResult>();
+
+        // Group tiles by distance.
+        var distancesToTilesMap = new Dictionary<int, List<Tile>>();
+        foreach (var kvp in visitedTiles)
+        {
+            if (kvp.Value < visitedTiles[end])
+            {
+                if (!distancesToTilesMap.ContainsKey(kvp.Value))
+                    distancesToTilesMap.Add(kvp.Value, new List<Tile>());
+
+                distancesToTilesMap[kvp.Value].Add(kvp.Key);
+            }
+        }
+
+        // Start from end tile and move towards the next closest tile.
+        var path = new Stack<TileResult>();
+        path.Push(new TileResult(end, distancesToTilesMap.Count));
+
+        for (int i = distancesToTilesMap.Count - 1; i > 0; i--)
+        {
+            Tile closest = null;
+            var lastDistance = -1f;
+
+            foreach (var candidateTile in distancesToTilesMap[i])
+            {
+                var distance = Vector2.Distance(candidateTile.transform.GetGridPosition(), path.Peek().Tile.transform.GetGridPosition());
+
+                if (distance < lastDistance || lastDistance == -1f)
+                {
+                    closest = candidateTile;
+                    lastDistance = distance;
+                }
+            }
+
+            Assert.IsNotNull(closest, "Failed to find a closest tile. You done goofed, bro.");
+
+            path.Push(new TileResult(closest, i));
+        }
+
+        return path.ToList();
+    }
+
     public List<TileResult> GetTargetableTiles(Unit unit, WeaponData weaponData)
     {
         return GetTargetableTiles(GetTile(unit), weaponData);
