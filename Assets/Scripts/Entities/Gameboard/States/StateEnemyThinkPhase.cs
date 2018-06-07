@@ -24,19 +24,23 @@ public class StateEnemyThinkPhase : StateBase
 
     private const float TimeBetweenMoves = 1f; // TODO: Move to Data.
 
-    private Queue<UnitTaskParameters> _tasks = new Queue<UnitTaskParameters>();
+    private Queue<AIControllerComponent> _aiControllers = new Queue<AIControllerComponent>();
 
     protected override void OnEnter()
     {
         base.OnEnter();
 
-        DebugEx.Log<StateEnemyMovePhase>("Start enemy think phase.");
+        DebugEx.Log<StateEnemyActPhase>("Start enemy think phase.");
 
         foreach (var enemy in Gameboard.World.Enemies.ToList())
         {
             var rnd = UnityEngine.Random.Range(0, Gameboard.World.Mechs.Count());
 
-            _tasks.Enqueue(new UnitTaskParameters(enemy, Gameboard.World.Mechs[rnd]));
+            var aiControllerComponent = enemy.GetComponent<AIControllerComponent>();
+            if (aiControllerComponent != null)
+                aiControllerComponent.Target = Gameboard.World.Mechs[rnd].Tile;
+
+            _aiControllers.Enqueue(aiControllerComponent);
         }
 
         MoveNext();
@@ -44,47 +48,20 @@ public class StateEnemyThinkPhase : StateBase
 
     private void MoveNext()
     {
-        Assert.IsFalse(_tasks.Count == 0);
+        Assert.IsFalse(_aiControllers.Count == 0);
 
-        var task = _tasks.Dequeue();
+        var aiController = _aiControllers.Dequeue();
 
-        DebugEx.Log<StateEnemyThinkPhase>("Executing task... {0} remaining...", _tasks.Count);
+        DebugEx.Log<StateEnemyThinkPhase>("Executing task... {0} remaining...", _aiControllers.Count);
 
-        var adjacentTiles = new List<Tile>();
-        foreach (var tileResult in Gameboard.World.Helper.GetTilesInRadius(task.Target.Tile, 1))
-        {
-            if (!tileResult.Tile.Blocked)
-                adjacentTiles.Add(tileResult.Tile);
-        }
-
-        if (adjacentTiles.Count == 0)
-        {
-            DebugEx.LogWarning<StateEnemyThinkPhase>("Failed to find any free tiles surrounding the target '{0}'", task.Target.name);
-            MoveNext();
-        }
-
-        var rnd = UnityEngine.Random.Range(0, adjacentTiles.Count);
-        task.TargetPosition = adjacentTiles[rnd];
-
-        ExecuteTask(task);
+        aiController.Move(() => StartCoroutine(PostMove()));
     }
 
-    private void ExecuteTask(UnitTaskParameters task)
-    {
-        var animator = new GameObject("EnemyThinkAnimator").AddComponent<UnitMoveAnimator>();
-        animator.Animate(Gameboard.World.Helper, task.Actor, task.TargetPosition, () =>
-        {
-            task.Actor.MoveTo(task.TargetPosition);
-            Destroy(animator.gameObject);
-            StartCoroutine(PostExecuteTask());
-        });
-    }
-
-    private IEnumerator PostExecuteTask()
+    private IEnumerator PostMove()
     {
         yield return new WaitForSeconds(TimeBetweenMoves);
 
-        if (_tasks.Count == 0)
+        if (_aiControllers.Count == 0)
         {
             ExitState();
         }
@@ -97,6 +74,6 @@ public class StateEnemyThinkPhase : StateBase
     protected override void OnExit()
     {
         base.OnExit();
-        Assert.IsTrue(_tasks.Count == 0);
+        Assert.IsTrue(_aiControllers.Count == 0);
     }
 }

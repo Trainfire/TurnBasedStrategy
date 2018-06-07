@@ -9,7 +9,7 @@ public enum StateID
     PlayerMove,
     TriggerSpawnPoints,
     EnemyThink,
-    EnemyMove,
+    EnemyAct,
     GameOver,
 }
 

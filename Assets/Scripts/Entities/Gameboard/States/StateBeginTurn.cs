@@ -9,7 +9,7 @@ public class StateBeginTurn : StateBase
     {
         base.OnEnter();
 
-        DebugEx.Log<StateEnemyMovePhase>("Start enemy spawn.");
+        DebugEx.Log<StateEnemyActPhase>("Start enemy spawn.");
 
         Gameboard.World.Populate();
 

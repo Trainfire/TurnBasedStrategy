@@ -5,6 +5,7 @@ public class Enemy : Unit
     public EnemyData Data { get; private set; }
     public UnitPushableComponent Pushable { get; private set; }
     public UnitWeaponComponent Weapon { get; private set; }
+    public AIControllerComponent Controller { get; private set; }
 
     public void Initialize(EnemyData enemyData, Helper helper)
     {
@@ -20,6 +21,8 @@ public class Enemy : Unit
 
         Weapon = AddUnitComponent<UnitWeaponComponent>();
         Weapon.WeaponData = Data.Weapon;
+
+        Controller = AddUnitComponent<AIControllerComponent>();
 
         Assert.IsNotNull(Data.View, "Missing view.");
         Instantiate(Data.View).transform.SetParent(transform, false);
