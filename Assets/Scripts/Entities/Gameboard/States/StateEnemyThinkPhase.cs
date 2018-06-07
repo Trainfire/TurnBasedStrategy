@@ -22,6 +22,8 @@ public class StateEnemyThinkPhase : StateBase
         }
     }
 
+    private const float TimeBetweenMoves = 1f; // TODO: Move to Data.
+
     private Queue<UnitTaskParameters> _tasks = new Queue<UnitTaskParameters>();
 
     protected override void OnEnter()
@@ -32,7 +34,7 @@ public class StateEnemyThinkPhase : StateBase
 
         foreach (var enemy in Gameboard.World.Enemies.ToList())
         {
-            var rnd = UnityEngine.Random.Range(0, Gameboard.World.Mechs.Count() - 1);
+            var rnd = UnityEngine.Random.Range(0, Gameboard.World.Mechs.Count());
 
             _tasks.Enqueue(new UnitTaskParameters(enemy, Gameboard.World.Mechs[rnd]));
         }
@@ -42,56 +44,54 @@ public class StateEnemyThinkPhase : StateBase
 
     private void MoveNext()
     {
+        Assert.IsFalse(_tasks.Count == 0);
+
+        var task = _tasks.Dequeue();
+
+        DebugEx.Log<StateEnemyThinkPhase>("Executing task... {0} remaining...", _tasks.Count);
+
+        var adjacentTiles = new List<Tile>();
+        foreach (var tileResult in Gameboard.World.Helper.GetTilesInRadius(task.Target.Tile, 1))
+        {
+            if (!tileResult.Tile.Blocked)
+                adjacentTiles.Add(tileResult.Tile);
+        }
+
+        if (adjacentTiles.Count == 0)
+        {
+            DebugEx.LogWarning<StateEnemyThinkPhase>("Failed to find any free tiles surrounding the target '{0}'", task.Target.name);
+            MoveNext();
+        }
+
+        var rnd = UnityEngine.Random.Range(0, adjacentTiles.Count);
+        task.TargetPosition = adjacentTiles[rnd];
+
+        ExecuteTask(task);
+    }
+
+    private void ExecuteTask(UnitTaskParameters task)
+    {
+        var animator = new GameObject("EnemyThinkAnimator").AddComponent<UnitMoveAnimator>();
+        animator.Animate(Gameboard.World.Helper, task.Actor, task.TargetPosition, () =>
+        {
+            task.Actor.MoveTo(task.TargetPosition);
+            Destroy(animator.gameObject);
+            StartCoroutine(PostExecuteTask());
+        });
+    }
+
+    private IEnumerator PostExecuteTask()
+    {
+        yield return new WaitForSeconds(TimeBetweenMoves);
+
         if (_tasks.Count == 0)
         {
             ExitState();
         }
         else
         {
-            Assert.IsFalse(_tasks.Count == 0);
-
-            var task = _tasks.Dequeue();
-
-            DebugEx.Log<StateEnemyThinkPhase>("Executing task... {0} remaining...", _tasks.Count);
-
-            var adjacentTiles = new List<Tile>();
-            foreach (var tileResult in Gameboard.World.Helper.GetTilesInRadius(task.Target.Tile, 1))
-            {
-                if (!tileResult.Tile.Blocked)
-                    adjacentTiles.Add(tileResult.Tile);
-            }
-
-            if (adjacentTiles.Count == 0)
-            {
-                DebugEx.LogWarning<StateEnemyThinkPhase>("Failed to find any free tiles surrounding the target '{0}'", task.Target.name);
-                MoveNext();
-            }
-
-            var rnd = UnityEngine.Random.Range(0, adjacentTiles.Count);
-            task.TargetPosition = adjacentTiles[rnd];
-
-            ExecuteTask(task);
+            MoveNext();
         }
-    }
-
-    private void ExecuteTask(UnitTaskParameters task)
-    {
-        task.Actor.MoveTo(task.TargetPosition);
-        MoveNext();
-        //var animator = new GameObject("EnemyThinkAnimator").AddComponent<UnitMoveAnimator>();
-        //animator.Animate(Gameboard.World.Helper, task.Actor, task.TargetPosition, () =>
-        //{
-        //    task.Actor.MoveTo(task.TargetPosition);
-        //    Destroy(animator.gameObject);
-        //    //StartCoroutine(PostExecuteTask());
-        //    MoveNext();
-        //});
-    }
-
-    private IEnumerator PostExecuteTask()
-    {
-        yield return new WaitForSeconds(2f);
-        MoveNext();
     }
 
     protected override void OnExit()
