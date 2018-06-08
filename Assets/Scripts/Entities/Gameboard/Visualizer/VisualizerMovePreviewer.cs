@@ -2,12 +2,12 @@
 using UnityEngine.Assertions;
 using System.Linq;
 
-public class VisualizerMovePreviewer
+public class VisualizerMovePreviewer : IVisualizer
 {
     private IStateEvents _stateEvents;
     private StateActionSetToMoveEventArgs _moveEventArgs;
 
-    public VisualizerMovePreviewer(IStateEvents stateEvents)
+    public void Initialize(IStateEvents stateEvents)
     {
         _stateEvents = stateEvents;
         _stateEvents.ActionCancelled += OnActionCancelled;

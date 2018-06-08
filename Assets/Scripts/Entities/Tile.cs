@@ -14,7 +14,6 @@ public class Tile : MonoBehaviour, IStateHandler
     public bool Blocked { get { return Occupant != null; } }
 
     public Unit Occupant { get { return _gameboardHelper.GetUnit(this); } }
-    public TileMarker Marker { get; private set; }
     public TileHazards Hazards { get; private set; }
 
     private string OccupantName { get { return Occupant != null ? Occupant.name : "Nobody"; } }
@@ -24,8 +23,6 @@ public class Tile : MonoBehaviour, IStateHandler
 
     private void Awake()
     {
-        Marker = gameObject.GetOrAddComponent<TileMarker>();
-
         _stateHandlers = new List<IStateHandler>();
     }
 
@@ -49,32 +46,6 @@ public class Tile : MonoBehaviour, IStateHandler
         OccupantLeft.InvokeSafe(this);
     }
 
-    //public void SetOccupant(Unit newOccupant)
-    //{
-    //    if (_occupant.Previous != null)
-    //    {
-    //        //Occupant.Removed -= OnOccupantDeath;
-    //        //Occupant.Moved -= OnOccupantMoved;
-
-    //        OccupantLeft.InvokeSafe(this);
-    //    }
-
-    //    _occupant.Current = newOccupant;
-
-    //    //OccupantChanged?.Invoke(this, newOccupant);
-
-    //    Debug.LogFormat("{0} is now occupied by {1}", name, OccupantName);
-
-    //    if (_occupant.Current != null)
-    //    {
-    //        //Occupant.Removed += OnOccupantDeath;
-    //        //Occupant.Moved += OnOccupantMoved;
-    //        _occupant.Current.transform.SetGridPosition(transform.GetGridPosition());
-
-    //        OccupantEntered.InvokeSafe(this);
-    //    }
-    //}
-
     public void ApplyHealthChange(int amount)
     {
         if (Occupant != null)
@@ -82,22 +53,6 @@ public class Tile : MonoBehaviour, IStateHandler
 
         ReceivedHealthChange.InvokeSafe(this);
     }
-
-    //private void RemoveOccupant()
-    //{
-    //    OccupantLeft.InvokeSafe(this);
-    //}
-
-    //private void OnOccupantDeath(Unit unit)
-    //{
-    //    RemoveOccupant();
-    //}
-
-    //private void OnOccupantMoved(UnitMoveEvent unitMoveEvent)
-    //{
-    //    Debug.LogFormat("Occupant {0} vacated from {1} ", OccupantName, name);
-    //    RemoveOccupant();
-    //}
 
     void IStateHandler.SaveStateBeforeMove() => _stateHandlers.ForEach(handler => handler.SaveStateBeforeMove());
     void IStateHandler.RestoreStateBeforeMove() => _stateHandlers.ForEach(handler => handler.RestoreStateBeforeMove());

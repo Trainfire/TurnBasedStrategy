@@ -40,7 +40,7 @@ public class Gameboard : GameEntity
         State.Initialize(this);
 
         var visualizer = gameObject.GetComponentAssert<Visualizer>();
-        visualizer.Initialize(State);
+        visualizer.Initialize(this);
 
         Events = new Events(InputEvents, State.Events, World);
 
