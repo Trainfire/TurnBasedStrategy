@@ -48,27 +48,31 @@ public class StateEnemyThinkPhase : StateBase
 
     private void MoveNext()
     {
-        Assert.IsFalse(_aiControllers.Count == 0);
-
-        var aiController = _aiControllers.Dequeue();
-
-        DebugEx.Log<StateEnemyThinkPhase>("Executing task... {0} remaining...", _aiControllers.Count);
-
-        aiController.Move(() => StartCoroutine(PostMove()));
-    }
-
-    private IEnumerator PostMove()
-    {
-        yield return new WaitForSeconds(TimeBetweenMoves);
-
         if (_aiControllers.Count == 0)
         {
             ExitState();
         }
         else
         {
-            MoveNext();
+            var aiController = _aiControllers.Peek();
+
+            DebugEx.Log<StateEnemyThinkPhase>("Executing task... {0} remaining...", _aiControllers.Count);
+
+            aiController.Move(() => StartCoroutine(PostMove()));
         }
+    }
+
+    private IEnumerator PostMove()
+    {
+        yield return new WaitForSeconds(TimeBetweenMoves);
+
+        var aiController = _aiControllers.Dequeue();
+
+        Events.ShowAttackTargetPreview(aiController.Target);
+        
+        yield return new WaitForSeconds(TimeBetweenMoves);
+
+        MoveNext();
     }
 
     protected override void OnExit()

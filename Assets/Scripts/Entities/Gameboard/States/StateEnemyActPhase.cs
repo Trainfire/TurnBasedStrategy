@@ -28,24 +28,24 @@ public class StateEnemyActPhase : StateBase
 
     private void MoveNext()
     {
-        var aiController = _aiControllers.Dequeue();
-
-        DebugEx.Log<StateEnemyThinkPhase>("Executing task... {0} remaining...", _aiControllers.Count);
-
-        aiController.Act(() => StartCoroutine(PostAct()));
-    }
-
-    private IEnumerator PostAct()
-    {
-        yield return new WaitForSeconds(TimeBetweenActions);
-
         if (_aiControllers.Count == 0)
         {
             ExitState();
         }
         else
         {
-            MoveNext();
+            var aiController = _aiControllers.Dequeue();
+
+            DebugEx.Log<StateEnemyThinkPhase>("Executing task... {0} remaining...", _aiControllers.Count);
+
+            aiController.Act(() => StartCoroutine(PostAct()));
         }
+    }
+
+    private IEnumerator PostAct()
+    {
+        yield return new WaitForSeconds(TimeBetweenActions);
+
+        MoveNext();
     }
 }
