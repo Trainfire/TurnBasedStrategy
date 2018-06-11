@@ -32,6 +32,7 @@ public interface IStateEvents
     event Action PreviewDisabled;
     event Action<EffectPreview> EffectPreviewShow;
     event Action<StateUndoEventArgs> Undo;
+    event Action<Tile> PreviewAttackTarget;
 }
 
 public class StateActionSetToMoveEventArgs
@@ -78,6 +79,7 @@ public class StateEventsController : MonoBehaviour, IStateEvents
     public event Action PreviewDisabled;
     public event Action<EffectPreview> EffectPreviewShow;
     public event Action<StateUndoEventArgs> Undo;
+    public event Action<Tile> PreviewAttackTarget;
 
     public void EndGame(GameEndedResult gameEndedResult) => GameEnded?.Invoke(gameEndedResult);
     public void SetActionCancelled(StateActionCancelledEventArgs args) => ActionCancelled?.Invoke(args);
@@ -90,4 +92,5 @@ public class StateEventsController : MonoBehaviour, IStateEvents
     public void ClearPreview() => PreviewDisabled?.Invoke();
     public void ShowEffectPreview(EffectPreview effectPreview) => EffectPreviewShow?.Invoke(effectPreview);
     public void TriggerUndo(StateUndoEventArgs args) => Undo?.Invoke(args);
+    public void ShowAttackTargetPreview(Tile tile) => PreviewAttackTarget?.Invoke(tile);
 }

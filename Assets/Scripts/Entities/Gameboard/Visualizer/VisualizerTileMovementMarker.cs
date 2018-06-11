@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class VisualizerTileMarker : MonoBehaviour, IVisualizer
+public class VisualizerTileMovementMarker : MonoBehaviour, IVisualizer
 {
     enum TileHighlightType
     {

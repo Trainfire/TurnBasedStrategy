@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 using Framework;
 
 public interface IVisualizer
@@ -15,20 +16,26 @@ public class Visualizer : MonoBehaviour
     {
         foreach (var tile in gameboard.World.Tiles)
         {
-            var tileMarkerComponent = tile.Value.gameObject.GetComponent<VisualizerTileMarker>();
-            if (tileMarkerComponent != null)
-            {
-                _visualizers.Add(tileMarkerComponent);
-            }
-            else
-            {
-                DebugEx.LogWarning<Visualizer>("Missing '{0}' component on '{1}'", typeof(VisualizerTileMarker).Name, tile.Value);
-            }
+            RegisterTileComponent<VisualizerTileMovementMarker>(tile.Value);
+            RegisterTileComponent<VisualizerTileTargetMarker>(tile.Value);
         }
 
         _visualizers.Add(new VisualizerMovePreviewer());
 
         _visualizers.ForEach(x => x.Initialize(gameboard.State.Events));
+    }
+
+    private void RegisterTileComponent<T>(Tile tile) where T : IVisualizer
+    {
+        var component = tile.gameObject.GetComponent<T>();
+        if (component != null)
+        {
+            _visualizers.Add(component);
+        }
+        else
+        {
+            DebugEx.LogWarning<Visualizer>("Missing '{0}' component on '{1}'", typeof(T).Name, tile);
+        }
     }
 
     private void OnDestroy()
