@@ -18,7 +18,7 @@ public class StateSequencer : MonoBehaviour
     public void Initialize(Gameboard gameboard, StateEventsController eventsController)
     {
         AddState<StateSetupPhase>(gameboard, eventsController);
-        AddState<StateBeginTurn>(gameboard, eventsController);
+        AddState<StatePopulateWorld>(gameboard, eventsController);
         AddState<StatePlayerMovePhase>(gameboard, eventsController);
         AddState<StateTriggerSpawnPoints>(gameboard, eventsController);
         AddState<StateEnemyThinkPhase>(gameboard, eventsController);
@@ -84,7 +84,7 @@ public class StateSequencer : MonoBehaviour
         Reset();
 
         _sequence.Add(StateID.Setup);
-        _sequence.Add(StateID.BeginTurn);
+        _sequence.Add(StateID.PopulateWorld);
         _sequence.Add(StateID.TriggerSpawnPoints);
         _sequence.Add(StateID.EnemyThink);
         _sequence.Add(StateID.EnemyAct);
@@ -95,11 +95,11 @@ public class StateSequencer : MonoBehaviour
     {
         Reset();
 
-        _sequence.Add(StateID.BeginTurn);
+        _sequence.Add(StateID.PopulateWorld);
         _sequence.Add(StateID.EnemyThink);
         _sequence.Add(StateID.PlayerMove);
-        _sequence.Add(StateID.TriggerSpawnPoints);
         _sequence.Add(StateID.EnemyAct);
+        _sequence.Add(StateID.TriggerSpawnPoints);
     }
 
     public void SetToEndGame()

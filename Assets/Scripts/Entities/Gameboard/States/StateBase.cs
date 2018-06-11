@@ -5,7 +5,7 @@ public enum StateID
 {
     Invalid,
     Setup,
-    BeginTurn,
+    PopulateWorld,
     PlayerMove,
     TriggerSpawnPoints,
     EnemyThink,

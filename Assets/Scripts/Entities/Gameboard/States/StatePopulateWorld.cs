@@ -1,34 +1,18 @@
 ﻿using Framework;
-using System.Collections.Generic;
-using System.Linq;
+using UnityEngine;
 
-public class StateTriggerSpawnPoints : StateBase
+public class StatePopulateWorld : StateBase
 {
-    public override StateID StateID { get { return StateID.TriggerSpawnPoints; } }
-
-    private Queue<SpawnPoint> _spawnPoints = new Queue<SpawnPoint>();
+    public override StateID StateID { get { return StateID.PopulateWorld; } }
 
     protected override void OnEnter()
     {
         base.OnEnter();
 
-        DebugEx.Log<StateTriggerSpawnPoints>("Populating world.");
+        DebugEx.Log<StatePopulateWorld>("Start enemy spawn.");
 
-        _spawnPoints = new Queue<SpawnPoint>(Gameboard.World.SpawnPoints);
+        Gameboard.World.Populate();
 
-        MoveNext();
-    }
-
-    private void MoveNext()
-    {
-        if (_spawnPoints.Count != 0)
-        {
-            _spawnPoints.Dequeue().Spawn();
-            MoveNext();
-        }
-        else
-        {
-            ExitState();
-        }
+        ExitState();
     }
 }
