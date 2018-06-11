@@ -87,8 +87,8 @@ public class StateSequencer : MonoBehaviour
         _sequence.Add(StateID.PopulateWorld);
         _sequence.Add(StateID.TriggerSpawnPoints);
         _sequence.Add(StateID.EnemyThink);
-        _sequence.Add(StateID.EnemyAct);
         _sequence.Add(StateID.PlayerMove);
+        _sequence.Add(StateID.EnemyAct);
     }
 
     private void SetToMainLoop()

@@ -1,4 +1,6 @@
-﻿using Framework;
+﻿using UnityEngine;
+using Framework;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,11 +26,17 @@ public class StateTriggerSpawnPoints : StateBase
         if (_spawnPoints.Count != 0)
         {
             _spawnPoints.Dequeue().Spawn();
-            MoveNext();
+            StartCoroutine(PostSpawn());
         }
         else
         {
             ExitState();
         }
+    }
+
+    IEnumerator PostSpawn()
+    {
+        yield return new WaitForSeconds(1f);
+        MoveNext();
     }
 }
