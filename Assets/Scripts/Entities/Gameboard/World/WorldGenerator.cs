@@ -11,11 +11,24 @@ public class WorldGenerator
         {
             for (int column = 0; column < world.Parameters.Data.GridSize; column++)
             {
-                var tile = world.SpawnTile(world.Parameters, column, row);
+                world.SpawnTile(world.Parameters, column, row);
+            }
+        }
 
-                // TEMP: Just add buildings to the last row.
-                //if (row == world.Parameters.Data.GridSize - 1 && world.Parameters.Data.Prefabs.DefaultBuilding != null)
-                //    world.SpawnUnit(tile, world.Parameters.Data.Prefabs.DefaultBuilding);
+        const int minBuildings = 5;
+        int spawnedBuildings = 0;
+        int iterations = 0;
+
+        while (spawnedBuildings != minBuildings && iterations < world.Helper.GridSize * world.Helper.GridSize)
+        {
+            var rndX = UnityEngine.Random.Range(0, world.Helper.GridSize);
+            var rndY = UnityEngine.Random.Range(0, world.Helper.GridSize);
+
+            var tile = world.Helper.GetTile(new UnityEngine.Vector2(rndX, rndY));
+            if (!tile.Blocked)
+            {
+                spawnedBuildings++;
+                world.SpawnUnit(tile, world.Parameters.Data.Prefabs.DefaultBuilding);
             }
         }
     }
