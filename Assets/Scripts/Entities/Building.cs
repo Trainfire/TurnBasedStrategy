@@ -11,5 +11,12 @@ public class Building : Unit
     {
         base.Initialize(gameboardHelper);
         Health.Setup(_health);
+        Health.Killed += OnHealthKilled;
+    }
+
+    private void OnHealthKilled(HealthComponent healthComponent)
+    {
+        healthComponent.Killed -= OnHealthKilled;
+        RemoveSelf();
     }
 }
