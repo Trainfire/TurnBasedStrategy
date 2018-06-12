@@ -32,13 +32,17 @@ public class StateEnemyThinkPhase : StateBase
 
         DebugEx.Log<StateEnemyActPhase>("Start enemy think phase.");
 
+        var targets = new List<Unit>();
+        Gameboard.World.Mechs.ToList().ForEach(x => targets.Add(x));
+        Gameboard.World.Buildings.ToList().ForEach(x => targets.Add(x));
+
         foreach (var enemy in Gameboard.World.Enemies.ToList())
         {
-            var rnd = UnityEngine.Random.Range(0, Gameboard.World.Mechs.Count());
+            var rnd = UnityEngine.Random.Range(0, targets.Count);
 
             var aiControllerComponent = enemy.GetComponent<AIControllerComponent>();
             if (aiControllerComponent != null)
-                aiControllerComponent.Target = Gameboard.World.Mechs[rnd].Tile;
+                aiControllerComponent.Target = targets[rnd].Tile;
 
             _aiControllers.Enqueue(aiControllerComponent);
         }
