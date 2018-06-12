@@ -24,6 +24,9 @@ public class UIHealthBars : MonoBehaviour
     {
         _events = gameboard.Events;
         _events.World.UnitAdded += AddHealthBar;
+
+        // Add any existing units.
+        gameboard.World.Units.ToList().ForEach(x => AddHealthBar(x));
     }
 
     private void AddHealthBar(Unit unit)
