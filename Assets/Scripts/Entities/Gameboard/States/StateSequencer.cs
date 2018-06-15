@@ -5,18 +5,27 @@ using System.Linq;
 using System;
 using Framework;
 
-public class StateSequencer : MonoBehaviour
+public interface IStateSequencer
+{
+    int TurnsLeft { get; }
+}
+
+public class StateSequencer : MonoBehaviour, IStateSequencer
 {
     public StateBase Current { get { return _states[_sequence[_index]]; } }
     public int TurnCount { get; private set; }
+    public int TurnsLeft { get { return Mathf.Max(0, _maxTurns - TurnCount); } }
     public IReadOnlyDictionary<StateID, StateBase> States { get { return _states; } }
 
     private int _index;
+    private int _maxTurns;
     private List<StateID> _sequence = new List<StateID>();
     private Dictionary<StateID, StateBase> _states = new Dictionary<StateID, StateBase>();
 
     public void Initialize(Gameboard gameboard, StateEventsController eventsController)
     {
+        _maxTurns = gameboard.Data.MaxTurns;
+
         AddState<StateSetupPhase>(gameboard, eventsController);
         AddState<StatePopulateWorld>(gameboard, eventsController);
         AddState<StatePlayerMovePhase>(gameboard, eventsController);
@@ -58,6 +67,12 @@ public class StateSequencer : MonoBehaviour
             DebugEx.Log<StateSequencer>("End turn {0}", TurnCount + 1);
 
             TurnCount++;
+
+            if (TurnCount == _maxTurns)
+            {
+                SetToEndGame();
+                return;
+            }
 
             if (TurnCount != 0)
                 SetToMainLoop();
@@ -105,7 +120,7 @@ public class StateSequencer : MonoBehaviour
     public void SetToEndGame()
     {
         Reset();
-
+        _sequence.Add(StateID.GameOver);
         _states[StateID.GameOver].Enter();
     }
 }

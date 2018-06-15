@@ -14,5 +14,6 @@ public class UIHud : MonoBehaviour
         gameObject.GetComponent<UIHudActions>((comp) => comp.Initialize(gameboard, inputController));
         gameObject.GetComponent<UIPreviewMarkers>((comp) => comp.Initialize(gameboard.Events.State));
         gameObject.GetComponent<UISpawnPointMarkers>((comp) => comp.Initialize(gameboard.Events.World));
+        gameObject.GetComponent<UITurnCount>((comp) => comp.Initialize(gameboard));
     }
 }

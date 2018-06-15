@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class State : MonoBehaviour
 {
-    public int TurnCount { get; private set; }
+    public IStateSequencer Sequencer { get { return _sequencer; } }
     public IStateEvents Events { get { return _eventsController; } }
     public IReadOnlyStateFlags Flags { get { return _sequencer.Current.Flags; } }
 
