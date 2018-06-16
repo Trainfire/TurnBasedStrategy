@@ -2,7 +2,7 @@
 using UnityEngine.Assertions;
 using System.Linq;
 
-public class VisualizerMovePreviewer : IVisualizer
+public class VisualizerMovePreviewer : IStateVisualizer
 {
     private IStateEvents _stateEvents;
     private StateActionSetToMoveEventArgs _moveEventArgs;

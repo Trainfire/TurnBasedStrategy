@@ -2,7 +2,7 @@
 using UnityEngine.Assertions;
 using System.Collections;
 
-public class VisualizerTileTargetMarker : MonoBehaviour, IVisualizer
+public class VisualizerTileTargetMarker : MonoBehaviour, IStateVisualizer
 {
     [SerializeField] private GameObject _view;
 

@@ -3,43 +3,52 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using Framework;
 
-public interface IVisualizer
+public interface IStateVisualizer
 {
     void Initialize(IStateEvents stateEvents);
 }
 
+public interface IInputVisualizer
+{
+    void Initialize(IInputEvents inputEvents);
+}
+
 public class Visualizer : MonoBehaviour
 {
-    private List<IVisualizer> _visualizers = new List<IVisualizer>();
+    private List<IStateVisualizer> _stateVisualizers = new List<IStateVisualizer>();
+    private List<IInputVisualizer> _inputVisualizers = new List<IInputVisualizer>();
 
     public void Initialize(Gameboard gameboard)
     {
         foreach (var tile in gameboard.World.Tiles)
         {
-            RegisterTileComponent<VisualizerTileMovementMarker>(tile.Value);
-            RegisterTileComponent<VisualizerTileTargetMarker>(tile.Value);
+            RegisterVisualizer<IStateVisualizer, VisualizerTileMovementMarker>(_stateVisualizers, tile.Value);
+            RegisterVisualizer<IStateVisualizer, VisualizerTileTargetMarker>(_stateVisualizers, tile.Value);
+            RegisterVisualizer<IInputVisualizer, VisualizerTileHoverMarker>(_inputVisualizers, tile.Value);
         }
 
-        _visualizers.Add(new VisualizerMovePreviewer());
+        _stateVisualizers.Add(new VisualizerMovePreviewer());
 
-        _visualizers.ForEach(x => x.Initialize(gameboard.State.Events));
+        _stateVisualizers.ForEach(x => x.Initialize(gameboard.State.Events));
+        _inputVisualizers.ForEach(x => x.Initialize(gameboard.InputEvents));
     }
 
-    private void RegisterTileComponent<T>(Tile tile) where T : IVisualizer
+    private void RegisterVisualizer<TList, TComponent>(List<TList> list, Tile tile) where TComponent : TList
     {
-        var component = tile.gameObject.GetComponent<T>();
+        var component = tile.gameObject.GetComponent<TComponent>();
         if (component != null)
         {
-            _visualizers.Add(component);
+            list.Add(component);
         }
         else
         {
-            DebugEx.LogWarning<Visualizer>("Missing '{0}' component on '{1}'", typeof(T).Name, tile);
+            DebugEx.LogWarning<Visualizer>("Missing '{0}' component on '{1}'", typeof(TComponent).Name, tile);
         }
     }
 
     private void OnDestroy()
     {
-        _visualizers.Clear();
+        _stateVisualizers.Clear();
+        _inputVisualizers.Clear();
     }
 }
