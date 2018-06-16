@@ -202,25 +202,31 @@ public class StatePlayerMovePhase : StateBase
 
     private void OnPlayerHoveredTileChanged(Tile hoveredTile)
     {
-        if (_unitActionHandler.Action == UnitAction.Unassigned)
-            return;
-
         var effectPreview = new EffectPreview();
 
         if (hoveredTile != null)
         {
             if (_unitActionHandler.Action == UnitAction.PrimaryAttack)
             {
-                var mechTile = Gameboard.World.Helper.GetTile(_selectedMech);
-                if (mechTile == null || _selectedMech.PrimaryWeapon == null || _selectedMech.PrimaryWeapon.WeaponData == null)
-                    return;
-
-                var spawnEffectParameters = new SpawnEffectParameters(mechTile, hoveredTile);
-                effectPreview = Effect.GetPreview(_selectedMech.PrimaryWeapon.WeaponData.EffectPrototype, Gameboard.World.Helper, spawnEffectParameters);
+                var spawnEffectParameters = new SpawnEffectParameters(_selectedMech.Tile, hoveredTile);
+                effectPreview = Effect.GetWeaponPreview(_selectedMech.PrimaryWeapon.WeaponData, Gameboard.World.Helper, spawnEffectParameters);
             }
             else if (_unitActionHandler.Action == UnitAction.Move)
             {
                 effectPreview = hoveredTile.Hazards.GetEffectPreviewOnEnter(_selectedMech);
+            }
+            else if (hoveredTile.Occupant != null)
+            {
+                var aiControllerComponent = hoveredTile.Occupant.GetComponent<AIControllerComponent>();
+                if (aiControllerComponent != null && aiControllerComponent.Target != null)
+                {
+                    var weaponComponent = hoveredTile.Occupant.GetComponent<UnitWeaponComponent>();
+                    if (weaponComponent != null)
+                    {
+                        var spawnEffectParameters = new SpawnEffectParameters(hoveredTile, aiControllerComponent.Target);
+                        effectPreview = Effect.GetWeaponPreview(weaponComponent.WeaponData, Gameboard.World.Helper, spawnEffectParameters);
+                    }
+                }
             }
         }
 

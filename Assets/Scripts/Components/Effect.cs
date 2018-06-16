@@ -110,6 +110,11 @@ public class Effect : MonoBehaviour
         return effectResult;
     }
 
+    public static EffectPreview GetWeaponPreview(WeaponData weaponData, Helper helper, SpawnEffectParameters spawnEffectParameters)
+    {
+        return GetPreview(weaponData.EffectPrototype, helper, spawnEffectParameters);
+    }
+
     public static EffectPreview GetPreview(Effect prototype, Helper helper, SpawnEffectParameters spawnEffectParameters)
     {
         var effectPreview = new EffectPreview();
