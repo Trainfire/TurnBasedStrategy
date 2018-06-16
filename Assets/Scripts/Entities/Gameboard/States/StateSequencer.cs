@@ -5,16 +5,10 @@ using System.Linq;
 using System;
 using Framework;
 
-public interface IStateSequencer
-{
-    int TurnsLeft { get; }
-}
-
-public class StateSequencer : MonoBehaviour, IStateSequencer
+public class StateSequencer : MonoBehaviour
 {
     public StateBase Current { get { return _states[_sequence[_index]]; } }
     public int TurnCount { get; private set; }
-    public int TurnsLeft { get { return Mathf.Max(0, _maxTurns - TurnCount); } }
     public IReadOnlyDictionary<StateID, StateBase> States { get { return _states; } }
 
     private int _index;

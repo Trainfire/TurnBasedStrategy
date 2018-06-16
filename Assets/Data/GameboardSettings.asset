@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: GameboardSettings
   m_EditorClassIdentifier: 
   _gridSize: 8
-  _maxTurns: 2
+  _maxTurns: 5
   _maxLiveEnemies: 3
   _prefabs:
     _defaultMech: {fileID: 11400000, guid: f0ccddbcfd116b846bf4e7f95897751b, type: 2}

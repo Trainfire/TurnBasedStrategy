@@ -4,6 +4,9 @@ using UnityEngine.Assertions;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// TODO: This should wrap a UIFillBar.
+/// </summary>
 public class UIHealthbar : MonoBehaviour
 {
     [SerializeField] private Transform _fillParent;

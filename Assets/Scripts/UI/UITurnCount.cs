@@ -22,6 +22,6 @@ public class UITurnCount : MonoBehaviour
     public void Update()
     {
         if (_gameboard != null)
-            _text.text = $"Turns Left: {_gameboard.State.Sequencer.TurnsLeft.ToString()}";
+            _text.text = $"Turns Left: {_gameboard.State.Data.TurnsLeft.ToString()}";
     }
 }
