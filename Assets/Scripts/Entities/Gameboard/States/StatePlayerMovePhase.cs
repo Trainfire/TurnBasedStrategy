@@ -9,6 +9,7 @@ public class StatePlayerMovePhase : StateBase
     {
         public bool CanAttack { get; private set; } = true;
         public bool CanMove { get; private set; } = true;
+        public bool CanRepair { get; private set; } = false;
 
         private Unit _unit;
         private IStateEvents _stateEvents;
@@ -29,8 +30,12 @@ public class StatePlayerMovePhase : StateBase
             if (args.Health.Current == 0)
             {
                 CanAttack = CanAttack ? false : CanAttack;
-                CanMove = CanMove ? false : CanMove;
+                CanMove = CanMove ? false : CanMove; // ...wat?
+                CanRepair = false;
+                return;
             }
+
+            CanRepair = args.Health.CanRestore;
         }
 
         private void OnUnitRemoved(Unit unit)
@@ -44,10 +49,11 @@ public class StatePlayerMovePhase : StateBase
             if (args.Unit != _unit)
                 return;
 
-            if (args.Action == UnitAction.PrimaryAttack || args.Action == UnitAction.SecondaryAttack)
+            if (args.Action == UnitAction.PrimaryAttack || args.Action == UnitAction.SecondaryAttack || args.Action == UnitAction.Repair)
             {
                 CanAttack = false;
                 CanMove = false;
+                CanRepair = false;
             }
             else if (args.Action == UnitAction.Move)
             {
@@ -87,6 +93,7 @@ public class StatePlayerMovePhase : StateBase
         Gameboard.InputEvents.Select += OnPlayerInputSelect;
         Gameboard.InputEvents.SetCurrentActionToAttack += OnPlayerSetCurrentActionToAttack;
         Gameboard.InputEvents.SetCurrentActionToMove += OnPlayerSetCurrentActionToMove;
+        Gameboard.InputEvents.SetCurrentActionToRepair += OnPlayerSetCurrentActionToRepair;
         Gameboard.InputEvents.CommitCurrentAction += OnPlayerCommitCurrentAction;
         Gameboard.InputEvents.HoveredTileChanged += OnPlayerHoveredTileChanged;
 
@@ -144,6 +151,22 @@ public class StatePlayerMovePhase : StateBase
         Events.ClearPreview();
         Events.SetActionToAttack(_selectedMech);
         Events.ShowPreview(Gameboard.World.Helper.GetTargetableTiles(_selectedMech, _selectedMech.PrimaryWeapon.WeaponData));
+    }
+
+    private void OnPlayerSetCurrentActionToRepair()
+    {
+        if (_selectedMech == null || !_unitFlags[_selectedMech].CanRepair)
+        {
+            DebugEx.Log<StatePlayerMovePhase>("Cannot repair this unit.");
+            return;
+        }
+
+        Events.ClearPreview();
+        Events.SetActionToRepair(_selectedMech);
+
+        var effectPreview = new EffectPreview();
+        effectPreview.RegisterHealthChange(_selectedMech.Tile, 1);
+        Events.ShowEffectPreview(effectPreview);
     }
 
     private void OnPlayerCommitCurrentAction(Tile targetTile)
@@ -239,5 +262,6 @@ public class StatePlayerMovePhase : StateBase
         Flags.CanUndo = _undoManager.CanUndo;
         Flags.CanSelectedUnitAttack = _selectedMech != null ? _unitFlags[_selectedMech].CanAttack : false;
         Flags.CanSelectedUnitMove = _selectedMech != null ? _unitFlags[_selectedMech].CanMove : false;
+        Flags.CanSelectedUnitRepair = _selectedMech != null ? _unitFlags[_selectedMech].CanRepair : false;
     }
 }

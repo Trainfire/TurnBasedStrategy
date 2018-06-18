@@ -72,3 +72,17 @@ public class UnitPrimaryAttackAction : IUnitAction
         return weapon != null ? helper.CanAttackTile(unit, target, weapon.WeaponData) : false;
     }
 }
+
+public class UnitRepairAction : IUnitAction
+{
+    public void Execute(Helper helper, Unit unit, Tile target, Action<UnitActionExecutionCompletedResult> onExecutionComplete)
+    {
+        unit.Health.Modify(1);
+        onExecutionComplete.Invoke(new UnitActionExecutionCompletedResult(unit, UnitAction.PrimaryAttack));
+    }
+
+    bool IUnitAction.IsValid(Helper helper, Unit unit, Tile target)
+    {
+        return unit.Health.Current > 0 && unit.Health.Current < unit.Health.Max;
+    }
+}

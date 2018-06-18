@@ -73,7 +73,7 @@ public class UIHealthbar : MonoBehaviour
         // Set healthbars that will be removed so that they flash.
         for (int i = 0; i < _fillSegmentInstances.Count; i++)
         {
-            if (i < _fillSegmentInstances.Count - Mathf.Abs(healthChangeDelta))
+            if (i < _fillSegmentInstances.Count + healthChangeDelta)
             {
                 _fillSegmentInstances[i].Flashing = false;
             }

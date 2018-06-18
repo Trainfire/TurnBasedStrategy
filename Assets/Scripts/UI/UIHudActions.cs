@@ -19,6 +19,7 @@ public class UIHudActions : MonoBehaviour
     private Button _buttonUndo;
     private Button _buttonMove;
     private Button _buttonAttack;
+    private Button _buttonRepair;
 
     private void Awake()
     {
@@ -37,6 +38,7 @@ public class UIHudActions : MonoBehaviour
         _buttonUndo = AddButton("Undo", () => inputController.TriggerUndo());
         _buttonMove = AddButton("Move", () => inputController.TriggerSetCurrentActionToMove());
         _buttonAttack = AddButton("Attack", () => inputController.TriggerSetCurrentActionToAttack());
+        _buttonRepair = AddButton("Repair", () => inputController.TriggerSetCurrentActionToRepair());
     }
 
     private Button AddButton(string label, Action onClick)
@@ -64,5 +66,6 @@ public class UIHudActions : MonoBehaviour
         _buttonUndo.gameObject.SetActive(_state.Flags.CanUndo);
         _buttonMove.gameObject.SetActive(_state.Flags.CanSelectedUnitMove);
         _buttonAttack.gameObject.SetActive(_state.Flags.CanSelectedUnitAttack);
+        _buttonRepair.gameObject.SetActive(_state.Flags.CanSelectedUnitRepair);
     }
 }

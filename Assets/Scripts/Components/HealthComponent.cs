@@ -22,6 +22,7 @@ public class HealthComponent : MonoBehaviour, IStateHandler
     public event Action<HealthComponent> Killed;
 
     public bool Invincible { get; set; }
+    public bool CanRestore { get { return Current != 0 && Current != Max && !Invincible; } }
     public int Max { get; private set; }
     public int Current { get; private set; }
 

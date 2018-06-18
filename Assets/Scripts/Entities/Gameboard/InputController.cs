@@ -9,6 +9,7 @@ public interface IInputEvents
     event Action<Tile> CommitCurrentAction;
     event Action SetCurrentActionToMove;
     event Action SetCurrentActionToAttack;
+    event Action SetCurrentActionToRepair;
     event Action Undo;
     event Action Continue;
     event Action<Tile> PreviewAction;
@@ -23,6 +24,7 @@ public class InputController : MonoBehaviour, IInputEvents
     public event Action<Tile> CommitCurrentAction;
     public event Action SetCurrentActionToMove;
     public event Action SetCurrentActionToAttack;
+    public event Action SetCurrentActionToRepair;
     public event Action Undo;
     public event Action Continue;
     public event Action<Tile> PreviewAction;
@@ -35,6 +37,7 @@ public class InputController : MonoBehaviour, IInputEvents
     private const KeyCode ContinueKey = KeyCode.Space;
     private const KeyCode UndoKey = KeyCode.Z;
     private const KeyCode PreviewKey = KeyCode.P; // DEBUG
+    private const KeyCode Repair = KeyCode.R;
 
     private Tile _lastTileUnderMouse;
 
@@ -47,6 +50,9 @@ public class InputController : MonoBehaviour, IInputEvents
 
         if (Input.GetKeyDown(PrimaryAttackKey))
             SetCurrentActionToAttack.InvokeSafe();
+
+        if (Input.GetKeyDown(Repair))
+            SetCurrentActionToRepair.InvokeSafe();
 
         if (Input.GetKeyDown(ContinueKey))
             Continue.InvokeSafe();
@@ -83,6 +89,7 @@ public class InputController : MonoBehaviour, IInputEvents
     public void TriggerCommitCurrentAction(Tile tile) => CommitCurrentAction?.Invoke(tile);
     public void TriggerSetCurrentActionToMove() => SetCurrentActionToMove?.Invoke();
     public void TriggerSetCurrentActionToAttack() => SetCurrentActionToAttack?.Invoke();
+    public void TriggerSetCurrentActionToRepair() => SetCurrentActionToRepair?.Invoke();
     public void TriggerUndo() => Undo?.Invoke();
     public void TriggerContinue() => Continue?.Invoke();
 

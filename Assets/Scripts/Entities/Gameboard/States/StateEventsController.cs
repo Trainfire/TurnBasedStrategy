@@ -25,6 +25,7 @@ public interface IStateEvents
     event Action<StateActionCancelledEventArgs> ActionCancelled;
     event Action<StateActionSetToMoveEventArgs> ActionSetToMove;
     event Action<Mech> ActionSetToAttack;
+    event Action<Mech> ActionSetToRepair;
     event Action<StateActionCommittedEventArgs> ActionCommitted;
     event Action<StateActionCommittedEventArgs> PostActionCommitted;
     event Action<Tile> HoveredTileSet;
@@ -72,6 +73,7 @@ public class StateEventsController : MonoBehaviour, IStateEvents
     public event Action<StateActionCancelledEventArgs> ActionCancelled;
     public event Action<StateActionSetToMoveEventArgs> ActionSetToMove;
     public event Action<Mech> ActionSetToAttack;
+    public event Action<Mech> ActionSetToRepair;
     public event Action<StateActionCommittedEventArgs> ActionCommitted;
     public event Action<StateActionCommittedEventArgs> PostActionCommitted;
     public event Action<Tile> HoveredTileSet;
@@ -85,6 +87,7 @@ public class StateEventsController : MonoBehaviour, IStateEvents
     public void SetActionCancelled(StateActionCancelledEventArgs args) => ActionCancelled?.Invoke(args);
     public void SetActionToMove(StateActionSetToMoveEventArgs args) => ActionSetToMove?.Invoke(args);
     public void SetActionToAttack(Mech mech) => ActionSetToAttack?.Invoke(mech);
+    public void SetActionToRepair(Mech mech) => ActionSetToRepair?.Invoke(mech);
     public void SetActionCommitted(StateActionCommittedEventArgs args) => ActionCommitted?.Invoke(args);
     public void SetPostActionCommitted(StateActionCommittedEventArgs args) => PostActionCommitted?.Invoke(args);
     public void SetHoveredTile(Tile tile) => HoveredTileSet?.Invoke(tile);

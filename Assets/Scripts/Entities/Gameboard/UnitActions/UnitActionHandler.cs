@@ -7,6 +7,7 @@ public enum UnitAction
     Move,
     PrimaryAttack,
     SecondaryAttack,
+    Repair,
 }
 
 public class UnitActionHandler : MonoBehaviour
@@ -23,6 +24,7 @@ public class UnitActionHandler : MonoBehaviour
             {
                 case UnitAction.Move: _handler = new UnitMoveAction(); break;
                 case UnitAction.PrimaryAttack: _handler = new UnitPrimaryAttackAction(); break;
+                case UnitAction.Repair: _handler = new UnitRepairAction(); break;
                 default: _handler = new UnitUnassignedAction(); break;
             }
         }
@@ -41,11 +43,13 @@ public class UnitActionHandler : MonoBehaviour
         _stateEvents.ActionSetToAttack += OnActionSetToAttack;
         _stateEvents.ActionCancelled += OnActionCancelled;
         _stateEvents.ActionSetToMove += OnActionSetToMove;
+        _stateEvents.ActionSetToRepair += OnActionSetToRepair;
         _stateEvents.PostActionCommitted += OnPostActionCommitted;
     }
 
     private void OnActionSetToAttack(Mech obj) => Action = UnitAction.PrimaryAttack;
     private void OnActionSetToMove(StateActionSetToMoveEventArgs obj) => Action = UnitAction.Move;
+    private void OnActionSetToRepair(Mech obj) => Action = UnitAction.Repair;
     private void OnActionCancelled(StateActionCancelledEventArgs obj) => Action = UnitAction.Unassigned;
     private void OnPostActionCommitted(StateActionCommittedEventArgs obj) => Action = UnitAction.Unassigned;
 
@@ -54,6 +58,7 @@ public class UnitActionHandler : MonoBehaviour
         _stateEvents.ActionSetToAttack -= OnActionSetToAttack;
         _stateEvents.ActionCancelled -= OnActionCancelled;
         _stateEvents.ActionSetToMove -= OnActionSetToMove;
+        _stateEvents.ActionSetToRepair -= OnActionSetToRepair;
         _stateEvents.ActionCommitted -= OnPostActionCommitted;
     }
 }
