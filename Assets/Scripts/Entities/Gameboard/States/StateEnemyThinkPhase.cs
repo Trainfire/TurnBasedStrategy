@@ -33,7 +33,7 @@ public class StateEnemyThinkPhase : StateBase
         DebugEx.Log<StateEnemyActPhase>("Start enemy think phase.");
 
         var targets = new List<Unit>();
-        Gameboard.World.Mechs.ToList().ForEach(x => targets.Add(x));
+        Gameboard.World.Mechs.Where(x => x.Health.Current != 0).ToList().ForEach(x => targets.Add(x));
         Gameboard.World.Buildings.ToList().ForEach(x => targets.Add(x));
 
         foreach (var enemy in Gameboard.World.Enemies.ToList())
